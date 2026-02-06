@@ -1,0 +1,70 @@
+# === OS & Editor ===
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.env
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
+
+# === Logs ===
+logs/
+*.log
+
+# === Dependency directories ===
+vendor/
+bower_components/
+
+# === Build outputs ===
+out/
+target/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# === Database ===
+*.sqlite3
+*.db
+
+# === IDE / Tools ===
+*.iml
+.classpath
+.project
+.settings/
+*.tmproj
+*.esproj
+
+# === Misc ===
+*.bak
+*.tmp
+*.temp
+.temp/
+tmp/
