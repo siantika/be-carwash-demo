@@ -123,11 +123,17 @@ docker compose up -d
 ```
 
 API base URL:
-
 http://localhost:8000
 
 API documentation (Swagger UI):
 http://localhost:8000/docs
 
-Picture of API Docs:
+### API Documentation Preview
+
+**Running server:**
+
+![Running Server](docs/images/active-server.png)
+
+**Swagger UI:**
+
 ![Swagger UI](docs/images/swagger-api.png)
