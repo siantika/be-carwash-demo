@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 echo "Restoring DB from /docker-entrypoint-initdb.d/backup.dump ..."
