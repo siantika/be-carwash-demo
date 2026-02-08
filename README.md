@@ -4,7 +4,7 @@ This repository contains a **demo backend API** for a Carwash Management System.
 The purpose of this project is to showcase **backend architecture, domain modeling,
 and use-case driven design**, not a full production system.
 
-This backend is designed as the core service for cashier applications and admin dashboards.
+This backend is designed as the core service for ticket dispenser, cashier applications, and admin dashboards.
 
 ---
 
@@ -53,7 +53,7 @@ The project follows **Clean Architecture** principles.
 
 ### Auth
 
-- Login (basic authentication flow)
+- Login (Basic Authentication for login, JWT for subsequent requests)
 
 ### Service Type
 
