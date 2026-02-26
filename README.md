@@ -1,139 +1,89 @@
 # Demo Carwash Backend API
 
-This repository contains a **demo backend API** for a Carwash Management System.
-The purpose of this project is to showcase **backend architecture, domain modeling,
-and use-case driven design**, not a full production system.
+This project is a demo backend service designed to simulate and manage the core operations of a carwash business. It showcases a well-structured backend architecture that emphasizes scalability, maintainability, and clean separation of concerns.
 
-This backend is designed as the core service for ticket dispenser, cashier applications, and admin dashboards.
+## Key Capabilities
 
----
-
-## Scope
-
-This is a **demo version**.
-
-Included:
-
-- Core domain entities and value objects
-- Use case–based application layer
-- Ticket and transaction flow (simplified)
-- User and service type management
-- Async PostgreSQL repositories
+- RESTful API with versioned prefix (`/api/v1`)
+- Authentication and role-based access control (admin/cashier)
+- Ticket creation, listing, and void flow
+- Transaction processing and listing
+- User registration, listing, activation, and deactivation
+- Service type creation, listing, activation, and deactivation
+- Async PostgreSQL access with repository pattern
 - Dockerized local environment
 
-Not included:
+## Why This Project Matters
 
-- IoT device integration
-- Loyalty, promotion, or membership system
-- Payment gateway integration
-- Multi-tenant support
-- Production monitoring and observability
+- Architecture focus: Applies Clean Architecture separation (domain, application, API, infrastructure).
+- Backend design focus: Uses use-case based application layer and DTO-driven flows.
+- Demo scope clarity: Focuses on core carwash backend workflows without external integrations.
+- Engineering showcase: Demonstrates API design, role checks, validation, and persistence integration.
 
----
+## Architecture Overview
 
-## Architecture
+### Core Services
 
-The project follows **Clean Architecture** principles.
+- `api`: FastAPI HTTP service
+- `db`: PostgreSQL database service
 
-- **Domain**  
-  Business entities, value objects, repository interfaces
+### Request Flow
 
-- **Application**  
-  Use cases (one use case per business action), Unit of Work, DTOs
+1. Client sends request to API endpoints under `/api/v1`
+2. API validates payload and authorization/role access
+3. Use case executes business logic through repositories
+4. API returns structured response payload
 
-- **API**  
-  FastAPI routers, request/response schemas, dependency injection
+### High-Level Architecture
 
-- **Infrastructure**  
-  PostgreSQL access via asyncpg, repository implementations
-
----
-
-## Implemented Use Cases
-
-### Auth
-
-- Login (Basic Authentication for login, JWT for subsequent requests)
-
-### Service Type
-
-- Create service type
-- Update service data
-- List service types
-- Activate or deactivate service
-
-### Ticket
-
-- Create ticket
-- List tickets
-- Void ticket
-
-### Transaction
-
-- Process transaction
-- List transactions
-
-### User
-
-- Register user
-- List users
-- Activate or deactivate user
-
----
+```mermaid
+flowchart LR
+    C[Client App] -->|HTTP /api/v1/*| A[FastAPI API]
+    A --> U[Application Use Cases]
+    U --> P[(PostgreSQL)]
+    P --> U
+    U --> A
+    A --> |JSON| C
+```
 
 ## Tech Stack
 
 - Python 3.12
 - FastAPI
 - PostgreSQL
-- asyncpg
+- SQLAlchemy + asyncpg
 - Pydantic v2
+- slowapi (rate limiting)
 - pytest
-- Docker
+- Docker + Docker Compose
 
----
+## Engineering Highlights
 
-## Configuration
+- Clean Architecture-inspired structure
+- Use-case driven application layer
+- Structured API response wrapper
+- Security middleware (headers, CORS, rate limiting)
+- Containerized local setup with database healthcheck
 
-Example environment file (`.env.docker`):
+## Features Readiness Snapshot
 
-```env
-DB_NAME=demo_carwash
-DB_USER=app
-DB_PASSWORD=apppass
-DB_HOST=db
-DB_PORT=5432
+- [x] Dockerized service setup
+- [x] Database health check on compose startup
+- [x] Auth and role-based endpoint protection
+- [x] Basic API rate limiting
 
-SECRET_KEY=change-me
+## Not Covered Implementation in Demo
 
-HOST=0.0.0.0
-PORT=8000
-```
+- IoT device integration
+- Loyalty, promotion, or membership system
+- Payment gateway integration
+- Multi-tenant support
+- Monitoring and observability
 
-## Quick Start
+## What This Repository Demonstrates
 
-The project is fully containerized.
-
-To run the application locally:
-
-```bash
-git clone <repository-url>
-cd demo-carwash-backend
-docker compose up -d
-```
-
-API base URL:
-http://localhost:8000
-
-API documentation (Swagger UI):
-http://localhost:8000/docs
-
-### API Documentation Preview
-
-**Running server:**
-
-![Running Server](docs/images/active-server.png)
-
-**Swagger UI:**
-
-![Swagger UI](docs/images/swagger-api.png)
+- Domain modeling with value objects and entities
+- Use-case oriented backend architecture
+- Separation of concerns across layers
+- Practical API workflow for carwash operations
+- Atomic Transaction
