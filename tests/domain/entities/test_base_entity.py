@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
-
 from domain.entities.base import BaseEntity
-from domain.exceptions import BusinessRuleViolation
+
+from app.shared.domain.exceptions.exceptions import BusinessRuleViolation
 
 
 def aware(dt: datetime) -> datetime:
