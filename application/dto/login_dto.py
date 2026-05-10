@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from domain.entities.user import User
+from app.modules.identity.domain.entities.user import User
 
 
 @dataclass(frozen=True)

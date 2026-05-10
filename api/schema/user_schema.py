@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from domain.entities.user import UserRoleEnum
+from app.modules.identity.domain.entities.user import UserRoleEnum
 
 
 class CreateUserRequest(BaseModel):

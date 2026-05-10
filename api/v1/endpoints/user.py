@@ -12,6 +12,7 @@ from api.dependencies.user import (
 )
 from api.schema.auth_schema import UserResponse
 from api.schema.user_schema import CreateUserRequest
+from app.modules.identity.domain.entities.user import UserRoleEnum
 from application.dto.user_dto import RegisterUserCmd
 from application.use_cases.user.list_users import ListUsersUseCase
 from application.use_cases.user.manage_activation_user_usecase import (
@@ -19,7 +20,6 @@ from application.use_cases.user.manage_activation_user_usecase import (
     DeactivateStatusUserUseCase,
 )
 from application.use_cases.user.register_user_usecase import RegisterUserUseCase
-from domain.entities.user import UserRoleEnum
 from infra.repositories.response import BaseResponse
 
 router = APIRouter()

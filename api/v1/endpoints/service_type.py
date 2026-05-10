@@ -20,7 +20,7 @@ from application.use_cases.service_type.manage_activation_status_usecase import 
     ActivateStatusServiceTypeUseCase,
     DeactivateStatusServiceTypeUseCase,
 )
-from domain.entities.user import UserRoleEnum
+from app.modules.identity.domain.entities.user import UserRoleEnum
 from infra.repositories.response import BaseResponse
 from interfaces.i_usecase import IUseCase
 
@@ -106,5 +106,4 @@ async def deactivate_service_type(
         message=f"Service type with id {deactivated_service_type.id} is deactivated",
         data=deactivated_service_type,
     )
-
 
