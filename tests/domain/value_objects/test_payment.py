@@ -1,6 +1,6 @@
 import pytest
 
-from domain.exceptions import InvalidValueObject
+from app.shared.domain.exceptions.exceptions import InvalidValueObject
 from domain.value_object.payment import Payment, PaymentMethodEnum
 
 

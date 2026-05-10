@@ -1,6 +1,6 @@
 import pytest
 
-from domain.exceptions import InvalidTicketNumber
+from app.shared.domain.exceptions.exceptions import InvalidTicketNumber
 from domain.value_object.ticket_number import TicketNumber
 
 VALID_EAN13_TICKET_NUMBER = [

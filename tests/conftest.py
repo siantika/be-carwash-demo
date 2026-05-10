@@ -2,7 +2,7 @@ import httpx
 import pytest
 from asgi_lifespan import LifespanManager
 
-from main import app
+from app.main import app
 
 
 # run only asyncio for backend test
