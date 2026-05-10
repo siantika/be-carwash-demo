@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from domain.exceptions import BusinessRuleViolation
+from app.shared.domain.exceptions.exceptions import BusinessRuleViolation
 
 
 class PaymentStatus(Enum):

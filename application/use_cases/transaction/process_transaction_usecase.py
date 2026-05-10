@@ -1,14 +1,15 @@
-from application.dto.transaction_dto import ProcessTransactionCmd, TransactionResultDto
-from application.i_unit_of_work import IUnitOfWork
-from domain.entities.base import _utcnow
-from domain.entities.ticket import TicketStatusEnum
-from domain.entities.transaction import Transaction
-from domain.exceptions import (
+from app.shared.domain.entities.base import _utcnow
+
+from app.shared.domain.exceptions.exceptions import (
     EntityAlreadyExists,
     EntityNotFound,
     FailedToSaveTransactionError,
     InvalidTicketStateError,
 )
+from application.dto.transaction_dto import ProcessTransactionCmd, TransactionResultDto
+from application.i_unit_of_work import IUnitOfWork
+from domain.entities.ticket import TicketStatusEnum
+from domain.entities.transaction import Transaction
 from domain.value_object.payment import Payment, PaymentMethodEnum
 from domain.value_object.payment_state import PaymentState, PaymentStatus
 from domain.value_object.plate_number import PlateNumber

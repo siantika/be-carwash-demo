@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from domain.entities.base import BaseEntity, _utcnow
-from domain.exceptions import BusinessRuleViolation
+from app.shared.domain.entities.base import BaseEntity, _utcnow
+
+from app.shared.domain.exceptions.exceptions import BusinessRuleViolation
 from domain.value_object.entry_time import EntryTime
 from domain.value_object.service_snapshot import ServiceSnapshot
 from domain.value_object.ticket_number import TicketNumber

@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
 
-from domain.entities.base import _utcnow
-from domain.exceptions import InvalidEntryTime
+from app.shared.domain.entities.base import _utcnow
+from app.shared.domain.exceptions.exceptions import InvalidEntryTime
 
 
 @dataclass(frozen=True)

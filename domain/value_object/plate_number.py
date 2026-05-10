@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
 
-from domain.exceptions import InvalidValueObject
+from app.shared.domain.exceptions.exceptions import InvalidValueObject
 
 PLATE_REGEX = re.compile(r"^[A-Z]{1,2}\s?\d{1,4}\s?[A-Z]{0,3}$")
 

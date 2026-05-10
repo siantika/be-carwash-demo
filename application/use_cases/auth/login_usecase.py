@@ -3,14 +3,14 @@ Authentication login use case.
 
 Handles user authentication and token generation.
 """
-from application.dto.login_dto import LoginResultDto
-from core.consts import Consts
-from core.security import create_access_token, verify_password
-from domain.exceptions import (
+from app.shared.domain.exceptions.exceptions import (
     EntityNotFound,
     InactiveUserError,
     InvalidPasswordError,
 )
+from application.dto.login_dto import LoginResultDto
+from core.consts import Consts
+from core.security import create_access_token, verify_password
 from domain.repositories.i_user_repo import IUserRepository
 
 

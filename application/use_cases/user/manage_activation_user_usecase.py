@@ -1,5 +1,5 @@
+from app.shared.domain.exceptions.exceptions import EntityNotFound
 from application.dto.user_dto import UserResultDto
-from domain.exceptions import EntityNotFound
 from domain.repositories.i_user_repo import IUserRepository
 
 

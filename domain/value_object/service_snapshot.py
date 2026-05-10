@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from domain.exceptions import InvalidServiceValue
+from app.shared.domain.exceptions.exceptions import InvalidServiceValue
 from domain.value_object.money import Money
 
 
