@@ -10,7 +10,7 @@ from api.dependencies.user import (
     get_list_users_usecase,
     get_register_user_usecase,
 )
-from api.schema.auth_schema import UserResponse
+from app.modules.identity.api.schemas import UserResponse
 from api.schema.user_schema import CreateUserRequest
 from app.modules.identity.domain.entities.user import UserRoleEnum
 from application.dto.user_dto import RegisterUserCmd

@@ -1,10 +1,6 @@
-from dataclasses import dataclass
+from app.modules.identity.application.dto.login_dto import (
+    LoginResultDto,
+    TokenPairDto,
+)
 
-from app.modules.identity.domain.entities.user import User
-
-
-@dataclass(frozen=True)
-class LoginResultDto:
-    access_token:str 
-    token_type:str 
-    user: User
+__all__ = ["LoginResultDto", "TokenPairDto"]
