@@ -12,13 +12,13 @@ from app.shared.domain.exceptions.exceptions import (
     InvalidPasswordError,
 )
 from app.modules.identity.application.dto.login_dto import TokenPairDto
-from core.config import settings
-from core.consts import Consts
-from core.security import (
+from app.modules.identity.application.constants import Consts
+from app.modules.identity.infra.security import (
     create_access_token,
     generate_refresh_token,
     hash_refresh_token,
 )
+from app.shared.config.settings import settings
 from domain.repositories.i_user_repo import IUserRepository
 
 

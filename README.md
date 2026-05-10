@@ -130,9 +130,17 @@ api/
 application/
 ├── dto/
 └── use_cases/
-core/
-├── middleware/
-└── config.py
+app/
+├── modules/
+│   └── identity/
+│       ├── api/
+│       ├── application/
+│       ├── domain/
+│       └── infra/
+└── shared/
+    ├── config/
+    ├── error_handling/
+    └── middleware/
 domain/
 ├── entities/
 ├── repositories/

@@ -3,7 +3,7 @@ from app.modules.identity.domain.repositories.i_refresh_token_repo import (
 )
 from app.shared.domain.entities.base import _utcnow
 from app.shared.domain.exceptions.exceptions import BusinessRuleViolation
-from core.security import hash_refresh_token
+from app.modules.identity.infra.security import hash_refresh_token
 
 
 class LogoutUseCase:

@@ -9,7 +9,7 @@ from app.modules.identity.application.use_cases.logout_usecase import LogoutUseC
 from app.modules.identity.application.use_cases.refresh_session_usecase import (
     RefreshSessionUseCase,
 )
-from core.security import hash_refresh_token
+from app.modules.identity.infra.security import hash_refresh_token
 
 
 class FakeUserRepository:

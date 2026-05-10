@@ -2,7 +2,7 @@ import asyncpg
 from fastapi import FastAPI, Request
 from fastapi.concurrency import asynccontextmanager
 
-from core.config import settings
+from app.shared.config.settings import settings
 
 
 async def get_db(request: Request):
