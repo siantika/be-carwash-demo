@@ -16,7 +16,7 @@ from app.shared.domain.exceptions.exceptions import (
     InactiveUserError,
     InvalidPasswordError,
 )
-from app.modules.identity.application.dto.login_dto import LoginResultDto
+from app.modules.identity.application.dto.login_dto import TokenPairDto
 from app.modules.identity.application.constants import Consts
 from app.modules.identity.infra.security import (
     create_access_token,
@@ -39,7 +39,7 @@ class LoginUseCase:
         self.user_repo = user_repo
         self.refresh_token_repo = refresh_token_repo
 
-    async def execute(self, username: str, password: str) -> LoginResultDto:
+    async def execute(self, username: str, password: str) -> TokenPairDto:
 
         user = await self.user_repo.get_by_username(username)
 
@@ -71,7 +71,7 @@ class LoginUseCase:
             )
         )
 
-        return LoginResultDto(
+        return TokenPairDto(
             access_token=token,
             refresh_token=refresh_token,
             token_type=Consts.TOKEN_TYPE,
