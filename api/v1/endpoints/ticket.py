@@ -15,7 +15,7 @@ from application.dto.ticket_dto import CreateTicketCmd
 from application.dto.ticket_void_dto import CreateTicketVoidCmd
 from application.use_cases.ticket.create_ticket_usecase import CreateTicketUseCase
 from application.use_cases.ticket.void_ticket_usecase import VoidTicketUseCase
-from domain.entities.user import UserRoleEnum
+from app.modules.identity.domain.entities.user import UserRoleEnum
 from infra.repositories.response import BaseResponse
 from interfaces.i_usecase import IUseCase
 

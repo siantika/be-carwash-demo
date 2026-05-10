@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from domain.entities.user import User
+from app.modules.identity.domain.entities.user import User
 
 
 class IUserRepository(ABC):
@@ -24,5 +24,4 @@ class IUserRepository(ABC):
     @abstractmethod
     async def save(self, user:User) -> User:
         pass
-
 

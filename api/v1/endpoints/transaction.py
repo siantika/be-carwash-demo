@@ -13,7 +13,7 @@ from api.schema.transaction_schema import (
     ProcessTransactionResponse,
 )
 from application.dto.transaction_dto import ProcessTransactionCmd
-from domain.entities.user import UserRoleEnum
+from app.modules.identity.domain.entities.user import UserRoleEnum
 from infra.repositories.response import BaseResponse
 from interfaces.i_usecase import IUseCase
 
@@ -54,4 +54,3 @@ async def list_transaction(
         message="Transaction is processed and saved successfully",
         data=processed_transaction,
     )
-

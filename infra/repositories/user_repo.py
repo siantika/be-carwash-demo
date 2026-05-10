@@ -2,8 +2,8 @@ from typing import List, Optional
 
 import asyncpg
 
-from domain.entities.user import User, UserRoleEnum
-from domain.exceptions import RepositoryError
+from app.modules.identity.domain.entities.user import User, UserRoleEnum
+from app.shared.domain.exceptions.exceptions import RepositoryError
 from domain.repositories.i_user_repo import IUserRepository
 from infra.error_handler import handle_db_error
 from interfaces.i_logger import ILogger
