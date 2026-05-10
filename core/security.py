@@ -1,10 +1,12 @@
+import hashlib
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
 from jose import jwt
 from passlib.context import CryptContext
 
-from api.schema.auth_schema import TokenData
+from app.shared.security.token_data import TokenData
 from core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -25,7 +27,7 @@ def create_access_token(user_id: str, username: str, role: str) -> str:
     payload: Dict[str, Any] = {
         "sub": user_id,
         "username": username,
-        "role": role,
+        "role": role.value if hasattr(role, "value") else role,
         "exp": expire, 
     }
 
@@ -35,6 +37,14 @@ def create_access_token(user_id: str, username: str, role: str) -> str:
         algorithm=settings.ALGORITHM,
     )
     return encoded_jwt
+
+
+def generate_refresh_token() -> str:
+    return secrets.token_urlsafe(64)
+
+
+def hash_refresh_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def decode_token(token: str) -> TokenData:
