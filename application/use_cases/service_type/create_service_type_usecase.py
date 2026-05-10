@@ -1,6 +1,6 @@
+from app.shared.domain.exceptions.exceptions import EntityAlreadyExists
 from application.dto.service_type_dto import CreateServiceTypeCmd, ServiceTypeResultDto
 from domain.entities.service_type import ServiceType
-from domain.exceptions import EntityAlreadyExists
 from domain.repositories.i_service_type import IServiceTypeRepository
 
 

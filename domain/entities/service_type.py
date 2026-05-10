@@ -2,8 +2,12 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Optional
 
-from domain.entities.base import BaseEntity
-from domain.exceptions import BusinessRuleViolation, InvalidValueObject
+from app.shared.domain.entities.base import BaseEntity
+
+from app.shared.domain.exceptions.exceptions import (
+    BusinessRuleViolation,
+    InvalidValueObject,
+)
 from domain.value_object.money import Money
 
 

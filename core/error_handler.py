@@ -6,7 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from domain.exceptions import (
+from app.shared.domain.exceptions.exceptions import (
     AppError,
     BusinessRuleViolation,
     EntityNotFound,

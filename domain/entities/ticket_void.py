@@ -2,8 +2,9 @@ from dataclasses import Field, dataclass
 from datetime import datetime
 from typing import Optional
 
-from domain.entities.base import _utcnow
-from domain.exceptions import InvalidValueObject
+from app.shared.domain.entities.base import _utcnow
+
+from app.shared.domain.exceptions.exceptions import InvalidValueObject
 
 
 @dataclass(kw_only=True)

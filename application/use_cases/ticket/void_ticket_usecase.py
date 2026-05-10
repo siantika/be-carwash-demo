@@ -1,7 +1,7 @@
+from app.shared.domain.exceptions.exceptions import EntityNotFound
 from application.dto.ticket_void_dto import CreateTicketVoidCmd, TicketVoidResultDto
 from application.i_unit_of_work import IUnitOfWork
 from domain.entities.ticket_void import TicketVoid
-from domain.exceptions import EntityNotFound
 
 
 class VoidTicketUseCase:

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from domain.exceptions import InvalidValueObject
+from app.shared.domain.exceptions.exceptions import InvalidValueObject
 
 
 class PaymentMethodEnum(str, Enum):

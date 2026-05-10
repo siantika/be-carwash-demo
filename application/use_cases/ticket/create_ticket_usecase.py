@@ -2,12 +2,12 @@ import threading
 import time
 from dataclasses import dataclass
 
+from app.shared.domain.exceptions.exceptions import EntityNotFound
 from application.dto.ticket_dto import (
     CreateTicketCmd,
     TicketResultDto,
 )
 from domain.entities.ticket import Ticket
-from domain.exceptions import EntityNotFound
 from domain.repositories.i_service_type import IServiceTypeRepository
 from domain.repositories.i_ticket_repo import ITicketRepository
 from domain.value_object.service_snapshot import ServiceSnapshot

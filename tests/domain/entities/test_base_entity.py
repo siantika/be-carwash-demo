@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from domain.entities.base import BaseEntity
+from app.shared.domain.entities.base import BaseEntity
 
 from app.shared.domain.exceptions.exceptions import BusinessRuleViolation
 

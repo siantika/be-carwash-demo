@@ -1,7 +1,7 @@
 import asyncio
 from typing import Any, Callable, Dict
 
-from domain.exceptions import RepositoryError
+from app.shared.domain.exceptions.exceptions import RepositoryError
 from interfaces.i_logger import ILogger
 
 

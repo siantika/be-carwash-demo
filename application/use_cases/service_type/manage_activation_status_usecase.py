@@ -1,7 +1,7 @@
+from app.shared.domain.exceptions.exceptions import EntityNotFound
 from application.dto.service_type_dto import (
     ServiceTypeResultDto,
 )
-from domain.exceptions import EntityNotFound
 from domain.repositories.i_service_type import IServiceTypeRepository
 
 

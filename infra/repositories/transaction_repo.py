@@ -5,7 +5,7 @@ import asyncpg
 
 from application.dto.transaction_dto import TransactionResultDto
 from domain.entities.transaction import Transaction
-from domain.exceptions import RepositoryError
+from app.shared.domain.exceptions.exceptions import RepositoryError
 from domain.repositories.i_transaction_repo import ITransactionRepository
 from domain.value_object.money import Money
 from domain.value_object.payment import Payment, PaymentMethodEnum

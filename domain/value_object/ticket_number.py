@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from domain.exceptions import InvalidTicketNumber
+from app.shared.domain.exceptions.exceptions import InvalidTicketNumber
 
 
 @dataclass(frozen=True)
