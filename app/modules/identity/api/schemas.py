@@ -2,8 +2,6 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.shared.security.token_data import TokenData
-
 USERNAME_PATTERN = r"^[a-zA-Z0-9_]+$"
 
 
@@ -45,19 +43,15 @@ class LoginRequest(BaseModel):
     )
                           
 
-class LoginResponse(BaseModel):
-    """Schema for successful login response."""
-    access_token: str
-    refresh_token: str
-    token_type: str
-    user: UserResponse
-
-
 class TokenResponse(BaseModel):
-    """Schema for generic token response."""
+    """Schema for token pair response."""
     access_token: str
     refresh_token: str
     token_type: str
+
+
+class LoginResponse(TokenResponse):
+    """Schema for successful login response."""
 
 
 class RefreshTokenRequest(BaseModel):

@@ -74,6 +74,5 @@ class LoginUseCase:
         return LoginResultDto(
             access_token=token,
             refresh_token=refresh_token,
-            token_type= Consts.TOKEN_TYPE,
-            user=user
+            token_type=Consts.TOKEN_TYPE,
         )
