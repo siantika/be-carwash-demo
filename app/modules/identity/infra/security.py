@@ -6,8 +6,8 @@ from typing import Any, Dict
 from jose import jwt
 from passlib.context import CryptContext
 
-from app.shared.security.token_data import TokenData
-from core.config import settings
+from app.modules.identity.application.dto.token_data import TokenData
+from app.shared.config.settings import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

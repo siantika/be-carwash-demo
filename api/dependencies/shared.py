@@ -7,8 +7,8 @@ from jose import JWTError
 from application.dto.auth_context_dto import AuthContextDto
 from application.dto.user_dto import UserResultDto
 from application.i_unit_of_work import IUnitOfWork
-from core.middleware.logger import StructlogLogger, setup_logger
-from core.security import decode_token
+from app.modules.identity.infra.security import decode_token
+from app.shared.middleware.logger import StructlogLogger, setup_logger
 from infra.db import get_db_pool
 from infra.unit_of_work import AsyncpgUnitOfWork
 from interfaces.i_logger import ILogger

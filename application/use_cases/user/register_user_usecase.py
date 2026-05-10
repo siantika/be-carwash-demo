@@ -2,7 +2,7 @@ from app.modules.identity.domain.entities.user import User
 
 from app.shared.domain.exceptions.exceptions import EntityAlreadyExists
 from application.dto.user_dto import RegisterUserCmd, UserResultDto
-from core.security import hash_password
+from app.modules.identity.infra.security import hash_password
 from domain.repositories.i_user_repo import IUserRepository
 
 

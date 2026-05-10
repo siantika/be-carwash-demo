@@ -16,7 +16,7 @@ from app.modules.identity.application.use_cases.logout_usecase import LogoutUseC
 from app.modules.identity.application.use_cases.refresh_session_usecase import (
     RefreshSessionUseCase,
 )
-from core.middleware.limiter import limiter
+from app.shared.middleware.limiter import limiter
 from infra.repositories.response import BaseResponse
 
 router = APIRouter()
