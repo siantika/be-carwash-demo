@@ -6,7 +6,7 @@ from app.modules.identity.domain.entities.account import Account, RoleCode
 from app.modules.identity.domain.repositories.i_account_repo import IAccountRepository
 from app.modules.identity.domain.value_objects.email import Email
 from app.modules.identity.domain.value_objects.username import Username
-from app.shared.domain.exceptions.exceptions import RepositoryError
+from app.shared.domain.exceptions.exceptions import EntityAlreadyExists, RepositoryError
 from app.shared.infra.database.error_handler import handle_db_error
 from interfaces.i_logger import ILogger
 
@@ -154,24 +154,27 @@ class AsyncPgAccountRepository(IAccountRepository):
 
     async def create(self, account: Account) -> Account:
         async def _create():
-            row = await self.db.fetchrow(
-                f"""
-                INSERT INTO identity.accounts (
-                    username,
-                    email,
-                    password_hash,
-                    role,
-                    is_active
+            try:
+                row = await self.db.fetchrow(
+                    f"""
+                    INSERT INTO identity.accounts (
+                        username,
+                        email,
+                        password_hash,
+                        role,
+                        is_active
+                    )
+                    VALUES ($1, $2, $3, $4, $5)
+                    RETURNING {SELECT_ALL_COLUMNS};
+                    """,
+                    account.username.value,
+                    account.email.value,
+                    account.password_hash,
+                    account.role.value,
+                    account.is_active,
                 )
-                VALUES ($1, $2, $3, $4, $5)
-                RETURNING {SELECT_ALL_COLUMNS};
-                """,
-                account.username.value,
-                account.email.value,
-                account.password_hash,
-                account.role.value,
-                account.is_active,
-            )
+            except asyncpg.UniqueViolationError as exc:
+                raise EntityAlreadyExists("Account", account.username.value) from exc
             return _mapper(row)
 
         return await handle_db_error(
