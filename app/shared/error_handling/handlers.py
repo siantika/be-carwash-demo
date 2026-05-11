@@ -9,6 +9,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.shared.domain.exceptions.exceptions import (
     AppError,
     BusinessRuleViolation,
+    EntityAlreadyExists,
     EntityNotFound,
     InactiveUserError,
     InvalidPasswordError,
@@ -23,6 +24,7 @@ EXCEPTION_STATUS_MAP = {
     InvalidPasswordError: status.HTTP_401_UNAUTHORIZED,
     InactiveUserError: status.HTTP_403_FORBIDDEN,
     EntityNotFound: status.HTTP_404_NOT_FOUND,
+    EntityAlreadyExists: status.HTTP_409_CONFLICT,
     BusinessRuleViolation: status.HTTP_400_BAD_REQUEST,
     RepositoryError: status.HTTP_500_INTERNAL_SERVER_ERROR,
     AppError: status.HTTP_400_BAD_REQUEST,
