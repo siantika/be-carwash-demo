@@ -20,9 +20,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def create_access_token(user_id: str, username: str, role: str) -> str:
+def create_access_token(user_id: str, username: str, role: str, expires:int) -> str:
     now = datetime.now(timezone.utc)
-    expire = now + timedelta(hours=settings.ACCESS_TOKEN_EXPIRE_HOURS)
+    expire = now + timedelta(hours=expires)
 
     payload: Dict[str, Any] = {
         "sub": user_id,
