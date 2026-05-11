@@ -5,7 +5,13 @@ Handles user authentication and token generation.
 """
 from datetime import timedelta
 
+from app.modules.identity.application.config.auth_config import AuthConfig
+from app.modules.identity.application.constants import Consts
+from app.modules.identity.application.dto.login_dto import TokenPairDto
+from app.modules.identity.application.services.i_password_hasher import IPasswordHasher
+from app.modules.identity.application.services.i_token_service import ITokenService
 from app.modules.identity.domain.entities.refresh_token import RefreshToken
+from app.modules.identity.domain.repositories.i_account_repo import IAccountRepository
 from app.modules.identity.domain.repositories.i_refresh_token_repo import (
     IRefreshTokenRepository,
 )
@@ -16,16 +22,6 @@ from app.shared.domain.exceptions.exceptions import (
     InactiveUserError,
     InvalidPasswordError,
 )
-from app.modules.identity.application.dto.login_dto import TokenPairDto
-from app.modules.identity.application.constants import Consts
-from app.modules.identity.infra.security import (
-    create_access_token,
-    generate_refresh_token,
-    hash_refresh_token,
-    verify_password,
-)
-from app.shared.config.settings import settings
-from domain.repositories.i_user_repo import IUserRepository
 
 
 class LoginUseCase: 
@@ -33,41 +29,48 @@ class LoginUseCase:
 
     def __init__(
         self,
-        user_repo: IUserRepository,
+        account_repo: IAccountRepository,
         refresh_token_repo: IRefreshTokenRepository,
+        password_hasher: IPasswordHasher,
+        token_service: ITokenService,
+        auth_config: AuthConfig
     ):
-        self.user_repo = user_repo
+        self.account_repo = account_repo
         self.refresh_token_repo = refresh_token_repo
-
+        self.password_hasher = password_hasher
+        self.token_service = token_service
+        self.auth_config = auth_config 
+        
     async def execute(self, username: str, password: str) -> TokenPairDto:
 
-        user = await self.user_repo.get_by_username(username)
+        account = await self.account_repo.find_by_username(username)
 
-        if user is None:
+        if account is None:
             raise EntityNotFound("Invalid username")
 
-        if not verify_password(password, user.password_hash):
+        if not self.password_hasher.verify(password, account.password_hash):
             raise InvalidPasswordError("Invalid password")
 
-        if not user.is_active:
-            raise InactiveUserError("User is inactive")
+        if not account.is_active:
+            raise InactiveUserError("account is inactive")
 
-        if user.id is None:
-            raise BusinessRuleViolation("Authenticated user must have an id")
+        if account.id is None:
+            raise BusinessRuleViolation("Authenticated account must have an id")
 
-        token = create_access_token(
-            str(user.id),
-            user.username,
-            user.role,
+        token = self.token_service.create_access_token(
+            str(account.id),
+            account.username,
+            account.role,
+            self.auth_config.access_token_expire_hours
         )
-        refresh_token = generate_refresh_token()
+        refresh_token = self.token_service.generate_refresh_token()
         now = _utcnow()
 
         await self.refresh_token_repo.save(
             RefreshToken(
-                user_id=user.id,
-                token_hash=hash_refresh_token(refresh_token),
-                expires_at=now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+                user_id=account.id,
+                token_hash=self.token_service.hash_refresh_token(refresh_token),
+                expires_at=now + timedelta(days=self.auth_config.refresh_token_expire_days),
             )
         )
 
