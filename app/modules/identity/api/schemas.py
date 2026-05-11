@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.modules.identity.domain.entities.account import RoleCode
+
 USERNAME_PATTERN = r"^[a-zA-Z0-9_]+$"
 
 
@@ -35,6 +37,43 @@ class AccountResponse(BaseModel):
         ...,
         description="Last account update timestamp in UTC"
     )
+
+
+class RegisterAccountRequest(BaseModel):
+    """Schema for registering a new account."""
+
+    username: str = Field(
+        ...,
+        min_length=3,
+        max_length=30,
+        examples=["cashier_01"],
+        pattern=USERNAME_PATTERN,
+        description="Unique username used for login",
+    )
+    email: str = Field(
+        ...,
+        max_length=255,
+        examples=["cashier@example.com"],
+        description="Account email address",
+    )
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=64,
+        description="Account password",
+    )
+    role: RoleCode = Field(
+        ...,
+        description="Role assigned to the account",
+    )
+    is_active: bool = Field(
+        default=True,
+        description="Whether the account can authenticate",
+    )
+
+    class Config:
+        extra = "forbid"
+
 
 class LoginRequest(BaseModel):
     """Schema for account login request."""

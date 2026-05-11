@@ -40,7 +40,7 @@ class RefreshSessionUseCase:
         if stored_token is None:
             raise InvalidPasswordError("Invalid refresh token")
 
-        account = await self.account_repo.find_by_id(stored_token.user_id)
+        account = await self.account_repo.find_by_id(stored_token.account_id)
         if account is None:
             raise EntityNotFound("Account not found")
 
@@ -58,7 +58,7 @@ class RefreshSessionUseCase:
         new_refresh_token = self.token_service.generate_refresh_token()
         await self.refresh_token_repo.save(
             RefreshToken(
-                user_id=account.id,
+                account_id=account.id,
                 token_hash=self.token_service.hash_refresh_token(new_refresh_token),
                 expires_at=now + timedelta(days=self.auth_config.refresh_token_expire_days),
             )

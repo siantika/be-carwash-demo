@@ -7,7 +7,7 @@ from app.shared.domain.exceptions.exceptions import BusinessRuleViolation
 
 @dataclass(kw_only=True)
 class RefreshToken(BaseEntity):
-    user_id: int
+    account_id: int
     token_hash: str
     expires_at: datetime
     revoked_at: datetime | None = None
@@ -16,8 +16,8 @@ class RefreshToken(BaseEntity):
     def __post_init__(self) -> None:
         super().__post_init__()
 
-        if self.user_id <= 0:
-            raise BusinessRuleViolation("Refresh token user_id must be positive")
+        if self.account_id <= 0:
+            raise BusinessRuleViolation("Refresh token account_id must be positive")
 
         if not self.token_hash.strip():
             raise BusinessRuleViolation("Refresh token hash must not be empty")

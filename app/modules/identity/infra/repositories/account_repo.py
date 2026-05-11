@@ -13,6 +13,7 @@ from interfaces.i_logger import ILogger
 SELECT_ALL_COLUMNS = """
 id,
 username,
+email,
 role,
 password_hash,
 is_active,
@@ -38,7 +39,7 @@ def _mapper(row: asyncpg.Record) -> Account:
     return Account(
         id=values["id"],
         username=username,
-        email=Email(values.get("email") or f"{username.value}@local.invalid"),
+        email=Email(values["email"]),
         role=_validate_role(values["role"]),
         password_hash=values["password_hash"],
         is_active=values["is_active"],
@@ -57,7 +58,7 @@ class AsyncPgAccountRepository(IAccountRepository):
             row = await self.db.fetchrow(
                 f"""
                 SELECT {SELECT_ALL_COLUMNS}
-                FROM users
+                FROM accounts
                 WHERE id = $1;
                 """,
                 account_id,
@@ -76,7 +77,7 @@ class AsyncPgAccountRepository(IAccountRepository):
             row = await self.db.fetchrow(
                 f"""
                 SELECT {SELECT_ALL_COLUMNS}
-                FROM users
+                FROM accounts
                 WHERE username = $1;
                 """,
                 username.value,
@@ -95,7 +96,7 @@ class AsyncPgAccountRepository(IAccountRepository):
             rows = await self.db.fetch(
                 f"""
                 SELECT {SELECT_ALL_COLUMNS}
-                FROM users
+                FROM accounts
                 ORDER BY created_at DESC, id DESC;
                 """
             )
@@ -113,7 +114,7 @@ class AsyncPgAccountRepository(IAccountRepository):
             rows = await self.db.fetch(
                 f"""
                 SELECT {SELECT_ALL_COLUMNS}
-                FROM users
+                FROM accounts
                 WHERE role = $1
                 ORDER BY created_at DESC, id DESC;
                 """,
@@ -133,7 +134,7 @@ class AsyncPgAccountRepository(IAccountRepository):
             rows = await self.db.fetch(
                 f"""
                 SELECT {SELECT_ALL_COLUMNS}
-                FROM users
+                FROM accounts
                 WHERE is_active = $1
                 ORDER BY created_at DESC, id DESC;
                 """,
@@ -152,16 +153,18 @@ class AsyncPgAccountRepository(IAccountRepository):
         async def _create():
             row = await self.db.fetchrow(
                 f"""
-                INSERT INTO users (
+                INSERT INTO accounts (
                     username,
+                    email,
                     password_hash,
                     role,
                     is_active
                 )
-                VALUES ($1, $2, $3, $4)
+                VALUES ($1, $2, $3, $4, $5)
                 RETURNING {SELECT_ALL_COLUMNS};
                 """,
                 account.username.value,
+                account.email.value,
                 account.password_hash,
                 account.role.value,
                 account.is_active,
@@ -179,16 +182,18 @@ class AsyncPgAccountRepository(IAccountRepository):
         async def _save():
             row = await self.db.fetchrow(
                 f"""
-                UPDATE users
+                UPDATE accounts
                 SET username = $1,
-                    password_hash = $2,
-                    role = $3,
-                    is_active = $4,
+                    email = $2,
+                    password_hash = $3,
+                    role = $4,
+                    is_active = $5,
                     updated_at = NOW()
-                WHERE id = $5
+                WHERE id = $6
                 RETURNING {SELECT_ALL_COLUMNS};
                 """,
                 account.username.value,
+                account.email.value,
                 account.password_hash,
                 account.role.value,
                 account.is_active,
@@ -207,7 +212,7 @@ class AsyncPgAccountRepository(IAccountRepository):
         async def _delete():
             await self.db.execute(
                 """
-                DELETE FROM users
+                DELETE FROM accounts
                 WHERE id = $1;
                 """,
                 account_id,

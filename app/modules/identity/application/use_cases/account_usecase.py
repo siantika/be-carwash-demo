@@ -14,9 +14,6 @@ from app.shared.domain.exceptions.exceptions import (
     EntityNotFound,
 )
 
-SUPPORTED_REGISTER_ACCOUNT_ROLES = frozenset({RoleCode.ADMIN, RoleCode.CASHIER})
-
-
 def _to_account_result(account: Account) -> AccountResultDto:
     return AccountResultDto(
         id=account.id,
@@ -34,12 +31,9 @@ def _parse_role(role: RoleCode | str) -> RoleCode:
         parsed_role = role
     else:
         try:
-            parsed_role = RoleCode(role.upper())
+            parsed_role = RoleCode(role.strip().upper())
         except ValueError as exc:
             raise BusinessRuleViolation("Invalid account role") from exc
-
-    if parsed_role not in SUPPORTED_REGISTER_ACCOUNT_ROLES:
-        raise BusinessRuleViolation("Account role is not supported")
 
     return parsed_role
 

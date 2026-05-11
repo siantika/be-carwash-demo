@@ -1,6 +1,14 @@
 from fastapi import Depends
 
 from app.modules.identity.application.config.auth_config import AuthConfig
+from app.modules.identity.application.use_cases.account_usecase import (
+    ActivateAccountUseCase,
+    DeactivateAccountUseCase,
+    DeleteAccountUseCase,
+    GetAccountUseCase,
+    ListAccountsUseCase,
+    RegisterAccountUseCase,
+)
 from app.modules.identity.infra.repositories.refresh_token_repo import (
     AsyncPgRefreshTokenRepository,
 )
@@ -79,3 +87,30 @@ def get_logout_usecase(
     token_service=Depends(get_token_service),
 ):
     return LogoutUseCase(refresh_token_repo, token_service)
+
+
+def get_register_account_usecase(
+    account_repo=Depends(get_account_repo),
+    password_hasher=Depends(get_password_hasher),
+):
+    return RegisterAccountUseCase(account_repo, password_hasher)
+
+
+def get_get_account_usecase(account_repo=Depends(get_account_repo)):
+    return GetAccountUseCase(account_repo)
+
+
+def get_list_accounts_usecase(account_repo=Depends(get_account_repo)):
+    return ListAccountsUseCase(account_repo)
+
+
+def get_activate_account_usecase(account_repo=Depends(get_account_repo)):
+    return ActivateAccountUseCase(account_repo)
+
+
+def get_deactivate_account_usecase(account_repo=Depends(get_account_repo)):
+    return DeactivateAccountUseCase(account_repo)
+
+
+def get_delete_account_usecase(account_repo=Depends(get_account_repo)):
+    return DeleteAccountUseCase(account_repo)

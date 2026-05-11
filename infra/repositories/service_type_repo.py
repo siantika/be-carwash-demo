@@ -2,10 +2,10 @@ from typing import List, Optional
 
 import asyncpg
 
+from app.shared.infra.database.error_handler import handle_db_error
 from domain.entities.service_type import ServiceType
 from domain.repositories.i_service_type import IServiceTypeRepository
 from domain.value_object.money import Money
-from infra.error_handler import handle_db_error
 from interfaces.i_logger import ILogger
 
 SELECT_ALL_COLUMNS = """
