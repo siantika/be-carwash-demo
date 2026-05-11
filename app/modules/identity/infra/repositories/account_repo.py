@@ -148,6 +148,33 @@ class AsyncPgAccountRepository(IAccountRepository):
             operation_name="list accounts by status",
         )
 
+    async def create(self, account: Account) -> Account:
+        async def _create():
+            row = await self.db.fetchrow(
+                f"""
+                INSERT INTO users (
+                    username,
+                    password_hash,
+                    role,
+                    is_active
+                )
+                VALUES ($1, $2, $3, $4)
+                RETURNING {SELECT_ALL_COLUMNS};
+                """,
+                account.username.value,
+                account.password_hash,
+                account.role.value,
+                account.is_active,
+            )
+            return _mapper(row)
+
+        return await handle_db_error(
+            operation=_create,
+            logger=self.logger,
+            context={"username": account.username.value},
+            operation_name="create account",
+        )
+
     async def save(self, account: Account) -> Account:
         async def _save():
             row = await self.db.fetchrow(
