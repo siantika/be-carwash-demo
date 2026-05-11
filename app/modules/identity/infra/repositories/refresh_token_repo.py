@@ -50,7 +50,7 @@ class AsyncPgRefreshTokenRepository(IRefreshTokenRepository):
         async def _create():
             row = await self.db.fetchrow(
                 f"""
-                INSERT INTO refresh_tokens (
+                INSERT INTO identity.refresh_tokens (
                     account_id,
                     token_hash,
                     expires_at,
@@ -84,7 +84,7 @@ class AsyncPgRefreshTokenRepository(IRefreshTokenRepository):
             row = await self.db.fetchrow(
                 f"""
                 SELECT {SELECT_ALL_COLUMNS}
-                FROM refresh_tokens
+                FROM identity.refresh_tokens
                 WHERE token_hash = $1
                   AND revoked_at IS NULL
                   AND expires_at > $2
@@ -102,11 +102,11 @@ class AsyncPgRefreshTokenRepository(IRefreshTokenRepository):
             operation_name="fetch active refresh token",
         )
 
-    async def revoke(self, refresh_token_id: int, revoked_at: datetime) -> None:
+    async def revoke(self, refresh_token_id: int, revoked_at: datetime) -> int:
         async def _update():
             row = await self.db.fetchrow(
                 """
-                UPDATE refresh_tokens
+                UPDATE identity.refresh_tokens
                 SET revoked_at = $2,
                     updated_at = $2
                 WHERE id = $1
@@ -117,6 +117,7 @@ class AsyncPgRefreshTokenRepository(IRefreshTokenRepository):
             )
             if row is None:
                 raise RepositoryError("Refresh token not found")
+            return row["id"]
 
         return await handle_db_error(
             operation=_update,
@@ -125,11 +126,11 @@ class AsyncPgRefreshTokenRepository(IRefreshTokenRepository):
             operation_name="revoke refresh token",
         )
 
-    async def mark_used(self, refresh_token_id: int, used_at: datetime) -> None:
+    async def mark_used(self, refresh_token_id: int, used_at: datetime) -> int:
         async def _update():
             row = await self.db.fetchrow(
                 """
-                UPDATE refresh_tokens
+                UPDATE identity.refresh_tokens
                 SET last_used_at = $2,
                     updated_at = $2
                 WHERE id = $1
@@ -140,6 +141,7 @@ class AsyncPgRefreshTokenRepository(IRefreshTokenRepository):
             )
             if row is None:
                 raise RepositoryError("Refresh token not found")
+            return row["id"]
 
         return await handle_db_error(
             operation=_update,

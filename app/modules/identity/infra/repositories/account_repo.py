@@ -212,7 +212,7 @@ class AsyncPgAccountRepository(IAccountRepository):
             operation_name="save account",
         )
 
-    async def delete(self, account_id: int) -> None:
+    async def delete(self, account_id: int) -> int:
         async def _delete():
             row = await self.db.fetchrow(
                 """
@@ -226,6 +226,7 @@ class AsyncPgAccountRepository(IAccountRepository):
             )
             if row is None:
                 raise RepositoryError("Account not found or already deleted")
+            return row["id"]
 
         return await handle_db_error(
             operation=_delete,

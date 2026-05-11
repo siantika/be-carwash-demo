@@ -57,9 +57,10 @@ class FakeAccountRepository:
         self.accounts[account.id] = account
         return account
 
-    async def delete(self, account_id: int) -> None:
+    async def delete(self, account_id: int) -> int:
         self.deleted_ids.append(account_id)
         self.accounts.pop(account_id, None)
+        return account_id
 
 
 class FakePasswordHasher:
@@ -168,4 +169,3 @@ async def test_delete_account_removes_account() -> None:
 
     assert repo.deleted_ids == [account.id]
     assert account.id not in repo.accounts
-

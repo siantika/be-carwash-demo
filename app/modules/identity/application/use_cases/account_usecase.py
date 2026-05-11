@@ -138,4 +138,6 @@ class DeleteAccountUseCase:
         if account is None:
             raise EntityNotFound("Account", account_id)
 
-        await self.account_repo.delete(account_id)
+        deleted_account_id = await self.account_repo.delete(account_id)
+        if deleted_account_id != account_id:
+            raise BusinessRuleViolation("Deleted account id mismatch")
