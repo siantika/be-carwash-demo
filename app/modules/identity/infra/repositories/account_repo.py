@@ -7,7 +7,7 @@ from app.modules.identity.domain.repositories.i_account_repo import IAccountRepo
 from app.modules.identity.domain.value_objects.email import Email
 from app.modules.identity.domain.value_objects.username import Username
 from app.shared.domain.exceptions.exceptions import RepositoryError
-from infra.error_handler import handle_db_error
+from app.shared.infra.database.error_handler import handle_db_error
 from interfaces.i_logger import ILogger
 
 SELECT_ALL_COLUMNS = """
