@@ -1,6 +1,6 @@
 from fastapi import Query
 
-from api.schema.pagination_schema import OffsetPagination
+from app.api.schema.pagination_schema import OffsetPagination
 
 
 def get_offset_pagination(

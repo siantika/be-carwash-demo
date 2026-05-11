@@ -3,7 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
-from api.dependencies.shared import get_logger
+from app.api.dependencies.shared import get_logger
 from app.shared.middleware.limiter import limiter
 from interfaces.i_logger import ILogger
 

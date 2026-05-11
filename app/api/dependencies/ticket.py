@@ -1,7 +1,7 @@
 from fastapi import Depends
 
-from api.dependencies.service_type import get_service_type_repo
-from api.dependencies.shared import get_logger, get_uow
+from app.api.dependencies.service_type import get_service_type_repo
+from app.api.dependencies.shared import get_logger, get_uow
 from application.use_cases.ticket.create_ticket_usecase import (
     CreateTicketUseCase,
     GenerateEan13TimeBased,

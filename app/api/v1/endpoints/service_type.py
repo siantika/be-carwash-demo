@@ -2,16 +2,16 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Request
 
-from api.dependencies.pagination import get_offset_pagination
-from api.dependencies.service_type import (
+from app.api.dependencies.pagination import get_offset_pagination
+from app.api.dependencies.service_type import (
     get_activate_service_type_usercase,
     get_create_service_type_usecase,
     get_deactivate_service_type_usercase,
     get_list_service_types_usecase,
 )
-from api.dependencies.shared import RoleChecker
-from api.schema.pagination_schema import OffsetPagination
-from api.schema.service_type_schema import CreateServiceTypeRequest, ServiceTypeResponse
+from app.api.dependencies.shared import RoleChecker
+from app.api.schema.pagination_schema import OffsetPagination
+from app.api.schema.service_type_schema import CreateServiceTypeRequest, ServiceTypeResponse
 from application.dto.service_type_dto import CreateServiceTypeCmd
 from application.use_cases.service_type.create_service_type_usecase import (
     CreateServiceTypeUseCase,

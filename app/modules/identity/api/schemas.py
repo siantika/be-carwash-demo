@@ -5,31 +5,39 @@ from pydantic import BaseModel, Field
 USERNAME_PATTERN = r"^[a-zA-Z0-9_]+$"
 
 
-class UserResponse(BaseModel):
+class AccountResponse(BaseModel):
     id: int = Field(
         ...,
         ge=1,
-        description="Unique identifier of the user"
+        description="Unique identifier of the account"
     )
     username: str = Field(
         ...,
-        description="Username of the user"
+        description="Username of the account"
+    )
+    email: str = Field(
+        ...,
+        description="Email address of the account"
     )
     role: str = Field(
         ...,
-        description="Role assigned to the user"
+        description="Role assigned to the account"
+    )
+    is_active: bool = Field(
+        ...,
+        description="Whether the account can authenticate"
     )
     created_at: datetime = Field(
         ...,
-        description="User creation timestamp (UTC)"
+        description="Account creation timestamp in UTC"
     )
     updated_at: datetime = Field(
         ...,
-        description="Last update timestamp (UTC)"
+        description="Last account update timestamp in UTC"
     )
 
 class LoginRequest(BaseModel):
-    """Schema for user login request."""
+    """Schema for account login request."""
     username: str = Field(..., min_length=3,
                           max_length=30,
                           examples=["user_1", "Surya"],
@@ -39,7 +47,7 @@ class LoginRequest(BaseModel):
     password: str = Field(..., 
                     min_length=8,
                     max_length=64,
-                    description="User password (minimum 8 characters)"
+                    description="Account password"
     )
                           
 

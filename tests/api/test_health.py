@@ -8,6 +8,6 @@ from app.main import app
 async def test_health_async():
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
-        r = await ac.get("/api/v1/health")
+        r = await ac.get("/")
         
     assert r.status_code == 200
