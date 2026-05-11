@@ -17,7 +17,7 @@ from app.modules.identity.application.use_cases.refresh_session_usecase import (
     RefreshSessionUseCase,
 )
 from app.shared.middleware.limiter import limiter
-from infra.repositories.response import BaseResponse
+from app.shared.response import BaseResponse
 
 router = APIRouter()
 
@@ -33,9 +33,7 @@ async def login(
     auth = await usecase.execute(payload.username, payload.password)
     
     return BaseResponse(
-        status="success",
-        message="login success",
-        data=auth,
+        data=auth
     )
 
 
@@ -49,9 +47,7 @@ async def refresh_session(
     token_pair = await usecase.execute(payload.refresh_token)
 
     return BaseResponse(
-        status="success",
-        message="session refreshed",
-        data=token_pair,
+        data=token_pair
     )
 
 
@@ -65,7 +61,5 @@ async def logout(
     await usecase.execute(payload.refresh_token)
 
     return BaseResponse(
-        status="success",
-        message="logout success",
-        data=None,
+        data=None
     )

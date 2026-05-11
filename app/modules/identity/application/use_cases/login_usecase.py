@@ -6,7 +6,6 @@ Handles user authentication and token generation.
 from datetime import timedelta
 
 from app.modules.identity.application.config.auth_config import AuthConfig
-from app.modules.identity.application.constants import Consts
 from app.modules.identity.application.dto.login_dto import TokenPairDto
 from app.modules.identity.application.services.i_password_hasher import IPasswordHasher
 from app.modules.identity.application.services.i_token_service import ITokenService
@@ -85,5 +84,5 @@ class LoginUseCase:
         return TokenPairDto(
             access_token=token,
             refresh_token=refresh_token,
-            token_type=Consts.TOKEN_TYPE,
+            token_type="Bearer",
         )

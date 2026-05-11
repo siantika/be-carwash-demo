@@ -14,7 +14,7 @@ from app.api.schema.transaction_schema import (
 )
 from application.dto.transaction_dto import ProcessTransactionCmd
 from app.modules.identity.domain.entities.account import RoleCode
-from infra.repositories.response import BaseResponse
+from app.shared.response import BaseResponse
 from interfaces.i_usecase import IUseCase
 
 router = APIRouter()
