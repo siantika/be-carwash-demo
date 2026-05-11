@@ -2,22 +2,25 @@ from datetime import timedelta
 
 import pytest
 
+from app.modules.identity.application.config.auth_config import AuthConfig
 from app.modules.identity.domain.entities.refresh_token import RefreshToken
-from app.modules.identity.domain.entities.user import User, UserRoleEnum
+from app.modules.identity.domain.entities.account import Account, RoleCode
+from app.modules.identity.domain.value_objects.email import Email
+from app.modules.identity.domain.value_objects.username import Username
 from app.shared.domain.entities.base import _utcnow
 from app.modules.identity.application.use_cases.logout_usecase import LogoutUseCase
 from app.modules.identity.application.use_cases.refresh_session_usecase import (
     RefreshSessionUseCase,
 )
-from app.modules.identity.infra.security import hash_refresh_token
+from app.modules.identity.infra.security import TokenService, hash_refresh_token
 
 
-class FakeUserRepository:
-    def __init__(self, user: User | None):
-        self.user = user
+class FakeAccountRepository:
+    def __init__(self, account: Account | None):
+        self.account = account
 
-    async def get_by_id(self, user_id: int) -> User | None:
-        return self.user if self.user and self.user.id == user_id else None
+    async def find_by_id(self, account_id: int) -> Account | None:
+        return self.account if self.account and self.account.id == account_id else None
 
 
 class FakeRefreshTokenRepository:
@@ -64,16 +67,22 @@ async def test_refresh_session_rotates_refresh_token() -> None:
         token_hash=hash_refresh_token(raw_refresh_token),
         expires_at=now + timedelta(days=1),
     )
-    user = User(
+    account = Account(
         id=1,
-        username="cashier",
-        role=UserRoleEnum.CASHIER,
+        username=Username("cashier"),
+        email=Email("cashier@example.com"),
+        role=RoleCode.CASHIER,
         password_hash="hash",
     )
     refresh_token_repo = FakeRefreshTokenRepository(stored_token)
     usecase = RefreshSessionUseCase(
-        user_repo=FakeUserRepository(user),
+        account_repo=FakeAccountRepository(account),
         refresh_token_repo=refresh_token_repo,
+        token_service=TokenService(),
+        auth_config=AuthConfig(
+            access_token_expire_hours=1,
+            refresh_token_expire_days=7,
+        ),
     )
 
     result = await usecase.execute(raw_refresh_token)
@@ -95,7 +104,7 @@ async def test_logout_revokes_active_refresh_token() -> None:
         expires_at=now + timedelta(days=1),
     )
     refresh_token_repo = FakeRefreshTokenRepository(stored_token)
-    usecase = LogoutUseCase(refresh_token_repo)
+    usecase = LogoutUseCase(refresh_token_repo, TokenService())
 
     await usecase.execute(raw_refresh_token)
 

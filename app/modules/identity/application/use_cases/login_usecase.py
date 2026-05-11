@@ -15,6 +15,7 @@ from app.modules.identity.domain.repositories.i_account_repo import IAccountRepo
 from app.modules.identity.domain.repositories.i_refresh_token_repo import (
     IRefreshTokenRepository,
 )
+from app.modules.identity.domain.value_objects.username import Username
 from app.shared.domain.entities.base import _utcnow
 from app.shared.domain.exceptions.exceptions import (
     BusinessRuleViolation,
@@ -43,19 +44,27 @@ class LoginUseCase:
         
     async def execute(self, username: str, password: str) -> TokenPairDto:
 
-        account = await self.account_repo.find_by_username(username)
+        now = _utcnow()
+        account = await self.account_repo.find_by_username(Username(username))
 
         if account is None:
             raise EntityNotFound("Invalid username")
 
-        if not self.password_hasher.verify(password, account.password_hash):
-            raise InvalidPasswordError("Invalid password")
+        if not account.can_login(now):
+            if not account.is_active:
+                raise InactiveUserError("Account is inactive")
+            raise BusinessRuleViolation("Account is temporarily locked")
 
-        if not account.is_active:
-            raise InactiveUserError("account is inactive")
+        if not self.password_hasher.verify(password, account.password_hash):
+            account.record_failed_login(now)
+            await self.account_repo.save(account)
+            raise InvalidPasswordError("Invalid password")
 
         if account.id is None:
             raise BusinessRuleViolation("Authenticated account must have an id")
+
+        account.record_successful_login(now)
+        await self.account_repo.save(account)
 
         token = self.token_service.create_access_token(
             str(account.id),
@@ -64,7 +73,6 @@ class LoginUseCase:
             self.auth_config.access_token_expire_hours
         )
         refresh_token = self.token_service.generate_refresh_token()
-        now = _utcnow()
 
         await self.refresh_token_repo.save(
             RefreshToken(

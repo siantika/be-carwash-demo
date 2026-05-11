@@ -7,6 +7,8 @@ from jose import jwt
 from passlib.context import CryptContext
 
 from app.modules.identity.application.dto.token_data import TokenData
+from app.modules.identity.domain.entities.account import RoleCode
+from app.modules.identity.domain.value_objects.username import Username
 from app.shared.config.settings import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -55,3 +57,25 @@ def decode_token(token: str) -> TokenData:
         algorithms=[settings.ALGORITHM],
     )
     return TokenData(**payload)
+
+
+class PasswordHasher:
+    def verify(self, plain_password: str, hashed_password: str) -> bool:
+        return verify_password(plain_password, hashed_password)
+
+
+class TokenService:
+    def create_access_token(
+        self,
+        account_id: str,
+        username: Username,
+        role: RoleCode,
+        expires: int,
+    ) -> str:
+        return create_access_token(account_id, username.value, role, expires)
+
+    def generate_refresh_token(self) -> str:
+        return generate_refresh_token()
+
+    def hash_refresh_token(self, token: str) -> str:
+        return hash_refresh_token(token)

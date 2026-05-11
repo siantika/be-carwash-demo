@@ -7,7 +7,6 @@ from api.v1.endpoints import (
     test_db,
     ticket,
     transaction,
-    user,
 )
 
 api_router = APIRouter()
@@ -17,4 +16,3 @@ api_router.include_router(identity_router, prefix="/auth", tags=["auth"])
 api_router.include_router(service_type.router, tags=['service-types'])
 api_router.include_router(ticket.router, tags=['tickets'])
 api_router.include_router(transaction.router, tags=['transactions'])
-api_router.include_router(user.router, tags=["users"])

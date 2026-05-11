@@ -13,7 +13,7 @@ from api.schema.transaction_schema import (
     ProcessTransactionResponse,
 )
 from application.dto.transaction_dto import ProcessTransactionCmd
-from app.modules.identity.domain.entities.user import UserRoleEnum
+from app.modules.identity.domain.entities.account import RoleCode
 from infra.repositories.response import BaseResponse
 from interfaces.i_usecase import IUseCase
 
@@ -22,7 +22,7 @@ router = APIRouter()
 @router.post("/transactions", response_model=BaseResponse[ProcessTransactionResponse])
 async def create_transaction(
     payload:ProcessTransactionRequest,
-    user= Depends(RoleChecker([UserRoleEnum.CASHIER])),
+    user= Depends(RoleChecker([RoleCode.CASHIER])),
     usecase:IUseCase = Depends(get_process_transaction_usecase)
 ):
     cmd = ProcessTransactionCmd(
@@ -43,7 +43,7 @@ async def create_transaction(
 @router.get("/transactions", response_model=BaseResponse[List[ProcessTransactionResponse]])
 async def list_transaction(
     pagination = Depends(get_offset_pagination),
-    user= Depends(RoleChecker([UserRoleEnum.CASHIER, UserRoleEnum.ADMIN])),
+    user= Depends(RoleChecker([RoleCode.CASHIER, RoleCode.ADMIN])),
     usecase:IUseCase = Depends(get_list_transactions_usecase)
 ):
     processed_transaction = await usecase.execute(pagination.limit, 

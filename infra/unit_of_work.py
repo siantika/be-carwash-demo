@@ -5,7 +5,6 @@ from infra.repositories.service_type_repo import AsyncPgServiceTypeRepository
 from infra.repositories.ticket_repo import AsyncPgTicketRepository
 from infra.repositories.ticket_void_repo import AsyncPgTicketVoidRepository
 from infra.repositories.transaction_repo import AsyncPgTransactionRepository
-from infra.repositories.user_repo import AsyncPgUserRepository
 from interfaces.i_logger import ILogger
 
 
@@ -27,7 +26,6 @@ class AsyncpgUnitOfWork(IUnitOfWork):
         self.ticket_void = AsyncPgTicketVoidRepository(self._conn, self.logger)
         self.transaction = AsyncPgTransactionRepository(self._conn, self.logger)
         self.service_type = AsyncPgServiceTypeRepository(self._conn, self.logger)
-        self.user = AsyncPgUserRepository(self._conn, self.logger)
 
         return self
 
