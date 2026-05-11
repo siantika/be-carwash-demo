@@ -5,7 +5,6 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 
 from application.dto.auth_context_dto import AuthContextDto
-from application.dto.user_dto import UserResultDto
 from application.i_unit_of_work import IUnitOfWork
 from app.modules.identity.infra.security import decode_token
 from app.shared.middleware.logger import StructlogLogger, setup_logger
@@ -48,8 +47,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> AuthContextDt
 
 
 def RoleChecker(required_roles: List[str]):
-    async def verify(user: UserResultDto = Depends(get_current_user)) -> UserResultDto:
-        if user.role not in required_roles:
+    async def verify(user: AuthContextDto = Depends(get_current_user)) -> AuthContextDto:
+        allowed_roles = {
+            role.value if hasattr(role, "value") else role
+            for role in required_roles
+        }
+        if user.role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission",

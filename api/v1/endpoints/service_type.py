@@ -20,7 +20,7 @@ from application.use_cases.service_type.manage_activation_status_usecase import 
     ActivateStatusServiceTypeUseCase,
     DeactivateStatusServiceTypeUseCase,
 )
-from app.modules.identity.domain.entities.user import UserRoleEnum
+from app.modules.identity.domain.entities.account import RoleCode
 from infra.repositories.response import BaseResponse
 from interfaces.i_usecase import IUseCase
 
@@ -31,7 +31,7 @@ router = APIRouter()
 async def list_service_types(
     pagination:OffsetPagination = Depends(get_offset_pagination),
     user = Depends(RoleChecker([
-        UserRoleEnum.ADMIN,
+        RoleCode.ADMIN,
         ])),
     usecase:IUseCase = Depends(get_list_service_types_usecase)
 ):
@@ -49,7 +49,7 @@ async def list_service_types(
 async def post_service_types(
     payload: CreateServiceTypeRequest,
     user = Depends(RoleChecker([
-        UserRoleEnum.ADMIN,
+        RoleCode.ADMIN,
         ])),
     usecase:CreateServiceTypeUseCase = Depends(get_create_service_type_usecase)
 ):
@@ -75,7 +75,7 @@ async def post_service_types(
 async def activate_service_type(
     service_type_id: int,
     user = Depends(RoleChecker([
-        UserRoleEnum.ADMIN,
+        RoleCode.ADMIN,
         ])),
     usecase:IUseCase=Depends(get_activate_service_type_usercase),
 ):
@@ -95,7 +95,7 @@ async def activate_service_type(
 async def deactivate_service_type(
     service_type_id: int,
     user = Depends(RoleChecker([
-        UserRoleEnum.ADMIN,
+        RoleCode.ADMIN,
         ])),
     usecase:IUseCase=Depends(get_deactivate_service_type_usercase),
 ):
