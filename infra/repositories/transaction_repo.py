@@ -3,15 +3,15 @@ from typing import Any, Mapping, Optional, Union, cast
 
 import asyncpg
 
+from app.shared.domain.exceptions.exceptions import RepositoryError
+from app.shared.infra.database.error_handler import handle_db_error
 from application.dto.transaction_dto import TransactionResultDto
 from domain.entities.transaction import Transaction
-from app.shared.domain.exceptions.exceptions import RepositoryError
 from domain.repositories.i_transaction_repo import ITransactionRepository
 from domain.value_object.money import Money
 from domain.value_object.payment import Payment, PaymentMethodEnum
 from domain.value_object.payment_state import PaymentState, PaymentStatus
 from domain.value_object.plate_number import PlateNumber
-from infra.error_handler import handle_db_error
 from interfaces.i_logger import ILogger
 
 Row = Union[asyncpg.Record, Mapping[str, Any]]

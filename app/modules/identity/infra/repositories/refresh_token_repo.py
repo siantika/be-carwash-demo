@@ -8,7 +8,7 @@ from app.modules.identity.domain.repositories.i_refresh_token_repo import (
     IRefreshTokenRepository,
 )
 from app.shared.domain.exceptions.exceptions import RepositoryError
-from infra.error_handler import handle_db_error
+from app.shared.infra.database.error_handler import handle_db_error
 from interfaces.i_logger import ILogger
 
 Row = Union[asyncpg.Record, Mapping[str, object]]
