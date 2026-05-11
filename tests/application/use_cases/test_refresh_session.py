@@ -50,11 +50,12 @@ class FakeRefreshTokenRepository:
         self.saved.append(refresh_token)
         return refresh_token
 
-    async def revoke(self, refresh_token_id: int, revoked_at) -> None:
+    async def revoke(self, refresh_token_id: int, revoked_at) -> int:
         self.revoked_ids.append(refresh_token_id)
+        return refresh_token_id
 
-    async def mark_used(self, refresh_token_id: int, used_at) -> None:
-        pass
+    async def mark_used(self, refresh_token_id: int, used_at) -> int:
+        return refresh_token_id
 
 
 @pytest.mark.anyio

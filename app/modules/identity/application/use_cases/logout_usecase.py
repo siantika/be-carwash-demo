@@ -28,4 +28,6 @@ class LogoutUseCase:
         if stored_token.id is None:
             raise BusinessRuleViolation("Stored refresh token must have an id")
 
-        await self.refresh_token_repo.revoke(stored_token.id, now)
+        revoked_token_id = await self.refresh_token_repo.revoke(stored_token.id, now)
+        if revoked_token_id != stored_token.id:
+            raise BusinessRuleViolation("Revoked refresh token id mismatch")
