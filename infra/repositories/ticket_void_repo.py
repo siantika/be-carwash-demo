@@ -1,8 +1,8 @@
 import asyncpg
 
+from app.shared.infra.database.error_handler import handle_db_error
 from domain.entities.ticket_void import TicketVoid
 from domain.repositories.i_void_ticket_repo import ITicketVoidRepository
-from infra.error_handler import handle_db_error
 from interfaces.i_logger import ILogger
 
 

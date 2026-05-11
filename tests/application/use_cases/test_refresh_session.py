@@ -63,7 +63,7 @@ async def test_refresh_session_rotates_refresh_token() -> None:
     now = _utcnow()
     stored_token = RefreshToken(
         id=1,
-        user_id=1,
+        account_id=1,
         token_hash=hash_refresh_token(raw_refresh_token),
         expires_at=now + timedelta(days=1),
     )
@@ -99,7 +99,7 @@ async def test_logout_revokes_active_refresh_token() -> None:
     now = _utcnow()
     stored_token = RefreshToken(
         id=1,
-        user_id=1,
+        account_id=1,
         token_hash=hash_refresh_token(raw_refresh_token),
         expires_at=now + timedelta(days=1),
     )

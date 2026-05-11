@@ -75,7 +75,7 @@ class LoginUseCase:
 
         await self.refresh_token_repo.save(
             RefreshToken(
-                user_id=account.id,
+                account_id=account.id,
                 token_hash=self.token_service.hash_refresh_token(refresh_token),
                 expires_at=now + timedelta(days=self.auth_config.refresh_token_expire_days),
             )
