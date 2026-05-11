@@ -1,6 +1,6 @@
 from fastapi import Depends
 
-from api.dependencies.shared import get_logger, get_uow
+from app.api.dependencies.shared import get_logger, get_uow
 from application.use_cases.transaction.list_transaction_usecase import (
     ListTransactionUseCase,
 )

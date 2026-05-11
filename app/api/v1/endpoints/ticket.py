@@ -2,15 +2,15 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
-from api.dependencies.pagination import get_offset_pagination
-from api.dependencies.shared import RoleChecker
-from api.dependencies.ticket import (
+from app.api.dependencies.pagination import get_offset_pagination
+from app.api.dependencies.shared import RoleChecker
+from app.api.dependencies.ticket import (
     get_create_ticket_usecase,
     get_list_tickets_usecase,
     get_void_ticket_usecase,
 )
-from api.schema.ticket_schema import CreateTicketRequest, TicketResponse
-from api.schema.ticket_void_schema import TicketVoidRequest, TicketVoidResponse
+from app.api.schema.ticket_schema import CreateTicketRequest, TicketResponse
+from app.api.schema.ticket_void_schema import TicketVoidRequest, TicketVoidResponse
 from application.dto.ticket_dto import CreateTicketCmd
 from application.dto.ticket_void_dto import CreateTicketVoidCmd
 from application.use_cases.ticket.create_ticket_usecase import CreateTicketUseCase

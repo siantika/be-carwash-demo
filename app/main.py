@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from api.v1.router import api_router
+from app.api.v1.router import api_router
 from app.shared.config.settings import settings
 from app.shared.error_handling.handlers import register_exception_handlers
 from app.shared.middleware.limiter import limiter
