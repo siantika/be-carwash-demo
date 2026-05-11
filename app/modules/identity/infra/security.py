@@ -60,6 +60,9 @@ def decode_token(token: str) -> TokenData:
 
 
 class PasswordHasher:
+    def hash(self, plain_password: str) -> str:
+        return hash_password(plain_password)
+
     def verify(self, plain_password: str, hashed_password: str) -> bool:
         return verify_password(plain_password, hashed_password)
 
