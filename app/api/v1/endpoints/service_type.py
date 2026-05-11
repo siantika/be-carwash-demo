@@ -21,7 +21,7 @@ from application.use_cases.service_type.manage_activation_status_usecase import 
     DeactivateStatusServiceTypeUseCase,
 )
 from app.modules.identity.domain.entities.account import RoleCode
-from infra.repositories.response import BaseResponse
+from app.shared.response import BaseResponse
 from interfaces.i_usecase import IUseCase
 
 router = APIRouter()
@@ -106,4 +106,3 @@ async def deactivate_service_type(
         message=f"Service type with id {deactivated_service_type.id} is deactivated",
         data=deactivated_service_type,
     )
-

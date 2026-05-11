@@ -14,7 +14,7 @@ from app.shared.domain.exceptions.exceptions import (
     InvalidPasswordError,
     RepositoryError,
 )
-from infra.repositories.response import BaseErrorResponse
+from app.shared.response import BaseErrorResponse, ErrorResponse
 
 # Setup logger for error handler
 logger = logging.getLogger(__name__)
@@ -44,9 +44,10 @@ def register_exception_handlers(app: FastAPI):
         return JSONResponse(
             status_code=status_code,
             content=BaseErrorResponse(
-                status="error",
-                message=str(exc),
-                error_type=exc.__class__.__name__
+                error=ErrorResponse(
+                    code=exc.__class__.__name__,
+                    message=str(exc),
+                )
             ).model_dump(),
         )
 
@@ -63,9 +64,10 @@ def register_exception_handlers(app: FastAPI):
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             content=BaseErrorResponse(
-                status="error",
-                message=message,
-                error_type="RequestValidationError"
+                error=ErrorResponse(
+                    code="RequestValidationError",
+                    message=message,
+                )
             ).model_dump()
         )
         
@@ -81,8 +83,9 @@ def register_exception_handlers(app: FastAPI):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=BaseErrorResponse(
-                status="error",
-                message="Internal server error",
-                error_type="InternalServerError"
+                error=ErrorResponse(
+                    code="InternalServerError",
+                    message="Internal server error",
+                )
             ).model_dump(),
         )

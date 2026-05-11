@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from app.modules.identity.application.config.auth_config import AuthConfig
-from app.modules.identity.application.constants import Consts
 from app.modules.identity.application.dto.login_dto import TokenPairDto
 from app.modules.identity.application.services.i_token_service import ITokenService
 from app.modules.identity.domain.entities.refresh_token import RefreshToken
@@ -75,5 +74,5 @@ class RefreshSessionUseCase:
         return TokenPairDto(
             access_token=access_token,
             refresh_token=new_refresh_token,
-            token_type=Consts.TOKEN_TYPE,
+            token_type="Bearer",
         )
