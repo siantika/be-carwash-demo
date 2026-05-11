@@ -104,18 +104,21 @@ class AsyncPgRefreshTokenRepository(IRefreshTokenRepository):
 
     async def revoke(self, refresh_token_id: int, revoked_at: datetime) -> None:
         async def _update():
-            await self.db.execute(
+            row = await self.db.fetchrow(
                 """
                 UPDATE refresh_tokens
                 SET revoked_at = $2,
                     updated_at = $2
-                WHERE id = $1;
+                WHERE id = $1
+                RETURNING id;
                 """,
                 refresh_token_id,
                 revoked_at,
             )
+            if row is None:
+                raise RepositoryError("Refresh token not found")
 
-        await handle_db_error(
+        return await handle_db_error(
             operation=_update,
             logger=self.logger,
             context={"refresh_token_id": refresh_token_id},
@@ -124,18 +127,21 @@ class AsyncPgRefreshTokenRepository(IRefreshTokenRepository):
 
     async def mark_used(self, refresh_token_id: int, used_at: datetime) -> None:
         async def _update():
-            await self.db.execute(
+            row = await self.db.fetchrow(
                 """
                 UPDATE refresh_tokens
                 SET last_used_at = $2,
                     updated_at = $2
-                WHERE id = $1;
+                WHERE id = $1
+                RETURNING id;
                 """,
                 refresh_token_id,
                 used_at,
             )
+            if row is None:
+                raise RepositoryError("Refresh token not found")
 
-        await handle_db_error(
+        return await handle_db_error(
             operation=_update,
             logger=self.logger,
             context={"refresh_token_id": refresh_token_id},
