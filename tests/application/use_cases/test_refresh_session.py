@@ -13,6 +13,7 @@ from app.modules.identity.application.use_cases.refresh_session_usecase import (
     RefreshSessionUseCase,
 )
 from app.modules.identity.infra.security import TokenService, hash_refresh_token
+from app.shared.domain.exceptions.exceptions import InvalidTokenError
 
 
 class FakeAccountRepository:
@@ -110,3 +111,31 @@ async def test_logout_revokes_active_refresh_token() -> None:
     await usecase.execute(raw_refresh_token)
 
     assert refresh_token_repo.revoked_ids == [1]
+
+
+@pytest.mark.anyio
+async def test_logout_rejects_invalid_refresh_token() -> None:
+    refresh_token_repo = FakeRefreshTokenRepository(None)
+    usecase = LogoutUseCase(refresh_token_repo, TokenService())
+
+    with pytest.raises(InvalidTokenError, match="Invalid refresh token"):
+        await usecase.execute("wrong-refresh-token")
+
+    assert refresh_token_repo.revoked_ids == []
+
+
+@pytest.mark.anyio
+async def test_refresh_session_rejects_invalid_refresh_token() -> None:
+    refresh_token_repo = FakeRefreshTokenRepository(None)
+    usecase = RefreshSessionUseCase(
+        account_repo=FakeAccountRepository(None),
+        refresh_token_repo=refresh_token_repo,
+        token_service=TokenService(),
+        auth_config=AuthConfig(
+            access_token_expire_hours=1,
+            refresh_token_expire_days=7,
+        ),
+    )
+
+    with pytest.raises(InvalidTokenError, match="Invalid refresh token"):
+        await usecase.execute("wrong-refresh-token")

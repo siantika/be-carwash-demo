@@ -3,7 +3,7 @@ from app.modules.identity.domain.repositories.i_refresh_token_repo import (
 )
 from app.modules.identity.application.services.i_token_service import ITokenService
 from app.shared.domain.entities.base import _utcnow
-from app.shared.domain.exceptions.exceptions import BusinessRuleViolation
+from app.shared.domain.exceptions.exceptions import BusinessRuleViolation, InvalidTokenError
 
 
 class LogoutUseCase:
@@ -23,7 +23,7 @@ class LogoutUseCase:
         )
 
         if stored_token is None:
-            return
+            raise InvalidTokenError("Invalid refresh token")
 
         if stored_token.id is None:
             raise BusinessRuleViolation("Stored refresh token must have an id")

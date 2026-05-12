@@ -4,6 +4,7 @@ from app.modules.identity.application.dto.account_dto import RegisterAccountCmd
 from app.modules.identity.application.use_cases.account_usecase import (
     ActivateAccountUseCase,
     DeleteAccountUseCase,
+    GetAccountUseCase,
     ListAccountsUseCase,
     RegisterAccountUseCase,
 )
@@ -107,6 +108,52 @@ async def test_register_account_rejects_duplicate_username() -> None:
 
     with pytest.raises(EntityAlreadyExists):
         await usecase.execute(cmd)
+
+
+@pytest.mark.anyio
+async def test_registered_account_can_be_fetched_by_id() -> None:
+    repo = FakeAccountRepository()
+    register_usecase = RegisterAccountUseCase(repo, FakePasswordHasher())
+    get_usecase = GetAccountUseCase(repo)
+
+    created = await register_usecase.execute(
+        RegisterAccountCmd(
+            username="Owner_01",
+            email="owner@example.com",
+            password="Password1",
+            role="OWNER",
+            is_active=False,
+        )
+    )
+
+    result = await get_usecase.execute(created.id)
+
+    assert result.id == created.id
+    assert result.username == "owner_01"
+    assert result.email == "owner@example.com"
+    assert result.role == "OWNER"
+    assert result.is_active is False
+
+
+@pytest.mark.anyio
+async def test_registered_account_appears_in_account_list() -> None:
+    repo = FakeAccountRepository()
+    register_usecase = RegisterAccountUseCase(repo, FakePasswordHasher())
+    list_usecase = ListAccountsUseCase(repo)
+
+    created = await register_usecase.execute(
+        RegisterAccountCmd(
+            username="cashier_02",
+            email="cashier02@example.com",
+            password="Password1",
+            role=RoleCode.CASHIER,
+        )
+    )
+
+    results = await list_usecase.execute()
+
+    assert len(results) == 1
+    assert results[0] == created
 
 
 @pytest.mark.anyio
