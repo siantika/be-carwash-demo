@@ -1,4 +1,5 @@
 from app.modules.identity.application.dto.account_dto import (
+    AccountListResultDto,
     AccountResultDto,
     RegisterAccountCmd,
 )
@@ -87,18 +88,30 @@ class ListAccountsUseCase:
         self,
         role: RoleCode | str | None = None,
         is_active: bool | None = None,
-    ) -> list[AccountResultDto]:
-        if role is not None and is_active is not None:
-            raise BusinessRuleViolation("Filter by role or status, not both")
+        page: int = 1,
+        limit: int = 20,
+    ) -> AccountListResultDto:
+        if page < 1:
+            raise BusinessRuleViolation("Page must be greater than or equal to 1")
 
-        if role is not None:
-            accounts = await self.account_repo.find_all_by_role(_parse_role(role))
-        elif is_active is not None:
-            accounts = await self.account_repo.find_all_by_status(is_active)
-        else:
-            accounts = await self.account_repo.find_all()
+        if limit < 1:
+            raise BusinessRuleViolation("Limit must be greater than or equal to 1")
 
-        return [_to_account_result(account) for account in accounts]
+        parsed_role = _parse_role(role) if role is not None else None
+        offset = (page - 1) * limit
+        accounts, total = await self.account_repo.find_all_filtered(
+            role=parsed_role,
+            is_active=is_active,
+            limit=limit,
+            offset=offset,
+        )
+
+        return AccountListResultDto(
+            items=[_to_account_result(account) for account in accounts],
+            total=total,
+            page=page,
+            limit=limit,
+        )
 
 
 class ActivateAccountUseCase:

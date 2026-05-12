@@ -33,20 +33,29 @@ class FakeAccountRepository:
             None,
         )
 
-    async def find_all(self) -> list[Account]:
-        return list(self.accounts.values())
+    async def find_all_filtered(
+        self,
+        role: RoleCode | None,
+        is_active: bool | None,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[Account], int]:
+        accounts = list(self.accounts.values())
+        accounts.sort(key=lambda account: account.id or 0, reverse=True)
 
-    async def find_all_by_role(self, role: RoleCode) -> list[Account]:
-        return [
-            account for account in self.accounts.values()
-            if account.role == role
-        ]
+        if role is not None:
+            accounts = [
+                account for account in accounts
+                if account.role == role
+            ]
 
-    async def find_all_by_status(self, is_active: bool) -> list[Account]:
-        return [
-            account for account in self.accounts.values()
-            if account.is_active is is_active
-        ]
+        if is_active is not None:
+            accounts = [
+                account for account in accounts
+                if account.is_active is is_active
+            ]
+
+        return accounts[offset:offset + limit], len(accounts)
 
     async def create(self, account: Account) -> Account:
         account.id = self.next_id
@@ -150,10 +159,12 @@ async def test_registered_account_appears_in_account_list() -> None:
         )
     )
 
-    results = await list_usecase.execute()
+    result = await list_usecase.execute()
 
-    assert len(results) == 1
-    assert results[0] == created
+    assert result.items == [created]
+    assert result.total == 1
+    assert result.page == 1
+    assert result.limit == 20
 
 
 @pytest.mark.anyio
@@ -176,9 +187,71 @@ async def test_list_accounts_can_filter_by_role() -> None:
         )
     )
 
-    results = await ListAccountsUseCase(repo).execute(role="ADMIN")
+    result = await ListAccountsUseCase(repo).execute(role="ADMIN")
 
-    assert [account.username for account in results] == ["admin_01"]
+    assert [account.username for account in result.items] == ["admin_01"]
+    assert result.total == 1
+
+
+@pytest.mark.anyio
+async def test_list_accounts_can_filter_by_role_and_status() -> None:
+    repo = FakeAccountRepository()
+    await repo.create(
+        Account(
+            username=Username("cashier_active"),
+            email=Email("cashier-active@example.com"),
+            password_hash="hash",
+            role=RoleCode.CASHIER,
+            is_active=True,
+        )
+    )
+    await repo.create(
+        Account(
+            username=Username("cashier_inactive"),
+            email=Email("cashier-inactive@example.com"),
+            password_hash="hash",
+            role=RoleCode.CASHIER,
+            is_active=False,
+        )
+    )
+    await repo.create(
+        Account(
+            username=Username("admin_inactive"),
+            email=Email("admin-inactive@example.com"),
+            password_hash="hash",
+            role=RoleCode.ADMIN,
+            is_active=False,
+        )
+    )
+
+    result = await ListAccountsUseCase(repo).execute(
+        role=RoleCode.CASHIER,
+        is_active=False,
+    )
+
+    assert [account.username for account in result.items] == ["cashier_inactive"]
+    assert result.total == 1
+
+
+@pytest.mark.anyio
+async def test_list_accounts_paginates_results() -> None:
+    repo = FakeAccountRepository()
+    for index in range(5):
+        await repo.create(
+            Account(
+                username=Username(f"cashier_{index}"),
+                email=Email(f"cashier-{index}@example.com"),
+                password_hash="hash",
+                role=RoleCode.CASHIER,
+            )
+        )
+
+    result = await ListAccountsUseCase(repo).execute(page=2, limit=2)
+
+    assert [account.username for account in result.items] == ["cashier_2", "cashier_1"]
+    assert result.total == 5
+    assert result.page == 2
+    assert result.limit == 2
 
 
 @pytest.mark.anyio

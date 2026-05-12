@@ -38,7 +38,7 @@ from app.modules.identity.application.use_cases.refresh_session_usecase import (
 )
 from app.modules.identity.domain.entities.account import RoleCode
 from app.shared.middleware.limiter import limiter
-from app.shared.response import BaseResponse
+from app.shared.response import BaseResponse, Metadata
 
 auth_router = APIRouter()
 account_router = APIRouter()
@@ -73,11 +73,25 @@ async def register_account(
 async def list_accounts(
     role: RoleCode | None = Query(default=None),
     is_active: bool | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=20, ge=1, le=100),
     user=Depends(RoleChecker(ACCOUNT_MANAGER_ROLES)),
     usecase: ListAccountsUseCase = Depends(get_list_accounts_usecase),
 ):
-    accounts = await usecase.execute(role=role, is_active=is_active)
-    return BaseResponse(data=accounts)
+    result = await usecase.execute(
+        role=role,
+        is_active=is_active,
+        page=page,
+        limit=limit,
+    )
+    return BaseResponse(
+        data=result.items,
+        metadata=Metadata(
+            page=result.page,
+            limit=result.limit,
+            total=result.total,
+        ),
+    )
 
 
 @account_router.get("/{account_id}", response_model=BaseResponse[AccountResponse])

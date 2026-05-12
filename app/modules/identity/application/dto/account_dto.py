@@ -23,3 +23,10 @@ class AccountResultDto:
     created_at: datetime
     updated_at: datetime
 
+
+@dataclass(frozen=True)
+class AccountListResultDto:
+    items: list[AccountResultDto]
+    total: int
+    page: int
+    limit: int
