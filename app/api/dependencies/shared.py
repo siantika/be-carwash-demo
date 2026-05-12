@@ -5,23 +5,35 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from pydantic import ValidationError
 
+from app.modules.identity.infra.repositories.account_repo import AsyncPgAccountRepository
 from app.modules.identity.infra.security import decode_token
 from app.shared.middleware.logger import StructlogLogger, setup_logger
 from application.dto.auth_context_dto import AuthContextDto
 from application.i_unit_of_work import IUnitOfWork
-from infra.db import get_db_pool
+from infra.db import get_db, get_db_pool
 from infra.unit_of_work import AsyncpgUnitOfWork
 from interfaces.i_logger import ILogger
+
+
+def get_logger() -> ILogger:
+    return StructlogLogger("api")
 
 
 async def get_uow(pool = Depends(get_db_pool), logger = Depends(setup_logger)) -> IUnitOfWork:
     return AsyncpgUnitOfWork(pool, logger)
 
+
+def get_account_repo(db=Depends(get_db), logger=Depends(get_logger)):
+    return AsyncPgAccountRepository(db, logger)
+
 # should be same as login path
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> AuthContextDto:
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    account_repo=Depends(get_account_repo),
+) -> AuthContextDto:
     try:
         payload = decode_token(token).model_dump() # convert from pydanctic object to dict
     except (JWTError, ValidationError):
@@ -31,7 +43,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> AuthContextDt
         )
 
     user_id = payload.get("user_id")
-    username = payload.get("username")
     role = payload.get("role")
     
     if user_id is None or role is None:
@@ -40,10 +51,23 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> AuthContextDt
             detail="Invalid token payload",
         )
 
+    account = await account_repo.find_by_id(user_id)
+    if account is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+        )
+
+    if not account.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is inactive",
+        )
+
     return AuthContextDto (
-        user_id,
-        username,
-        role,
+        account.id,
+        account.username.value,
+        account.role.value,
     )
 
 
@@ -61,9 +85,3 @@ def RoleChecker(required_roles: List[str]):
         return user
 
     return verify
-
-
-# dependencies for logger 
-
-def get_logger() -> ILogger:
-    return StructlogLogger("api")

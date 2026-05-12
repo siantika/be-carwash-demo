@@ -109,3 +109,21 @@ async def test_successful_login_resets_failed_attempts() -> None:
     assert account_repo.account.locked_until is None
     assert account_repo.account.last_login_at is not None
     assert len(refresh_token_repo.saved_tokens) == 1
+
+
+@pytest.mark.anyio
+async def test_login_rejects_unknown_username_as_invalid_credentials() -> None:
+    account_repo = FakeAccountRepository(None)
+    usecase = _login_usecase(account_repo)
+
+    with pytest.raises(InvalidPasswordError, match="Invalid credentials"):
+        await usecase.execute("missing_user", "wrong-password")
+
+
+@pytest.mark.anyio
+async def test_login_rejects_wrong_password_as_invalid_credentials() -> None:
+    account_repo = FakeAccountRepository(_active_account())
+    usecase = _login_usecase(account_repo)
+
+    with pytest.raises(InvalidPasswordError, match="Invalid credentials"):
+        await usecase.execute("cashier_01", "wrong-password")
