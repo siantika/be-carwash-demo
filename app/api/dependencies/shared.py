@@ -1,13 +1,14 @@
-from typing import Any, Dict, List
+from typing import List
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
+from pydantic import ValidationError
 
-from application.dto.auth_context_dto import AuthContextDto
-from application.i_unit_of_work import IUnitOfWork
 from app.modules.identity.infra.security import decode_token
 from app.shared.middleware.logger import StructlogLogger, setup_logger
+from application.dto.auth_context_dto import AuthContextDto
+from application.i_unit_of_work import IUnitOfWork
 from infra.db import get_db_pool
 from infra.unit_of_work import AsyncpgUnitOfWork
 from interfaces.i_logger import ILogger
@@ -23,7 +24,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> AuthContextDto:
     try:
         payload = decode_token(token).model_dump() # convert from pydanctic object to dict
-    except JWTError:
+    except (JWTError, ValidationError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
