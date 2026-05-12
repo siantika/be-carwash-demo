@@ -1,6 +1,7 @@
 from app.modules.service_catalog.application.dto.service_type_dto import (
     CreateServiceTypeCmd,
     ServiceTypeListResultDto,
+    ServiceTypeListFilterDto,
     ServiceTypeResultDto,
     UpdateServiceTypeCmd,
 )
@@ -35,12 +36,13 @@ class CreateServiceTypeUseCase:
         self.service_type_repo = service_type_repo
 
     async def execute(self, cmd: CreateServiceTypeCmd) -> ServiceTypeResultDto:
-        existing_service_type = await self.service_type_repo.find_by_name(cmd.name)
+        name = cmd.name.strip()
+        existing_service_type = await self.service_type_repo.find_by_name(name)
         if existing_service_type is not None:
-            raise EntityAlreadyExists("ServiceType", cmd.name)
+            raise EntityAlreadyExists("ServiceType", name)
 
         service_type = ServiceType(
-            name=cmd.name,
+            name=name,
             desc=cmd.desc,
             price=Money(cmd.price),
             is_active=cmd.is_active,
@@ -56,6 +58,7 @@ class ListServiceTypesUseCase:
 
     async def execute(
         self,
+        filters: ServiceTypeListFilterDto | None = None,
         page: int = 1,
         limit: int = 20,
     ) -> ServiceTypeListResultDto:
@@ -65,8 +68,33 @@ class ListServiceTypesUseCase:
         if limit < 1:
             raise BusinessRuleViolation("Limit must be greater than or equal to 1")
 
+        filters = filters or ServiceTypeListFilterDto()
+        q = filters.q.strip() if filters.q is not None else None
+        if q == "":
+            q = None
+
+        if filters.min_price is not None and filters.min_price < 0:
+            raise BusinessRuleViolation("Minimum price must be greater than or equal to 0")
+
+        if filters.max_price is not None and filters.max_price < 0:
+            raise BusinessRuleViolation("Maximum price must be greater than or equal to 0")
+
+        if (
+            filters.min_price is not None
+            and filters.max_price is not None
+            and filters.max_price < filters.min_price
+        ):
+            raise BusinessRuleViolation(
+                "Maximum price must be greater than or equal to minimum price"
+            )
+
         offset = (page - 1) * limit
         service_types, total = await self.service_type_repo.list(
+            q=q,
+            is_active=filters.is_active,
+            is_primary=filters.is_primary,
+            min_price=filters.min_price,
+            max_price=filters.max_price,
             limit=limit,
             offset=offset,
         )
@@ -90,6 +118,19 @@ class FindServiceTypeByIdUseCase:
         return _to_service_type_result(service_type)
 
 
+class FindServiceTypeByNameUseCase:
+    def __init__(self, service_type_repo: IServiceTypeRepository):
+        self.service_type_repo = service_type_repo
+
+    async def execute(self, service_name: str) -> ServiceTypeResultDto:
+        name = service_name.strip()
+        service_type = await self.service_type_repo.find_by_name(name)
+        if service_type is None:
+            raise EntityNotFound("ServiceType", name)
+
+        return _to_service_type_result(service_type)
+
+
 class ChangeServiceTypeDataUseCase:
     def __init__(self, service_type_repo: IServiceTypeRepository):
         self.service_type_repo = service_type_repo
@@ -99,9 +140,30 @@ class ChangeServiceTypeDataUseCase:
         service_type_id: int,
         cmd: UpdateServiceTypeCmd,
     ) -> ServiceTypeResultDto:
+        if all(
+            value is None
+            for value in (
+                cmd.name,
+                cmd.desc,
+                cmd.price,
+                cmd.is_active,
+                cmd.is_primary,
+            )
+        ):
+            raise BusinessRuleViolation("At least one service type field must be provided")
+
         service_type = await self.service_type_repo.find_by_id(service_type_id)
         if service_type is None:
             raise EntityNotFound("ServiceType", service_type_id)
+
+        if cmd.name is not None:
+            name = cmd.name.strip()
+            existing_service_type = await self.service_type_repo.find_by_name(name)
+            if (
+                existing_service_type is not None
+                and existing_service_type.id != service_type.id
+            ):
+                raise EntityAlreadyExists("ServiceType", name)
 
         service_type.update_details(
             name=cmd.name,

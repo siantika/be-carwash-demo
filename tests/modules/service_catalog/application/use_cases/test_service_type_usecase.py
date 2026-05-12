@@ -4,6 +4,7 @@ import pytest
 
 from app.modules.service_catalog.application.dto.service_type_dto import (
     CreateServiceTypeCmd,
+    ServiceTypeListFilterDto,
     UpdateServiceTypeCmd,
 )
 from app.modules.service_catalog.application.use_cases.service_type_usecase import (
@@ -13,6 +14,7 @@ from app.modules.service_catalog.application.use_cases.service_type_usecase impo
     DeleteServiceTypeUseCase,
     DeactivateServiceTypeUseCase,
     FindServiceTypeByIdUseCase,
+    FindServiceTypeByNameUseCase,
     ListServiceTypesUseCase,
 )
 from app.modules.service_catalog.domain.entities.service_type import ServiceType
@@ -42,8 +44,56 @@ class FakeServiceTypeRepository:
             None,
         )
 
-    async def list(self, limit: int, offset: int) -> tuple[list[ServiceType], int]:
+    async def list(
+        self,
+        *,
+        q: str | None,
+        is_active: bool | None,
+        is_primary: bool | None,
+        min_price: Decimal | None,
+        max_price: Decimal | None,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[ServiceType], int]:
         service_types = list(self.service_types.values())
+
+        if q is not None:
+            q_lower = q.lower()
+            service_types = [
+                service_type
+                for service_type in service_types
+                if q_lower in service_type.name.lower()
+                or q_lower in service_type.desc.lower()
+            ]
+
+        if is_active is not None:
+            service_types = [
+                service_type
+                for service_type in service_types
+                if service_type.is_active is is_active
+            ]
+
+        if is_primary is not None:
+            service_types = [
+                service_type
+                for service_type in service_types
+                if service_type.is_primary is is_primary
+            ]
+
+        if min_price is not None:
+            service_types = [
+                service_type
+                for service_type in service_types
+                if service_type.price.amount >= min_price
+            ]
+
+        if max_price is not None:
+            service_types = [
+                service_type
+                for service_type in service_types
+                if service_type.price.amount <= max_price
+            ]
+
         service_types.sort(key=lambda service_type: service_type.id or 0, reverse=True)
         return service_types[offset:offset + limit], len(service_types)
 
@@ -120,6 +170,59 @@ async def test_list_service_types_paginates_results() -> None:
 
 
 @pytest.mark.anyio
+async def test_list_service_types_applies_filters() -> None:
+    repo = FakeServiceTypeRepository()
+    await repo.add(
+        ServiceType(
+            name="Premium Wash",
+            desc="Premium exterior wash",
+            price=Money(Decimal("75000")),
+        )
+    )
+    await repo.add(
+        ServiceType(
+            name="Basic Wash",
+            desc="Basic exterior wash",
+            price=Money(Decimal("50000")),
+        )
+    )
+    await repo.add(
+        ServiceType(
+            name="Interior Cleaning",
+            desc="Inactive interior cleaning",
+            price=Money(Decimal("90000")),
+            is_active=False,
+        )
+    )
+
+    result = await ListServiceTypesUseCase(repo).execute(
+        filters=ServiceTypeListFilterDto(
+            q="wash",
+            is_active=True,
+            is_primary=False,
+            min_price=Decimal("60000"),
+            max_price=Decimal("80000"),
+        )
+    )
+
+    assert [service_type.name for service_type in result.items] == ["Premium Wash"]
+    assert result.total == 1
+
+
+@pytest.mark.anyio
+async def test_list_service_types_rejects_invalid_price_range() -> None:
+    repo = FakeServiceTypeRepository()
+
+    with pytest.raises(BusinessRuleViolation, match="Maximum price"):
+        await ListServiceTypesUseCase(repo).execute(
+            filters=ServiceTypeListFilterDto(
+                min_price=Decimal("80000"),
+                max_price=Decimal("50000"),
+            )
+        )
+
+
+@pytest.mark.anyio
 async def test_find_service_type_by_id_returns_service() -> None:
     repo = FakeServiceTypeRepository()
     service_type = await repo.add(
@@ -147,6 +250,32 @@ async def test_find_service_type_by_id_raises_when_missing() -> None:
 
 
 @pytest.mark.anyio
+async def test_find_service_type_by_name_returns_service() -> None:
+    repo = FakeServiceTypeRepository()
+    service_type = await repo.add(
+        ServiceType(
+            name="Basic Wash",
+            desc="Basic exterior wash",
+            price=Money(Decimal("50000")),
+        )
+    )
+
+    result = await FindServiceTypeByNameUseCase(repo).execute(" Basic Wash ")
+
+    assert result.id == service_type.id
+    assert result.name == "Basic Wash"
+    assert result.price == Decimal("50000")
+
+
+@pytest.mark.anyio
+async def test_find_service_type_by_name_raises_when_missing() -> None:
+    repo = FakeServiceTypeRepository()
+
+    with pytest.raises(EntityNotFound):
+        await FindServiceTypeByNameUseCase(repo).execute("Missing Wash")
+
+
+@pytest.mark.anyio
 async def test_update_service_type_changes_partial_fields() -> None:
     repo = FakeServiceTypeRepository()
     service_type = await repo.add(
@@ -168,6 +297,55 @@ async def test_update_service_type_changes_partial_fields() -> None:
     assert result.name == "Basic Wash Plus"
     assert result.desc == "Basic exterior wash"
     assert result.price == Decimal("55000")
+
+
+@pytest.mark.anyio
+async def test_update_service_type_rejects_empty_payload() -> None:
+    repo = FakeServiceTypeRepository()
+
+    with pytest.raises(BusinessRuleViolation, match="At least one"):
+        await ChangeServiceTypeDataUseCase(repo).execute(
+            1,
+            UpdateServiceTypeCmd(),
+        )
+
+
+@pytest.mark.anyio
+async def test_update_service_type_rejects_duplicate_name() -> None:
+    repo = FakeServiceTypeRepository()
+    await repo.add(
+        ServiceType(
+            name="Basic Wash",
+            desc="Basic exterior wash",
+            price=Money(Decimal("50000")),
+        )
+    )
+    premium = await repo.add(
+        ServiceType(
+            name="Premium Wash",
+            desc="Premium exterior wash",
+            price=Money(Decimal("75000")),
+        )
+    )
+
+    with pytest.raises(EntityAlreadyExists):
+        await ChangeServiceTypeDataUseCase(repo).execute(
+            premium.id,
+            UpdateServiceTypeCmd(name="Basic Wash"),
+        )
+
+
+@pytest.mark.anyio
+async def test_primary_service_is_forced_active() -> None:
+    service_type = ServiceType(
+        name="Primary Wash",
+        desc="Primary exterior wash",
+        price=Money(Decimal("50000")),
+        is_active=False,
+        is_primary=True,
+    )
+
+    assert service_type.is_active is True
 
 
 @pytest.mark.anyio

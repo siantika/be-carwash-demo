@@ -1,6 +1,7 @@
-from typing import List
+from decimal import Decimal
+from typing import Annotated, List
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Path, Query, status
 
 from app.api.dependencies.shared import RoleChecker
 from app.modules.identity.domain.entities.account import RoleCode
@@ -11,6 +12,7 @@ from app.modules.service_catalog.api.dependencies import (
     get_deactivate_service_type_usecase,
     get_delete_service_type_usecase,
     get_find_service_type_by_id,
+    get_find_service_type_by_name,
     get_list_service_types_usecase,
 )
 from app.modules.service_catalog.api.schemas import (
@@ -20,6 +22,7 @@ from app.modules.service_catalog.api.schemas import (
 )
 from app.modules.service_catalog.application.dto.service_type_dto import (
     CreateServiceTypeCmd,
+    ServiceTypeListFilterDto,
     UpdateServiceTypeCmd,
 )
 from app.modules.service_catalog.application.use_cases.service_type_usecase import (
@@ -29,6 +32,7 @@ from app.modules.service_catalog.application.use_cases.service_type_usecase impo
     DeactivateServiceTypeUseCase,
     DeleteServiceTypeUseCase,
     FindServiceTypeByIdUseCase,
+    FindServiceTypeByNameUseCase,
     ListServiceTypesUseCase,
 )
 from app.shared.response import BaseResponse, Metadata
@@ -40,12 +44,27 @@ SERVICE_CATALOG_MANAGER_ROLES = [RoleCode.ADMIN, RoleCode.OWNER]
 
 @router.get("", response_model=BaseResponse[List[ServiceTypeResponse]])
 async def list_service_types(
+    q: str | None = Query(default=None, min_length=1, max_length=100),
+    is_active: bool | None = Query(default=None),
+    is_primary: bool | None = Query(default=None),
+    min_price: Decimal | None = Query(default=None, ge=0),
+    max_price: Decimal | None = Query(default=None, ge=0),
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
     user=Depends(RoleChecker(SERVICE_CATALOG_MANAGER_ROLES)),
     usecase: ListServiceTypesUseCase = Depends(get_list_service_types_usecase),
 ):
-    result = await usecase.execute(page=page, limit=limit)
+    result = await usecase.execute(
+        filters=ServiceTypeListFilterDto(
+            q=q,
+            is_active=is_active,
+            is_primary=is_primary,
+            min_price=min_price,
+            max_price=max_price,
+        ),
+        page=page,
+        limit=limit,
+    )
     return BaseResponse(
         data=result.items,
         metadata=Metadata(
@@ -55,9 +74,20 @@ async def list_service_types(
         ),
     )
 
+
+@router.get("/name/{service_name}", response_model=BaseResponse[ServiceTypeResponse])
+async def find_service_type_by_name(
+    service_name: Annotated[str, Path(min_length=3, max_length=50)],
+    user=Depends(RoleChecker(SERVICE_CATALOG_MANAGER_ROLES)),
+    usecase: FindServiceTypeByNameUseCase = Depends(get_find_service_type_by_name),
+):
+    service_type = await usecase.execute(service_name)
+    return BaseResponse(data=service_type)
+
+
 @router.get("/{service_type_id}", response_model=BaseResponse[ServiceTypeResponse])
 async def find_service_type_by_id(
-    service_type_id: int,
+    service_type_id: Annotated[int, Path(ge=1)],
     user=Depends(RoleChecker(SERVICE_CATALOG_MANAGER_ROLES)),
     usecase: FindServiceTypeByIdUseCase = Depends(get_find_service_type_by_id),
 ):
@@ -92,7 +122,7 @@ async def create_service_type(
     response_model=BaseResponse[ServiceTypeResponse],
 )
 async def update_service_type(
-    service_type_id: int,
+    service_type_id: Annotated[int, Path(ge=1)],
     payload: UpdateServiceTypeRequest,
     user=Depends(RoleChecker(SERVICE_CATALOG_MANAGER_ROLES)),
     usecase: ChangeServiceTypeDataUseCase = Depends(get_change_service_type_usecase),
@@ -115,7 +145,7 @@ async def update_service_type(
     response_model=BaseResponse[ServiceTypeResponse],
 )
 async def activate_service_type(
-    service_type_id: int,
+    service_type_id: Annotated[int, Path(ge=1)],
     user=Depends(RoleChecker(SERVICE_CATALOG_MANAGER_ROLES)),
     usecase: ActivateServiceTypeUseCase = Depends(get_activate_service_type_usecase),
 ):
@@ -128,7 +158,7 @@ async def activate_service_type(
     response_model=BaseResponse[ServiceTypeResponse],
 )
 async def deactivate_service_type(
-    service_type_id: int,
+    service_type_id: Annotated[int, Path(ge=1)],
     user=Depends(RoleChecker(SERVICE_CATALOG_MANAGER_ROLES)),
     usecase: DeactivateServiceTypeUseCase = Depends(get_deactivate_service_type_usecase),
 ):
@@ -138,7 +168,7 @@ async def deactivate_service_type(
 
 @router.delete("/{service_type_id}", response_model=BaseResponse[None])
 async def delete_service_type(
-    service_type_id: int,
+    service_type_id: Annotated[int, Path(ge=1)],
     user=Depends(RoleChecker(SERVICE_CATALOG_MANAGER_ROLES)),
     usecase: DeleteServiceTypeUseCase = Depends(get_delete_service_type_usecase),
 ):

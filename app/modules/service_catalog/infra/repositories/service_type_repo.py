@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Any, Mapping
 
 import asyncpg
@@ -90,34 +91,79 @@ class AsyncPgServiceTypeRepository(IServiceTypeRepository):
 
     async def list(
         self,
+        *,
+        q: str | None,
+        is_active: bool | None,
+        is_primary: bool | None,
+        min_price: Decimal | None,
+        max_price: Decimal | None,
         limit: int,
         offset: int,
     ) -> tuple[list[ServiceType], int]:
         async def _fetch():
+            conditions = ["deleted_at IS NULL"]
+            params: list[Any] = []
+
+            if q is not None:
+                params.append(f"%{q}%")
+                conditions.append(
+                    f"(name ILIKE ${len(params)} OR description ILIKE ${len(params)})"
+                )
+
+            if is_active is not None:
+                params.append(is_active)
+                conditions.append(f"is_active = ${len(params)}")
+
+            if is_primary is not None:
+                params.append(is_primary)
+                conditions.append(f"is_primary = ${len(params)}")
+
+            if min_price is not None:
+                params.append(min_price)
+                conditions.append(f"price >= ${len(params)}")
+
+            if max_price is not None:
+                params.append(max_price)
+                conditions.append(f"price <= ${len(params)}")
+
+            where_clause = " AND ".join(conditions)
+            limit_param = len(params) + 1
+            offset_param = len(params) + 2
+
             rows = await self.db.fetch(
                 f"""
                 SELECT {SELECT_ALL_COLUMNS}
                 FROM service_catalog.service_types
-                WHERE deleted_at IS NULL
+                WHERE {where_clause}
                 ORDER BY created_at DESC, id DESC
-                LIMIT $1 OFFSET $2;
+                LIMIT ${limit_param} OFFSET ${offset_param};
                 """,
+                *params,
                 limit,
                 offset,
             )
             total = await self.db.fetchval(
-                """
+                f"""
                 SELECT COUNT(*)
                 FROM service_catalog.service_types
-                WHERE deleted_at IS NULL;
-                """
+                WHERE {where_clause};
+                """,
+                *params,
             )
             return [_mapper(row) for row in rows], int(total or 0)
 
         return await handle_db_error(
             operation=_fetch,
             logger=self.logger,
-            context={"limit": limit, "offset": offset},
+            context={
+                "q": q,
+                "is_active": is_active,
+                "is_primary": is_primary,
+                "min_price": str(min_price) if min_price is not None else None,
+                "max_price": str(max_price) if max_price is not None else None,
+                "limit": limit,
+                "offset": offset,
+            },
             operation_name="list service types",
         )
 
@@ -156,26 +202,33 @@ class AsyncPgServiceTypeRepository(IServiceTypeRepository):
 
     async def save(self, service_type: ServiceType) -> ServiceType:
         async def _update():
-            row = await self.db.fetchrow(
-                f"""
-                UPDATE service_catalog.service_types
-                SET name = $1,
-                    description = $2,
-                    price = $3,
-                    is_active = $4,
-                    is_primary = $5,
-                    updated_at = NOW()
-                WHERE id = $6
-                  AND deleted_at IS NULL
-                RETURNING {SELECT_ALL_COLUMNS};
-                """,
-                service_type.name,
-                service_type.desc,
-                service_type.price.amount,
-                service_type.is_active,
-                service_type.is_primary,
-                service_type.id,
-            )
+            try:
+                row = await self.db.fetchrow(
+                    f"""
+                    UPDATE service_catalog.service_types
+                    SET name = $1,
+                        description = $2,
+                        price = $3,
+                        is_active = $4,
+                        is_primary = $5,
+                        updated_at = NOW()
+                    WHERE id = $6
+                      AND deleted_at IS NULL
+                    RETURNING {SELECT_ALL_COLUMNS};
+                    """,
+                    service_type.name,
+                    service_type.desc,
+                    service_type.price.amount,
+                    service_type.is_active,
+                    service_type.is_primary,
+                    service_type.id,
+                )
+            except asyncpg.UniqueViolationError as exc:
+                raise EntityAlreadyExists("ServiceType", service_type.name) from exc
+
+            if row is None:
+                raise RepositoryError("Service type not found or already deleted")
+
             return _mapper(row)
 
         return await handle_db_error(
@@ -201,6 +254,9 @@ class AsyncPgServiceTypeRepository(IServiceTypeRepository):
                 service_type.deleted_at,
                 service_type.id,
             )
+            if row is None:
+                raise RepositoryError("Service type not found or already deleted")
+
             return _mapper(row)
 
         return await handle_db_error(
