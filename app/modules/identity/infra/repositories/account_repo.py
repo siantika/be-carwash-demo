@@ -17,6 +17,9 @@ email,
 role,
 password_hash,
 is_active,
+failed_login_attempts,
+locked_until,
+last_login_at,
 created_at,
 updated_at
 """.strip()
@@ -43,6 +46,9 @@ def _mapper(row: asyncpg.Record) -> Account:
         role=_validate_role(values["role"]),
         password_hash=values["password_hash"],
         is_active=values["is_active"],
+        failed_login_attempts=values["failed_login_attempts"],
+        locked_until=values["locked_until"],
+        last_login_at=values["last_login_at"],
         created_at=values["created_at"],
         updated_at=values["updated_at"],
     )
@@ -160,9 +166,12 @@ class AsyncPgAccountRepository(IAccountRepository):
                         email,
                         password_hash,
                         role,
-                        is_active
+                        is_active,
+                        failed_login_attempts,
+                        locked_until,
+                        last_login_at
                     )
-                    VALUES ($1, $2, $3, $4, $5)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                     RETURNING {SELECT_ALL_COLUMNS};
                     """,
                     account.username.value,
@@ -170,6 +179,9 @@ class AsyncPgAccountRepository(IAccountRepository):
                     account.password_hash,
                     account.role.value,
                     account.is_active,
+                    account.failed_login_attempts,
+                    account.locked_until,
+                    account.last_login_at,
                 )
             except asyncpg.UniqueViolationError as exc:
                 raise EntityAlreadyExists("Account", account.username.value) from exc
@@ -192,8 +204,11 @@ class AsyncPgAccountRepository(IAccountRepository):
                     password_hash = $3,
                     role = $4,
                     is_active = $5,
+                    failed_login_attempts = $6,
+                    locked_until = $7,
+                    last_login_at = $8,
                     updated_at = NOW()
-                WHERE id = $6
+                WHERE id = $9
                   AND deleted_at IS NULL
                 RETURNING {SELECT_ALL_COLUMNS};
                 """,
@@ -202,6 +217,9 @@ class AsyncPgAccountRepository(IAccountRepository):
                 account.password_hash,
                 account.role.value,
                 account.is_active,
+                account.failed_login_attempts,
+                account.locked_until,
+                account.last_login_at,
                 account.id,
             )
             return _mapper(row)
