@@ -2,7 +2,8 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Query, Request, status
 
-from app.api.dependencies.shared import RoleChecker
+from app.api.dependencies.shared import RoleChecker, get_current_user
+from application.dto.auth_context_dto import AuthContextDto
 from app.modules.identity.api.dependencies import (
     get_activate_account_usecase,
     get_deactivate_account_usecase,
@@ -16,6 +17,7 @@ from app.modules.identity.api.dependencies import (
 )
 from app.modules.identity.api.schemas import (
     AccountResponse,
+    CurrentUserResponse,
     LoginRequest,
     LoginResponse,
     RefreshTokenRequest,
@@ -152,6 +154,17 @@ async def login(
     
     return BaseResponse(
         data=auth
+    )
+
+
+@auth_router.get("/me", response_model=BaseResponse[CurrentUserResponse])
+async def me(user: AuthContextDto = Depends(get_current_user)):
+    return BaseResponse(
+        data=CurrentUserResponse(
+            user_id=user.user_id,
+            username=user.username,
+            role=user.role,
+        )
     )
 
 

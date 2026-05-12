@@ -18,7 +18,6 @@ from app.modules.identity.domain.value_objects.username import Username
 from app.shared.domain.entities.base import _utcnow
 from app.shared.domain.exceptions.exceptions import (
     BusinessRuleViolation,
-    EntityNotFound,
     InactiveUserError,
     InvalidPasswordError,
 )
@@ -47,7 +46,7 @@ class LoginUseCase:
         account = await self.account_repo.find_by_username(Username(username))
 
         if account is None:
-            raise EntityNotFound("Invalid username")
+            raise InvalidPasswordError("Invalid credentials")
 
         if not account.can_login(now):
             if not account.is_active:
@@ -57,7 +56,7 @@ class LoginUseCase:
         if not self.password_hasher.verify(password, account.password_hash):
             account.record_failed_login(now)
             await self.account_repo.save(account)
-            raise InvalidPasswordError("Invalid password")
+            raise InvalidPasswordError("Invalid credentials")
 
         if account.id is None:
             raise BusinessRuleViolation("Authenticated account must have an id")
