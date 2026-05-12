@@ -48,7 +48,7 @@ class AsyncPgServiceTypeRepository(IServiceTypeRepository):
         self.db = db
         self.logger = logger
 
-    async def get_by_id(self, service_type_id: int) -> ServiceType | None:
+    async def find_by_id(self, service_type_id: int) -> ServiceType | None:
         async def _fetch():
             row = await self.db.fetchrow(
                 f"""
@@ -68,7 +68,7 @@ class AsyncPgServiceTypeRepository(IServiceTypeRepository):
             operation_name="fetch service type by id",
         )
 
-    async def get_by_name(self, service_name: str) -> ServiceType | None:
+    async def find_by_name(self, service_name: str) -> ServiceType | None:
         async def _fetch():
             row = await self.db.fetchrow(
                 f"""

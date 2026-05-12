@@ -78,4 +78,5 @@ class ServiceType(BaseEntity):
         if is_primary is not None:
             self.is_primary = is_primary
 
+        # Perform re-validation for updated data
         self.__post_init__()

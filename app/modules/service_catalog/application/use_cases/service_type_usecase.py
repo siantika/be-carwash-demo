@@ -35,7 +35,7 @@ class CreateServiceTypeUseCase:
         self.service_type_repo = service_type_repo
 
     async def execute(self, cmd: CreateServiceTypeCmd) -> ServiceTypeResultDto:
-        existing_service_type = await self.service_type_repo.get_by_name(cmd.name)
+        existing_service_type = await self.service_type_repo.find_by_name(cmd.name)
         if existing_service_type is not None:
             raise EntityAlreadyExists("ServiceType", cmd.name)
 
@@ -78,6 +78,18 @@ class ListServiceTypesUseCase:
         )
 
 
+class FindServiceTypeByIdUseCase:
+    def __init__(self, service_type_repo: IServiceTypeRepository):
+        self.service_type_repo = service_type_repo
+
+    async def execute(self, service_type_id: int) -> ServiceTypeResultDto:
+        service_type = await self.service_type_repo.find_by_id(service_type_id)
+        if service_type is None:
+            raise EntityNotFound("ServiceType", service_type_id)
+
+        return _to_service_type_result(service_type)
+
+
 class ChangeServiceTypeDataUseCase:
     def __init__(self, service_type_repo: IServiceTypeRepository):
         self.service_type_repo = service_type_repo
@@ -87,7 +99,7 @@ class ChangeServiceTypeDataUseCase:
         service_type_id: int,
         cmd: UpdateServiceTypeCmd,
     ) -> ServiceTypeResultDto:
-        service_type = await self.service_type_repo.get_by_id(service_type_id)
+        service_type = await self.service_type_repo.find_by_id(service_type_id)
         if service_type is None:
             raise EntityNotFound("ServiceType", service_type_id)
 
@@ -107,7 +119,7 @@ class ActivateServiceTypeUseCase:
         self.service_type_repo = service_type_repo
 
     async def execute(self, service_type_id: int) -> ServiceTypeResultDto:
-        service_type = await self.service_type_repo.get_by_id(service_type_id)
+        service_type = await self.service_type_repo.find_by_id(service_type_id)
         if service_type is None:
             raise EntityNotFound("ServiceType", service_type_id)
 
@@ -121,7 +133,7 @@ class DeactivateServiceTypeUseCase:
         self.service_type_repo = service_type_repo
 
     async def execute(self, service_type_id: int) -> ServiceTypeResultDto:
-        service_type = await self.service_type_repo.get_by_id(service_type_id)
+        service_type = await self.service_type_repo.find_by_id(service_type_id)
         if service_type is None:
             raise EntityNotFound("ServiceType", service_type_id)
 
@@ -135,7 +147,7 @@ class DeleteServiceTypeUseCase:
         self.service_type_repo = service_type_repo
 
     async def execute(self, service_type_id: int) -> None:
-        service_type = await self.service_type_repo.get_by_id(service_type_id)
+        service_type = await self.service_type_repo.find_by_id(service_type_id)
         if service_type is None:
             raise EntityNotFound("ServiceType", service_type_id)
 
