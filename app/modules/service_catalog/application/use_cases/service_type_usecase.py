@@ -8,6 +8,7 @@ from app.modules.service_catalog.domain.entities.service_type import ServiceType
 from app.modules.service_catalog.domain.repositories.i_service_type_repo import (
     IServiceTypeRepository,
 )
+from app.shared.domain.entities.base import _utcnow
 from app.shared.domain.exceptions.exceptions import (
     BusinessRuleViolation,
     EntityAlreadyExists,
@@ -127,3 +128,16 @@ class DeactivateServiceTypeUseCase:
         service_type.deactivate()
         deactivated_service_type = await self.service_type_repo.save(service_type)
         return _to_service_type_result(deactivated_service_type)
+
+
+class DeleteServiceTypeUseCase:
+    def __init__(self, service_type_repo: IServiceTypeRepository):
+        self.service_type_repo = service_type_repo
+
+    async def execute(self, service_type_id: int) -> None:
+        service_type = await self.service_type_repo.get_by_id(service_type_id)
+        if service_type is None:
+            raise EntityNotFound("ServiceType", service_type_id)
+
+        service_type.delete(_utcnow())
+        await self.service_type_repo.delete(service_type)

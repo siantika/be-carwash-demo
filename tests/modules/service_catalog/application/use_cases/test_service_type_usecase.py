@@ -10,6 +10,7 @@ from app.modules.service_catalog.application.use_cases.service_type_usecase impo
     ActivateServiceTypeUseCase,
     ChangeServiceTypeDataUseCase,
     CreateServiceTypeUseCase,
+    DeleteServiceTypeUseCase,
     DeactivateServiceTypeUseCase,
     ListServiceTypesUseCase,
 )
@@ -51,6 +52,10 @@ class FakeServiceTypeRepository:
         return service_type
 
     async def save(self, service_type: ServiceType) -> ServiceType:
+        self.service_types[service_type.id] = service_type
+        return service_type
+
+    async def delete(self, service_type: ServiceType) -> ServiceType:
         self.service_types[service_type.id] = service_type
         return service_type
 
@@ -167,3 +172,38 @@ async def test_activate_service_type_sets_active() -> None:
     result = await ActivateServiceTypeUseCase(repo).execute(service_type.id)
 
     assert result.is_active is True
+
+
+@pytest.mark.anyio
+async def test_delete_service_type_soft_deletes_service() -> None:
+    repo = FakeServiceTypeRepository()
+    service_type = await repo.add(
+        ServiceType(
+            name="Basic Wash",
+            desc="Basic exterior wash",
+            price=Money(Decimal("50000")),
+        )
+    )
+
+    await DeleteServiceTypeUseCase(repo).execute(service_type.id)
+
+    assert repo.service_types[service_type.id].deleted_at is not None
+    assert repo.service_types[service_type.id].is_active is False
+
+
+@pytest.mark.anyio
+async def test_delete_primary_service_is_rejected() -> None:
+    repo = FakeServiceTypeRepository()
+    service_type = await repo.add(
+        ServiceType(
+            name="Primary Wash",
+            desc="Primary exterior wash",
+            price=Money(Decimal("50000")),
+            is_primary=True,
+        )
+    )
+
+    with pytest.raises(BusinessRuleViolation, match="Primary service cannot be deleted"):
+        await DeleteServiceTypeUseCase(repo).execute(service_type.id)
+
+    assert repo.service_types[service_type.id].deleted_at is None
