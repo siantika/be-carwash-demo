@@ -18,6 +18,7 @@ def test_service_type_mapper_loads_database_row() -> None:
             "is_primary": False,
             "created_at": now,
             "updated_at": now,
+            "deleted_at": None,
         }
     )
 
@@ -27,3 +28,4 @@ def test_service_type_mapper_loads_database_row() -> None:
     assert service_type.price == Money(Decimal("75000"))
     assert service_type.is_active is True
     assert service_type.is_primary is False
+    assert service_type.deleted_at is None
