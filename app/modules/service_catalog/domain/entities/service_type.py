@@ -1,6 +1,4 @@
 from dataclasses import dataclass
-from decimal import Decimal
-from typing import Optional
 
 from app.shared.domain.entities.base import BaseEntity
 from app.shared.domain.exceptions.exceptions import (
@@ -10,7 +8,7 @@ from app.shared.domain.exceptions.exceptions import (
 from app.shared.domain.value_objects.money import Money
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ServiceType(BaseEntity):
     name: str
     desc: str
@@ -18,7 +16,9 @@ class ServiceType(BaseEntity):
     is_active: bool = True
     is_primary: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
+        super().__post_init__()
+
         if not self.name.strip():
             raise InvalidValueObject("Service name must not be empty")
 
@@ -28,42 +28,44 @@ class ServiceType(BaseEntity):
         if self.price is None:
             raise InvalidValueObject("Service price is required")
 
-    # ---- domain behaviors ----
+        self.name = self.name.strip()
+        self.desc = self.desc.strip()
 
-    def deactivate(self):
-        if self.is_primary:
-            raise BusinessRuleViolation(
-                "Primary service cannot be deactivated"
-            )
-        self.is_active = False
-
-    def activate(self):
+    def activate(self) -> None:
         self.is_active = True
 
-    def mark_as_primary(self):
+    def deactivate(self) -> None:
+        if self.is_primary:
+            raise BusinessRuleViolation("Primary service cannot be deactivated")
+
+        self.is_active = False
+
+    def mark_as_primary(self) -> None:
         self.is_primary = True
         self.is_active = True
 
-    def change_price(self, new_price: Money):
-        self.price = new_price
-        
     def update_details(
         self,
         *,
-        name: Optional[str] = None,
-        desc: Optional[str] = None,
-        price: Optional[Decimal] = None,
-        is_active: Optional[bool] = None,
-        is_primary: Optional[bool] = None,
+        name: str | None = None,
+        desc: str | None = None,
+        price: Money | None = None,
+        is_active: bool | None = None,
+        is_primary: bool | None = None,
     ) -> None:
-        # apply partial update
         if name is not None:
-            self.name = name
+            self.name = name.strip()
+
         if desc is not None:
-            self.desc = desc
+            self.desc = desc.strip()
+
         if price is not None:
             self.price = price
+
         if is_active is not None:
             self.is_active = is_active
+
         if is_primary is not None:
             self.is_primary = is_primary
+
+        self.__post_init__()
