@@ -1,0 +1,21 @@
+from dataclasses import dataclass
+
+from app.shared.domain.exceptions.exceptions import InvalidServiceValue
+from app.shared.domain.value_objects.money import Money
+
+
+@dataclass(frozen=True)
+class ServiceSnapshot:
+    service_name: str
+    service_price: Money
+    service_desc: str
+
+    def __post_init__(self):
+        if not self.service_name.strip():
+            raise InvalidServiceValue("Service name cannot be empty")
+
+        if not self.service_desc.strip():
+            raise InvalidServiceValue("Service desc cannot be empty")
+
+        object.__setattr__(self, "service_name", self.service_name.strip())
+        object.__setattr__(self, "service_desc", self.service_desc.strip())

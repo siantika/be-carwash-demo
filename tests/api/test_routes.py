@@ -14,4 +14,6 @@ def test_auth_and_account_routes_are_separated():
     assert "/api/v1/service-types/{service_type_id}" in paths
     assert "/api/v1/service-types/{service_type_id}/activate" in paths
     assert "/api/v1/service-types/{service_type_id}/deactivate" in paths
+    assert "/api/v1/tickets" in paths
+    assert "/api/v1/tickets/{ticket_id}/void" in paths
     assert "/api/v1/auth/accounts" not in paths
