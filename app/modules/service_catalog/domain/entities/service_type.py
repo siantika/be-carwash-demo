@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 from app.shared.domain.entities.base import BaseEntity
 from app.shared.domain.exceptions.exceptions import (
@@ -39,6 +40,15 @@ class ServiceType(BaseEntity):
             raise BusinessRuleViolation("Primary service cannot be deactivated")
 
         self.is_active = False
+
+    def delete(self, deleted_at: datetime) -> None:
+        self.ensure_timezone_aware(deleted_at, "deleted_at")
+
+        if self.is_primary:
+            raise BusinessRuleViolation("Primary service cannot be deleted")
+
+        self.is_active = False
+        self.deleted_at = deleted_at
 
     def mark_as_primary(self) -> None:
         self.is_primary = True

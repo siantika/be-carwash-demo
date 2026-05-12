@@ -8,6 +8,7 @@ from app.modules.service_catalog.api.dependencies import (
     get_activate_service_type_usecase,
     get_change_service_type_usecase,
     get_create_service_type_usecase,
+    get_delete_service_type_usecase,
     get_deactivate_service_type_usecase,
     get_list_service_types_usecase,
 )
@@ -24,6 +25,7 @@ from app.modules.service_catalog.application.use_cases.service_type_usecase impo
     ActivateServiceTypeUseCase,
     ChangeServiceTypeDataUseCase,
     CreateServiceTypeUseCase,
+    DeleteServiceTypeUseCase,
     DeactivateServiceTypeUseCase,
     ListServiceTypesUseCase,
 )
@@ -121,3 +123,13 @@ async def deactivate_service_type(
 ):
     service_type = await usecase.execute(service_type_id)
     return BaseResponse(data=service_type)
+
+
+@router.delete("/{service_type_id}", response_model=BaseResponse[None])
+async def delete_service_type(
+    service_type_id: int,
+    user=Depends(RoleChecker(SERVICE_CATALOG_MANAGER_ROLES)),
+    usecase: DeleteServiceTypeUseCase = Depends(get_delete_service_type_usecase),
+):
+    await usecase.execute(service_type_id)
+    return BaseResponse(data=None)

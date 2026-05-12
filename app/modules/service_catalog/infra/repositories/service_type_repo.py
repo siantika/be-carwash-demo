@@ -184,3 +184,28 @@ class AsyncPgServiceTypeRepository(IServiceTypeRepository):
             context={"service_type_id": service_type.id},
             operation_name="update service type",
         )
+
+    async def delete(self, service_type: ServiceType) -> ServiceType:
+        async def _delete():
+            row = await self.db.fetchrow(
+                f"""
+                UPDATE service_catalog.service_types
+                SET is_active = $1,
+                    deleted_at = $2,
+                    updated_at = NOW()
+                WHERE id = $3
+                  AND deleted_at IS NULL
+                RETURNING {SELECT_ALL_COLUMNS};
+                """,
+                service_type.is_active,
+                service_type.deleted_at,
+                service_type.id,
+            )
+            return _mapper(row)
+
+        return await handle_db_error(
+            operation=_delete,
+            logger=self.logger,
+            context={"service_type_id": service_type.id},
+            operation_name="soft delete service type",
+        )

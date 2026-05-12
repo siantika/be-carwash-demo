@@ -4,6 +4,7 @@ from app.modules.service_catalog.application.use_cases.service_type_usecase impo
     ActivateServiceTypeUseCase,
     ChangeServiceTypeDataUseCase,
     CreateServiceTypeUseCase,
+    DeleteServiceTypeUseCase,
     DeactivateServiceTypeUseCase,
     ListServiceTypesUseCase,
 )
@@ -41,3 +42,7 @@ def get_activate_service_type_usecase(service_type_repo=Depends(get_service_type
 
 def get_deactivate_service_type_usecase(service_type_repo=Depends(get_service_type_repo)):
     return DeactivateServiceTypeUseCase(service_type_repo)
+
+
+def get_delete_service_type_usecase(service_type_repo=Depends(get_service_type_repo)):
+    return DeleteServiceTypeUseCase(service_type_repo)
