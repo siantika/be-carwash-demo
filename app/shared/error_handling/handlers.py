@@ -12,6 +12,7 @@ from app.shared.domain.exceptions.exceptions import (
     EntityNotFound,
     InactiveUserError,
     InvalidPasswordError,
+    InvalidTokenError,
     RepositoryError,
 )
 from app.shared.response import BaseErrorResponse, ErrorResponse
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 EXCEPTION_STATUS_MAP = {
     InvalidPasswordError: status.HTTP_401_UNAUTHORIZED,
+    InvalidTokenError: status.HTTP_401_UNAUTHORIZED,
     InactiveUserError: status.HTTP_403_FORBIDDEN,
     EntityNotFound: status.HTTP_404_NOT_FOUND,
     EntityAlreadyExists: status.HTTP_409_CONFLICT,

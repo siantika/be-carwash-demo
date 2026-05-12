@@ -13,7 +13,7 @@ from app.shared.domain.exceptions.exceptions import (
     BusinessRuleViolation,
     EntityNotFound,
     InactiveUserError,
-    InvalidPasswordError,
+    InvalidTokenError,
 )
 
 
@@ -38,7 +38,7 @@ class RefreshSessionUseCase:
         )
 
         if stored_token is None:
-            raise InvalidPasswordError("Invalid refresh token")
+            raise InvalidTokenError("Invalid refresh token")
 
         account = await self.account_repo.find_by_id(stored_token.account_id)
         if account is None:

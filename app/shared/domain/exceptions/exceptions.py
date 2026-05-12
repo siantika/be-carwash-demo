@@ -56,6 +56,12 @@ class InvalidPasswordError(AppError):
     """Password salah saat login."""
     pass
 
+
+class InvalidTokenError(AppError):
+    """Token autentikasi tidak valid, expired, atau sudah dicabut."""
+    pass
+
+
 class InactiveUserError(AppError):
     """User ditemukan tapi status tidak aktif."""
     pass

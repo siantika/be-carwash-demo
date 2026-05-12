@@ -40,13 +40,14 @@ from app.modules.identity.domain.entities.account import RoleCode
 from app.shared.middleware.limiter import limiter
 from app.shared.response import BaseResponse
 
-router = APIRouter()
+auth_router = APIRouter()
+account_router = APIRouter()
 
 ACCOUNT_MANAGER_ROLES = [RoleCode.ADMIN, RoleCode.OWNER]
 
 
-@router.post(
-    "/accounts",
+@account_router.post(
+    "",
     response_model=BaseResponse[AccountResponse],
     status_code=status.HTTP_201_CREATED,
 )
@@ -68,7 +69,7 @@ async def register_account(
     return BaseResponse(data=created_account)
 
 
-@router.get("/accounts", response_model=BaseResponse[List[AccountResponse]])
+@account_router.get("", response_model=BaseResponse[List[AccountResponse]])
 async def list_accounts(
     role: RoleCode | None = Query(default=None),
     is_active: bool | None = Query(default=None),
@@ -79,7 +80,7 @@ async def list_accounts(
     return BaseResponse(data=accounts)
 
 
-@router.get("/accounts/{account_id}", response_model=BaseResponse[AccountResponse])
+@account_router.get("/{account_id}", response_model=BaseResponse[AccountResponse])
 async def get_account(
     account_id: int,
     user=Depends(RoleChecker(ACCOUNT_MANAGER_ROLES)),
@@ -89,8 +90,8 @@ async def get_account(
     return BaseResponse(data=account)
 
 
-@router.patch(
-    "/accounts/{account_id}/activate",
+@account_router.patch(
+    "/{account_id}/activate",
     response_model=BaseResponse[AccountResponse],
 )
 async def activate_account(
@@ -102,8 +103,8 @@ async def activate_account(
     return BaseResponse(data=account)
 
 
-@router.patch(
-    "/accounts/{account_id}/deactivate",
+@account_router.patch(
+    "/{account_id}/deactivate",
     response_model=BaseResponse[AccountResponse],
 )
 async def deactivate_account(
@@ -115,7 +116,7 @@ async def deactivate_account(
     return BaseResponse(data=account)
 
 
-@router.delete("/accounts/{account_id}", response_model=BaseResponse[None])
+@account_router.delete("/{account_id}", response_model=BaseResponse[None])
 async def delete_account(
     account_id: int,
     user=Depends(RoleChecker(ACCOUNT_MANAGER_ROLES)),
@@ -125,7 +126,7 @@ async def delete_account(
     return BaseResponse(data=None)
 
 
-@router.post("/login", response_model=BaseResponse[LoginResponse])
+@auth_router.post("/login", response_model=BaseResponse[LoginResponse])
 @limiter.limit("10/second")
 async def login(
     request: Request,
@@ -140,7 +141,7 @@ async def login(
     )
 
 
-@router.post("/refresh", response_model=BaseResponse[TokenResponse])
+@auth_router.post("/refresh", response_model=BaseResponse[TokenResponse])
 @limiter.limit("10/second")
 async def refresh_session(
     request: Request,
@@ -154,7 +155,7 @@ async def refresh_session(
     )
 
 
-@router.post("/logout", response_model=BaseResponse[None])
+@auth_router.post("/logout", response_model=BaseResponse[None])
 @limiter.limit("10/second")
 async def logout(
     request: Request,
