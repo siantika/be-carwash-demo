@@ -7,6 +7,7 @@ from app.modules.service_catalog.application.use_cases.service_type_usecase impo
     DeactivateServiceTypeUseCase,
     DeleteServiceTypeUseCase,
     FindServiceTypeByIdUseCase,
+    FindServiceTypeByNameUseCase,
     ListServiceTypesUseCase,
 )
 from app.modules.service_catalog.infra.repositories.service_type_repo import (
@@ -28,8 +29,14 @@ def get_service_type_repo(db=Depends(get_db), logger=Depends(get_logger)):
 def get_list_service_types_usecase(service_type_repo=Depends(get_service_type_repo)):
     return ListServiceTypesUseCase(service_type_repo)
 
+
 def get_find_service_type_by_id(service_type_repo=Depends(get_service_type_repo)):
     return FindServiceTypeByIdUseCase(service_type_repo)
+
+
+def get_find_service_type_by_name(service_type_repo=Depends(get_service_type_repo)):
+    return FindServiceTypeByNameUseCase(service_type_repo)
+
 
 def get_create_service_type_usecase(service_type_repo=Depends(get_service_type_repo)):
     return CreateServiceTypeUseCase(service_type_repo)

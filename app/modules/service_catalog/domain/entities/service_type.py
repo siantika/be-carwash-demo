@@ -29,6 +29,9 @@ class ServiceType(BaseEntity):
         if self.price is None:
             raise InvalidValueObject("Service price is required")
 
+        if self.is_primary:
+            self.is_active = True
+
         self.name = self.name.strip()
         self.desc = self.desc.strip()
 

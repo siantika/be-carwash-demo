@@ -22,6 +22,15 @@ class UpdateServiceTypeCmd:
 
 
 @dataclass(frozen=True)
+class ServiceTypeListFilterDto:
+    q: str | None = None
+    is_active: bool | None = None
+    is_primary: bool | None = None
+    min_price: Decimal | None = None
+    max_price: Decimal | None = None
+
+
+@dataclass(frozen=True)
 class ServiceTypeResultDto:
     id: int | None
     name: str
