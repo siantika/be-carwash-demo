@@ -38,10 +38,7 @@ def _resolve_status_code(exc: AppError) -> int:
 
 
 def _dump_error_response(response: BaseErrorResponse) -> dict:
-    if hasattr(response, "model_dump"):
-        return response.model_dump(exclude_none=True)
-
-    return response.dict(exclude_none=True)
+    return response.model_dump(exclude_none=True)
 
 
 def _format_validation_location(location: tuple) -> str:
