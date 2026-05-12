@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from app.shared.domain.exceptions.exceptions import InvalidServiceValue
-from domain.value_object.money import Money
+from app.shared.domain.value_objects.money import Money
 
 
 @dataclass(frozen=True)

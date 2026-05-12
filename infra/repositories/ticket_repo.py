@@ -2,10 +2,10 @@ from typing import List, Optional
 
 import asyncpg
 
+from app.shared.domain.value_objects.money import Money
 from app.shared.infra.database.error_handler import handle_db_error
 from domain.entities.ticket import Ticket, TicketStatusEnum
 from domain.value_object.entry_time import EntryTime
-from domain.value_object.money import Money
 from domain.value_object.service_snapshot import ServiceSnapshot
 from domain.value_object.ticket_number import TicketNumber
 from interfaces.i_logger import ILogger

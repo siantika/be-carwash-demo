@@ -4,11 +4,11 @@ from typing import Any, Mapping, Optional, Union, cast
 import asyncpg
 
 from app.shared.domain.exceptions.exceptions import RepositoryError
+from app.shared.domain.value_objects.money import Money
 from app.shared.infra.database.error_handler import handle_db_error
 from application.dto.transaction_dto import TransactionResultDto
 from domain.entities.transaction import Transaction
 from domain.repositories.i_transaction_repo import ITransactionRepository
-from domain.value_object.money import Money
 from domain.value_object.payment import Payment, PaymentMethodEnum
 from domain.value_object.payment_state import PaymentState, PaymentStatus
 from domain.value_object.plate_number import PlateNumber

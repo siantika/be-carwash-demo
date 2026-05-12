@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from domain.value_object.money import Money
+from app.shared.domain.value_objects.money import Money
 
 
 @dataclass(frozen=True)

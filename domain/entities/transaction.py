@@ -4,9 +4,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 from app.shared.domain.entities.base import BaseEntity
-
 from app.shared.domain.exceptions.exceptions import BusinessRuleViolation
-from domain.value_object.money import Money
+from app.shared.domain.value_objects.money import Money
 from domain.value_object.payment import Payment
 from domain.value_object.payment_state import PaymentState
 from domain.value_object.plate_number import PlateNumber

@@ -1,7 +1,13 @@
 from fastapi import APIRouter
 
 from app.modules.identity.api.routes import account_router, auth_router
+from app.modules.service_catalog.api.routes import router as service_catalog_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
 api_router.include_router(account_router, prefix="/accounts", tags=["accounts"])
+api_router.include_router(
+    service_catalog_router,
+    prefix="/service-types",
+    tags=["service-catalog"],
+)
