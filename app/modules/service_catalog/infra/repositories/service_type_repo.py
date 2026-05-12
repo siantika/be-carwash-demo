@@ -21,7 +21,8 @@ price,
 is_active,
 is_primary,
 created_at,
-updated_at
+updated_at,
+deleted_at
 """.strip()
 
 
@@ -38,6 +39,7 @@ def _mapper(row: Row) -> ServiceType:
         is_primary=row["is_primary"],
         created_at=row["created_at"],
         updated_at=row["updated_at"],
+        deleted_at=row["deleted_at"],
     )
 
 
@@ -52,7 +54,8 @@ class AsyncPgServiceTypeRepository(IServiceTypeRepository):
                 f"""
                 SELECT {SELECT_ALL_COLUMNS}
                 FROM service_catalog.service_types
-                WHERE id = $1;
+                WHERE id = $1
+                  AND deleted_at IS NULL;
                 """,
                 service_type_id,
             )
@@ -71,7 +74,8 @@ class AsyncPgServiceTypeRepository(IServiceTypeRepository):
                 f"""
                 SELECT {SELECT_ALL_COLUMNS}
                 FROM service_catalog.service_types
-                WHERE name = $1;
+                WHERE name = $1
+                  AND deleted_at IS NULL;
                 """,
                 service_name,
             )
@@ -94,6 +98,7 @@ class AsyncPgServiceTypeRepository(IServiceTypeRepository):
                 f"""
                 SELECT {SELECT_ALL_COLUMNS}
                 FROM service_catalog.service_types
+                WHERE deleted_at IS NULL
                 ORDER BY created_at DESC, id DESC
                 LIMIT $1 OFFSET $2;
                 """,
@@ -103,7 +108,8 @@ class AsyncPgServiceTypeRepository(IServiceTypeRepository):
             total = await self.db.fetchval(
                 """
                 SELECT COUNT(*)
-                FROM service_catalog.service_types;
+                FROM service_catalog.service_types
+                WHERE deleted_at IS NULL;
                 """
             )
             return [_mapper(row) for row in rows], int(total or 0)
@@ -160,6 +166,7 @@ class AsyncPgServiceTypeRepository(IServiceTypeRepository):
                     is_primary = $5,
                     updated_at = NOW()
                 WHERE id = $6
+                  AND deleted_at IS NULL
                 RETURNING {SELECT_ALL_COLUMNS};
                 """,
                 service_type.name,
