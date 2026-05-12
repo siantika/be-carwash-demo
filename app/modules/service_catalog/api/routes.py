@@ -8,8 +8,9 @@ from app.modules.service_catalog.api.dependencies import (
     get_activate_service_type_usecase,
     get_change_service_type_usecase,
     get_create_service_type_usecase,
-    get_delete_service_type_usecase,
     get_deactivate_service_type_usecase,
+    get_delete_service_type_usecase,
+    get_find_service_type_by_id,
     get_list_service_types_usecase,
 )
 from app.modules.service_catalog.api.schemas import (
@@ -25,8 +26,9 @@ from app.modules.service_catalog.application.use_cases.service_type_usecase impo
     ActivateServiceTypeUseCase,
     ChangeServiceTypeDataUseCase,
     CreateServiceTypeUseCase,
-    DeleteServiceTypeUseCase,
     DeactivateServiceTypeUseCase,
+    DeleteServiceTypeUseCase,
+    FindServiceTypeByIdUseCase,
     ListServiceTypesUseCase,
 )
 from app.shared.response import BaseResponse, Metadata
@@ -52,6 +54,15 @@ async def list_service_types(
             total=result.total,
         ),
     )
+
+@router.get("/{service_type_id}", response_model=BaseResponse[ServiceTypeResponse])
+async def find_service_type_by_id(
+    service_type_id: int,
+    user=Depends(RoleChecker(SERVICE_CATALOG_MANAGER_ROLES)),
+    usecase: FindServiceTypeByIdUseCase = Depends(get_find_service_type_by_id),
+):
+    service_type = await usecase.execute(service_type_id)
+    return BaseResponse(data=service_type)
 
 
 @router.post(

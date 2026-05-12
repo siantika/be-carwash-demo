@@ -12,12 +12,14 @@ from app.modules.service_catalog.application.use_cases.service_type_usecase impo
     CreateServiceTypeUseCase,
     DeleteServiceTypeUseCase,
     DeactivateServiceTypeUseCase,
+    FindServiceTypeByIdUseCase,
     ListServiceTypesUseCase,
 )
 from app.modules.service_catalog.domain.entities.service_type import ServiceType
 from app.shared.domain.exceptions.exceptions import (
     BusinessRuleViolation,
     EntityAlreadyExists,
+    EntityNotFound,
 )
 from app.shared.domain.value_objects.money import Money
 
@@ -27,10 +29,10 @@ class FakeServiceTypeRepository:
         self.service_types: dict[int, ServiceType] = {}
         self.next_id = 1
 
-    async def get_by_id(self, service_type_id: int) -> ServiceType | None:
+    async def find_by_id(self, service_type_id: int) -> ServiceType | None:
         return self.service_types.get(service_type_id)
 
-    async def get_by_name(self, service_name: str) -> ServiceType | None:
+    async def find_by_name(self, service_name: str) -> ServiceType | None:
         return next(
             (
                 service_type
@@ -115,6 +117,33 @@ async def test_list_service_types_paginates_results() -> None:
     assert result.total == 5
     assert result.page == 2
     assert result.limit == 2
+
+
+@pytest.mark.anyio
+async def test_find_service_type_by_id_returns_service() -> None:
+    repo = FakeServiceTypeRepository()
+    service_type = await repo.add(
+        ServiceType(
+            name="Basic Wash",
+            desc="Basic exterior wash",
+            price=Money(Decimal("50000")),
+        )
+    )
+
+    result = await FindServiceTypeByIdUseCase(repo).execute(service_type.id)
+
+    assert result.id == service_type.id
+    assert result.name == "Basic Wash"
+    assert result.desc == "Basic exterior wash"
+    assert result.price == Decimal("50000")
+
+
+@pytest.mark.anyio
+async def test_find_service_type_by_id_raises_when_missing() -> None:
+    repo = FakeServiceTypeRepository()
+
+    with pytest.raises(EntityNotFound):
+        await FindServiceTypeByIdUseCase(repo).execute(999)
 
 
 @pytest.mark.anyio
