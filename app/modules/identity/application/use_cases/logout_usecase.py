@@ -3,7 +3,11 @@ from app.modules.identity.domain.repositories.i_refresh_token_repo import (
 )
 from app.modules.identity.application.services.i_token_service import ITokenService
 from app.shared.domain.entities.base import _utcnow
-from app.shared.domain.exceptions.exceptions import BusinessRuleViolation, InvalidTokenError
+from app.shared.domain.exceptions.exceptions import (
+    InvalidTokenError,
+    MissingPersistedEntityIdError,
+    RevokedRefreshTokenMismatchError,
+)
 
 
 class LogoutUseCase:
@@ -26,8 +30,8 @@ class LogoutUseCase:
             raise InvalidTokenError("Invalid refresh token")
 
         if stored_token.id is None:
-            raise BusinessRuleViolation("Stored refresh token must have an id")
+            raise MissingPersistedEntityIdError("Stored refresh token must have an id")
 
         revoked_token_id = await self.refresh_token_repo.revoke(stored_token.id, now)
         if revoked_token_id != stored_token.id:
-            raise BusinessRuleViolation("Revoked refresh token id mismatch")
+            raise RevokedRefreshTokenMismatchError("Revoked refresh token id mismatch")

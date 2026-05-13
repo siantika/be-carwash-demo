@@ -1,7 +1,10 @@
 import pytest
 
 from app.modules.carwash_operation.domain.entities.ticket import Ticket, TicketStatusEnum
-from app.shared.domain.exceptions.exceptions import BusinessRuleViolation
+from app.shared.domain.exceptions.exceptions import (
+    BusinessRuleViolation,
+    TerminalTicketStateError,
+)
 
 
 class DummyEntryTime:
@@ -46,7 +49,7 @@ def test_change_status_from_in_progress_allowed(target):
 def test_change_status_from_terminal_state_raises(terminal_status):
     t = make_ticket(status=terminal_status)
 
-    with pytest.raises(BusinessRuleViolation) as exc:
+    with pytest.raises(TerminalTicketStateError) as exc:
         t.change_status(TicketStatusEnum.IN_PROGRESS)
 
     assert "terminal state" in str(exc.value)
@@ -67,12 +70,12 @@ def test_mark_void_sets_status_void():
 def test_mark_paid_when_already_paid_raises():
     t = make_ticket(TicketStatusEnum.PAID)
 
-    with pytest.raises(BusinessRuleViolation):
+    with pytest.raises(TerminalTicketStateError):
         t.mark_paid()
 
 
 def test_mark_void_when_already_void_raises():
     t = make_ticket(TicketStatusEnum.VOID)
 
-    with pytest.raises(BusinessRuleViolation):
+    with pytest.raises(TerminalTicketStateError):
         t.mark_void()

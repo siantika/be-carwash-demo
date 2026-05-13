@@ -3,8 +3,9 @@ from datetime import datetime
 
 from app.shared.domain.entities.base import BaseEntity
 from app.shared.domain.exceptions.exceptions import (
-    BusinessRuleViolation,
     InvalidValueObject,
+    PrimaryServiceCannotBeDeactivated,
+    PrimaryServiceCannotBeDeleted,
 )
 from app.shared.domain.value_objects.money import Money
 
@@ -40,7 +41,9 @@ class ServiceType(BaseEntity):
 
     def deactivate(self) -> None:
         if self.is_primary:
-            raise BusinessRuleViolation("Primary service cannot be deactivated")
+            raise PrimaryServiceCannotBeDeactivated(
+                "Primary service cannot be deactivated"
+            )
 
         self.is_active = False
 
@@ -48,7 +51,7 @@ class ServiceType(BaseEntity):
         self.ensure_timezone_aware(deleted_at, "deleted_at")
 
         if self.is_primary:
-            raise BusinessRuleViolation("Primary service cannot be deleted")
+            raise PrimaryServiceCannotBeDeleted("Primary service cannot be deleted")
 
         self.is_active = False
         self.deleted_at = deleted_at

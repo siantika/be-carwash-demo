@@ -10,10 +10,11 @@ from app.modules.identity.domain.repositories.i_refresh_token_repo import (
 )
 from app.shared.domain.entities.base import _utcnow
 from app.shared.domain.exceptions.exceptions import (
-    BusinessRuleViolation,
     EntityNotFound,
     InactiveUserError,
     InvalidTokenError,
+    MissingPersistedEntityIdError,
+    RevokedRefreshTokenMismatchError,
 )
 
 
@@ -48,14 +49,14 @@ class RefreshSessionUseCase:
             raise InactiveUserError("Account is inactive")
 
         if stored_token.id is None:
-            raise BusinessRuleViolation("Stored refresh token must have an id")
+            raise MissingPersistedEntityIdError("Stored refresh token must have an id")
 
         if account.id is None:
-            raise BusinessRuleViolation("Refresh token user must have an id")
+            raise MissingPersistedEntityIdError("Refresh token user must have an id")
 
         revoked_token_id = await self.refresh_token_repo.revoke(stored_token.id, now)
         if revoked_token_id != stored_token.id:
-            raise BusinessRuleViolation("Revoked refresh token id mismatch")
+            raise RevokedRefreshTokenMismatchError("Revoked refresh token id mismatch")
 
         new_refresh_token = self.token_service.generate_refresh_token()
         await self.refresh_token_repo.save(

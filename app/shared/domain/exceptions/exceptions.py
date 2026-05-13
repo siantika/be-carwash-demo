@@ -47,6 +47,11 @@ class BusinessRuleViolation(DomainError):
     pass
 
 
+class ApplicationInvariantViolation(AppError):
+    """State aplikasi tidak konsisten walau input bisnis valid."""
+    pass
+
+
 # ===========================
 # SPESIFIK — HANYA JIKA BUTUH LOGIKA BERBEDA
 # ===========================
@@ -62,8 +67,38 @@ class InvalidTokenError(AppError):
     pass
 
 
+class NotAuthenticatedError(InvalidTokenError):
+    """Request membutuhkan token autentikasi."""
+    pass
+
+
+class PermissionDeniedError(AppError):
+    """User terautentikasi tetapi tidak punya akses."""
+    pass
+
+
 class InactiveUserError(AppError):
     """User ditemukan tapi status tidak aktif."""
+    pass
+
+
+class AccountTemporarilyLockedError(BusinessRuleViolation):
+    """Account aktif tetapi sedang terkunci sementara."""
+    pass
+
+
+class MissingPersistedEntityIdError(ApplicationInvariantViolation):
+    """Entity yang sudah dipersist seharusnya memiliki id."""
+    pass
+
+
+class RevokedRefreshTokenMismatchError(ApplicationInvariantViolation):
+    """Refresh token yang direvoke tidak sama dengan token yang diminta."""
+    pass
+
+
+class DeletedAccountMismatchError(ApplicationInvariantViolation):
+    """Account yang dihapus tidak sama dengan account yang diminta."""
     pass
 
 # --- service snapshot --- 
@@ -84,12 +119,33 @@ class InvalidEntryTime(BusinessRuleViolation):
     pass 
 
 
+class InactiveServiceTypeCannotBeUsed(BusinessRuleViolation):
+    """Service type inactive tidak boleh dipakai untuk membuat ticket."""
+    pass
+
+
 class InvalidTicketStateError(BusinessRuleViolation):
     """Operasi tidak valid untuk status tiket saat ini."""
     pass
 
-class TicketAlreadyInTransactionError(BusinessRuleViolation):
-    """Tiket sudah terlibat dalam transaksi aktif."""
+
+class TicketNotPayableError(InvalidTicketStateError):
+    """Ticket tidak berada pada status yang bisa dibayar."""
+    pass
+
+
+class TerminalTicketStateError(InvalidTicketStateError):
+    """Status ticket terminal tidak boleh diubah lagi."""
+    pass
+
+
+class InvalidTargetTicketStateError(InvalidTicketStateError):
+    """Target status ticket tidak valid."""
+    pass
+
+
+class TicketAlreadyPaidError(BusinessRuleViolation):
+    """Ticket sudah memiliki transaksi pembayaran."""
     pass
 
 class FailedToSaveTransactionError(AppError):
@@ -104,4 +160,14 @@ class FailedToSetTicketStatusError(AppError):
 # --- Service ---
 class InvalidServiceKeysError(AppError):
     """Konfigurasi layanan tidak valid (missing/wrong keys)."""
+    pass
+
+
+class PrimaryServiceCannotBeDeactivated(BusinessRuleViolation):
+    """Primary service wajib tetap aktif."""
+    pass
+
+
+class PrimaryServiceCannotBeDeleted(BusinessRuleViolation):
+    """Primary service tidak boleh dihapus."""
     pass

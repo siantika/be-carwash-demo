@@ -22,10 +22,10 @@ from app.modules.carwash_operation.domain.entities.ticket import TicketStatusEnu
 from app.shared.domain.entities.base import _utcnow
 from app.shared.domain.exceptions.exceptions import (
     BusinessRuleViolation,
-    EntityAlreadyExists,
     EntityNotFound,
     FailedToSaveTransactionError,
-    InvalidTicketStateError,
+    TicketAlreadyPaidError,
+    TicketNotPayableError,
 )
 
 
@@ -94,13 +94,15 @@ class ProcessTransactionUseCase:
                 raise EntityNotFound("Ticket", cmd.ticket_id)
 
             if ticket.status != TicketStatusEnum.IN_PROGRESS:
-                raise InvalidTicketStateError(
+                raise TicketNotPayableError(
                     f"Ticket is not in a payable state. Ticket status: {ticket.status.value}"
                 )
 
             existing_transaction = await u.transaction.find_by_ticket_id(cmd.ticket_id)
             if existing_transaction is not None:
-                raise EntityAlreadyExists("PaymentTransaction", cmd.ticket_id)
+                raise TicketAlreadyPaidError(
+                    f"Ticket {cmd.ticket_id} already has a payment transaction"
+                )
 
             cashier = await u.account.find_by_id(cmd.cashier_id)
             if cashier is None:

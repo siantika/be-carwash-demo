@@ -47,7 +47,7 @@ async def test_auth_dependency_exception_uses_base_error_response():
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.json() == {
         "error": {
-            "code": "HTTPException",
+            "code": "NotAuthenticatedError",
             "message": "Not authenticated",
         }
     }
