@@ -140,6 +140,7 @@ app/
 └── shared/
     ├── config/
     ├── error_handling/
+    ├── interfaces/
     └── middleware/
 domain/
 ├── entities/
@@ -148,7 +149,6 @@ domain/
 infra/
 ├── db.py
 └── repositories/
-interfaces/
 main.py
 tests/
 ```

@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict
 import asyncpg
 
 from app.shared.domain.exceptions.exceptions import AppError, RepositoryError
-from interfaces.i_logger import ILogger
+from app.shared.interfaces.i_logger import ILogger
 
 
 async def handle_db_error(

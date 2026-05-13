@@ -17,7 +17,7 @@ from application.use_cases.ticket.create_ticket_usecase import CreateTicketUseCa
 from application.use_cases.ticket.void_ticket_usecase import VoidTicketUseCase
 from app.modules.identity.domain.entities.account import RoleCode
 from app.shared.response import BaseResponse
-from interfaces.i_usecase import IUseCase
+from app.shared.interfaces.i_usecase import IUseCase
 
 router = APIRouter()
 

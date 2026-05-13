@@ -10,7 +10,7 @@ from app.modules.billing.infra.repositories.transaction_repo import (
 from app.modules.billing.infra.unit_of_work import AsyncPgBillingUnitOfWork
 from app.shared.infra.database.db import get_db, get_db_pool
 from app.shared.middleware.logger import StructlogLogger
-from interfaces.i_logger import ILogger
+from app.shared.interfaces.i_logger import ILogger
 
 
 def get_logger() -> ILogger:
