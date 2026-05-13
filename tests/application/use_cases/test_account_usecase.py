@@ -1,6 +1,7 @@
 import pytest
 
 from app.modules.identity.application.dto.account_dto import RegisterAccountCmd
+from app.modules.identity.application.queries.models import AccountListFilterDto
 from app.modules.identity.application.use_cases.account_usecase import (
     ActivateAccountUseCase,
     DeleteAccountUseCase,
@@ -33,26 +34,26 @@ class FakeAccountRepository:
             None,
         )
 
-    async def find_all_filtered(
+    async def list(
         self,
-        role: RoleCode | None,
-        is_active: bool | None,
+        *,
+        filters: AccountListFilterDto,
         limit: int,
         offset: int,
     ) -> tuple[list[Account], int]:
         accounts = list(self.accounts.values())
         accounts.sort(key=lambda account: account.id or 0, reverse=True)
 
-        if role is not None:
+        if filters.role is not None:
             accounts = [
                 account for account in accounts
-                if account.role == role
+                if account.role == filters.role
             ]
 
-        if is_active is not None:
+        if filters.is_active is not None:
             accounts = [
                 account for account in accounts
-                if account.is_active is is_active
+                if account.is_active is filters.is_active
             ]
 
         return accounts[offset:offset + limit], len(accounts)

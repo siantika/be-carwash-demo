@@ -4,8 +4,10 @@ import pytest
 
 from app.modules.service_catalog.application.dto.service_type_dto import (
     CreateServiceTypeCmd,
-    ServiceTypeListFilterDto,
     UpdateServiceTypeCmd,
+)
+from app.modules.service_catalog.application.queries.models import (
+    ServiceTypeListFilterDto,
 )
 from app.modules.service_catalog.application.use_cases.service_type_usecase import (
     ActivateServiceTypeUseCase,
@@ -47,18 +49,14 @@ class FakeServiceTypeRepository:
     async def list(
         self,
         *,
-        q: str | None,
-        is_active: bool | None,
-        is_primary: bool | None,
-        min_price: Decimal | None,
-        max_price: Decimal | None,
+        filters: ServiceTypeListFilterDto,
         limit: int,
         offset: int,
     ) -> tuple[list[ServiceType], int]:
         service_types = list(self.service_types.values())
 
-        if q is not None:
-            q_lower = q.lower()
+        if filters.q is not None:
+            q_lower = filters.q.lower()
             service_types = [
                 service_type
                 for service_type in service_types
@@ -66,32 +64,32 @@ class FakeServiceTypeRepository:
                 or q_lower in service_type.desc.lower()
             ]
 
-        if is_active is not None:
+        if filters.is_active is not None:
             service_types = [
                 service_type
                 for service_type in service_types
-                if service_type.is_active is is_active
+                if service_type.is_active is filters.is_active
             ]
 
-        if is_primary is not None:
+        if filters.is_primary is not None:
             service_types = [
                 service_type
                 for service_type in service_types
-                if service_type.is_primary is is_primary
+                if service_type.is_primary is filters.is_primary
             ]
 
-        if min_price is not None:
+        if filters.min_price is not None:
             service_types = [
                 service_type
                 for service_type in service_types
-                if service_type.price.amount >= min_price
+                if service_type.price.amount >= filters.min_price
             ]
 
-        if max_price is not None:
+        if filters.max_price is not None:
             service_types = [
                 service_type
                 for service_type in service_types
-                if service_type.price.amount <= max_price
+                if service_type.price.amount <= filters.max_price
             ]
 
         service_types.sort(key=lambda service_type: service_type.id or 0, reverse=True)

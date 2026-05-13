@@ -5,6 +5,8 @@ import pytest
 
 from app.modules.carwash_operation.application.dto.ticket_dto import (
     CreateTicketCmd,
+)
+from app.modules.carwash_operation.application.queries.models import (
     TicketListFilterDto,
 )
 from app.modules.carwash_operation.application.dto.ticket_void_dto import (
@@ -46,27 +48,27 @@ class FakeTicketRepository:
     async def list(
         self,
         *,
-        status: TicketStatusEnum | None,
-        service_type_id: int | None,
-        ticket_number: str | None,
+        filters: TicketListFilterDto,
         limit: int,
         offset: int,
     ) -> tuple[list[Ticket], int]:
         tickets = list(self.tickets.values())
 
-        if status is not None:
-            tickets = [ticket for ticket in tickets if ticket.status == status]
+        if filters.status is not None:
+            tickets = [ticket for ticket in tickets if ticket.status == filters.status]
 
-        if service_type_id is not None:
-            tickets = [
-                ticket for ticket in tickets if ticket.service_type_id == service_type_id
-            ]
-
-        if ticket_number is not None:
+        if filters.service_type_id is not None:
             tickets = [
                 ticket
                 for ticket in tickets
-                if ticket_number in ticket.ticket_number.value
+                if ticket.service_type_id == filters.service_type_id
+            ]
+
+        if filters.ticket_number is not None:
+            tickets = [
+                ticket
+                for ticket in tickets
+                if filters.ticket_number in ticket.ticket_number.value
             ]
 
         tickets.sort(key=lambda ticket: ticket.id or 0, reverse=True)

@@ -1,9 +1,14 @@
 from app.modules.service_catalog.application.dto.service_type_dto import (
     CreateServiceTypeCmd,
     ServiceTypeListResultDto,
-    ServiceTypeListFilterDto,
     ServiceTypeResultDto,
     UpdateServiceTypeCmd,
+)
+from app.modules.service_catalog.application.queries.models import (
+    ServiceTypeListFilterDto,
+)
+from app.modules.service_catalog.application.queries.service_type_query_repository import (
+    IServiceTypeQueryRepository,
 )
 from app.modules.service_catalog.domain.entities.service_type import ServiceType
 from app.modules.service_catalog.domain.repositories.i_service_type_repo import (
@@ -53,8 +58,8 @@ class CreateServiceTypeUseCase:
 
 
 class ListServiceTypesUseCase:
-    def __init__(self, service_type_repo: IServiceTypeRepository):
-        self.service_type_repo = service_type_repo
+    def __init__(self, service_type_query: IServiceTypeQueryRepository):
+        self.service_type_query = service_type_query
 
     async def execute(
         self,
@@ -89,12 +94,14 @@ class ListServiceTypesUseCase:
             )
 
         offset = (page - 1) * limit
-        service_types, total = await self.service_type_repo.list(
-            q=q,
-            is_active=filters.is_active,
-            is_primary=filters.is_primary,
-            min_price=filters.min_price,
-            max_price=filters.max_price,
+        service_types, total = await self.service_type_query.list(
+            filters=ServiceTypeListFilterDto(
+                q=q,
+                is_active=filters.is_active,
+                is_primary=filters.is_primary,
+                min_price=filters.min_price,
+                max_price=filters.max_price,
+            ),
             limit=limit,
             offset=offset,
         )

@@ -3,6 +3,12 @@ from app.modules.identity.application.dto.account_dto import (
     AccountResultDto,
     RegisterAccountCmd,
 )
+from app.modules.identity.application.queries.models import (
+    AccountListFilterDto,
+)
+from app.modules.identity.application.queries.account_query_repository import (
+    IAccountQueryRepository,
+)
 from app.modules.identity.application.services.i_password_hasher import IPasswordHasher
 from app.modules.identity.domain.entities.account import Account, RoleCode
 from app.modules.identity.domain.repositories.i_account_repo import IAccountRepository
@@ -81,8 +87,8 @@ class GetAccountUseCase:
 
 
 class ListAccountsUseCase:
-    def __init__(self, account_repo: IAccountRepository):
-        self.account_repo = account_repo
+    def __init__(self, account_query: IAccountQueryRepository):
+        self.account_query = account_query
 
     async def execute(
         self,
@@ -99,9 +105,11 @@ class ListAccountsUseCase:
 
         parsed_role = _parse_role(role) if role is not None else None
         offset = (page - 1) * limit
-        accounts, total = await self.account_repo.find_all_filtered(
-            role=parsed_role,
-            is_active=is_active,
+        accounts, total = await self.account_query.list(
+            filters=AccountListFilterDto(
+                role=parsed_role,
+                is_active=is_active,
+            ),
             limit=limit,
             offset=offset,
         )

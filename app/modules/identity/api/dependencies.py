@@ -17,6 +17,7 @@ from app.modules.identity.application.use_cases.refresh_session_usecase import (
 from app.modules.identity.infra.repositories.account_repo import (
     AsyncPgAccountRepository,
 )
+from app.modules.identity.infra.repositories.query.postgres_account_query_repository import PostgresAccountQueryRepository
 from app.modules.identity.infra.repositories.refresh_token_repo import (
     AsyncPgRefreshTokenRepository,
 )
@@ -33,6 +34,10 @@ def get_logger() -> ILogger:
 
 def get_account_repo(db=Depends(get_db), logger=Depends(get_logger)):
     return AsyncPgAccountRepository(db, logger)
+
+
+def get_account_query(db=Depends(get_db), logger=Depends(get_logger)):
+    return PostgresAccountQueryRepository(db, logger)
 
 
 def get_refresh_token_repo(db=Depends(get_db), logger=Depends(get_logger)):
@@ -102,8 +107,8 @@ def get_get_account_usecase(account_repo=Depends(get_account_repo)):
     return GetAccountUseCase(account_repo)
 
 
-def get_list_accounts_usecase(account_repo=Depends(get_account_repo)):
-    return ListAccountsUseCase(account_repo)
+def get_list_accounts_usecase(account_query=Depends(get_account_query)):
+    return ListAccountsUseCase(account_query)
 
 
 def get_activate_account_usecase(account_repo=Depends(get_account_repo)):

@@ -2,6 +2,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 
+from app.modules.service_catalog.application.queries.service_type_query_repository import (
+    ServiceTypeListFilterDto,
+)
+
 
 @dataclass(frozen=True)
 class CreateServiceTypeCmd:
@@ -19,15 +23,6 @@ class UpdateServiceTypeCmd:
     price: Decimal | None = None
     is_active: bool | None = None
     is_primary: bool | None = None
-
-
-@dataclass(frozen=True)
-class ServiceTypeListFilterDto:
-    q: str | None = None
-    is_active: bool | None = None
-    is_primary: bool | None = None
-    min_price: Decimal | None = None
-    max_price: Decimal | None = None
 
 
 @dataclass(frozen=True)
