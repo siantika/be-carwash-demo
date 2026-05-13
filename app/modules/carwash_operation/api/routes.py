@@ -2,7 +2,7 @@ from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, Header, Path, Query, status
 
-from app.api.dependencies.shared import RoleChecker
+from app.api.dependencies.shared import DeviceChecker, RoleChecker
 from app.modules.carwash_operation.api.dependencies import (
     get_create_ticket_usecase,
     get_list_tickets_usecase,
@@ -14,20 +14,22 @@ from app.modules.carwash_operation.api.schemas import (
     TicketVoidRequest,
     TicketVoidResponse,
 )
-from app.modules.carwash_operation.application.dto.ticket_dto import (
-    CreateTicketCmd,
-)
-from app.modules.carwash_operation.application.queries.models import (
-    TicketListFilterDto,
-)
-from app.modules.carwash_operation.application.dto.ticket_void_dto import (
-    CreateTicketVoidCmd,
-)
 from app.modules.carwash_operation.application.commands.ticket_command import (
     CreateTicketUseCase,
     VoidTicketUseCase,
 )
-from app.modules.carwash_operation.application.queries.ticket_query import ListTicketsUseCase
+from app.modules.carwash_operation.application.dto.ticket_dto import (
+    CreateTicketCmd,
+)
+from app.modules.carwash_operation.application.dto.ticket_void_dto import (
+    CreateTicketVoidCmd,
+)
+from app.modules.carwash_operation.application.queries.models import (
+    TicketListFilterDto,
+)
+from app.modules.carwash_operation.application.queries.ticket_query import (
+    ListTicketsUseCase,
+)
 from app.modules.carwash_operation.domain.entities.ticket import TicketStatusEnum
 from app.modules.identity.domain.entities.account import RoleCode
 from app.shared.response import BaseResponse, Metadata
@@ -41,7 +43,7 @@ CARWASH_OPERATION_ROLES = [RoleCode.ADMIN, RoleCode.OWNER, RoleCode.CASHIER]
 async def create_ticket(
     payload: CreateTicketRequest,
     idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
-    user=Depends(RoleChecker(CARWASH_OPERATION_ROLES)),
+    device=Depends(DeviceChecker()),
     usecase: CreateTicketUseCase = Depends(get_create_ticket_usecase),
 ):
     ticket = await usecase.execute(

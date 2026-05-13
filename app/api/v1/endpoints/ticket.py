@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, Header
 
 from app.api.dependencies.pagination import get_offset_pagination
-from app.api.dependencies.shared import RoleChecker
+from app.api.dependencies.shared import DeviceChecker, RoleChecker
 from app.api.dependencies.ticket import (
     get_create_ticket_usecase,
     get_list_tickets_usecase,
@@ -30,6 +30,7 @@ router = APIRouter()
 async def create_ticket(
     payload:CreateTicketRequest,
     idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
+    device = Depends(DeviceChecker()),
     usecase: CreateTicketUseCase=Depends(get_create_ticket_usecase)
 ):
     cmd = CreateTicketCmd(
