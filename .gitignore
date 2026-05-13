@@ -1,3 +1,8 @@
+# === AI agent settings ====
+.agents
+.codex
+
+
 # === OS & Editor ===
 .DS_Store
 Thumbs.db
