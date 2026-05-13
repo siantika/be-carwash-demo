@@ -12,7 +12,7 @@ from app.modules.identity.infra.repositories.account_repo import (
 from app.modules.identity.infra.security import decode_token
 from app.shared.infra.database.db import get_db, get_db_pool
 from app.shared.middleware.logger import StructlogLogger, setup_logger
-from interfaces.i_logger import ILogger
+from app.shared.interfaces.i_logger import ILogger
 
 
 def get_logger() -> ILogger:

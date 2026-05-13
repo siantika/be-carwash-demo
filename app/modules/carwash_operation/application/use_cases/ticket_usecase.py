@@ -29,7 +29,7 @@ from app.shared.domain.exceptions.exceptions import (
     BusinessRuleViolation,
     EntityNotFound,
 )
-from interfaces.i_barcode_generator import IBarcodeGenerator
+from app.modules.carwash_operation.application.services.i_barcode_generator import IBarcodeGenerator
 
 
 def _to_ticket_result(ticket: Ticket) -> TicketResultDto:

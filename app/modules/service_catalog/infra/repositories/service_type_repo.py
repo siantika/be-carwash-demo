@@ -10,7 +10,7 @@ from app.modules.service_catalog.domain.repositories.i_service_type_repo import 
 from app.shared.domain.exceptions.exceptions import EntityAlreadyExists, RepositoryError
 from app.shared.domain.value_objects.money import Money
 from app.shared.infra.database.error_handler import handle_db_error
-from interfaces.i_logger import ILogger
+from app.shared.interfaces.i_logger import ILogger
 
 Row = asyncpg.Record | Mapping[str, Any]
 

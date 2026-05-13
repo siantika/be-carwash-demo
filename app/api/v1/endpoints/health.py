@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.dependencies.shared import get_logger
 from app.shared.middleware.limiter import limiter
-from interfaces.i_logger import ILogger
+from app.shared.interfaces.i_logger import ILogger
 
 router = APIRouter()
 

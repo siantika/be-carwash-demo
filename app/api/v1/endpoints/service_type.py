@@ -22,7 +22,7 @@ from application.use_cases.service_type.manage_activation_status_usecase import 
 )
 from app.modules.identity.domain.entities.account import RoleCode
 from app.shared.response import BaseResponse
-from interfaces.i_usecase import IUseCase
+from app.shared.interfaces.i_usecase import IUseCase
 
 router = APIRouter()
 

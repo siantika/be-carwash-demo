@@ -8,7 +8,7 @@ from app.modules.carwash_operation.infra.repositories.ticket_repo import (
     AsyncPgTicketRepository,
 )
 from app.modules.identity.infra.repositories.account_repo import AsyncPgAccountRepository
-from interfaces.i_logger import ILogger
+from app.shared.interfaces.i_logger import ILogger
 
 
 class AsyncPgBillingUnitOfWork(IBillingUnitOfWork):

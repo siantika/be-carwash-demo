@@ -15,7 +15,7 @@ from app.modules.service_catalog.infra.repositories.service_type_repo import (
 )
 from app.shared.infra.database.db import get_db
 from app.shared.middleware.logger import StructlogLogger
-from interfaces.i_logger import ILogger
+from app.shared.interfaces.i_logger import ILogger
 
 
 def get_logger() -> ILogger:

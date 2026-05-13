@@ -8,7 +8,7 @@ from app.modules.carwash_operation.domain.repositories.i_ticket_void_repo import
 )
 from app.shared.domain.exceptions.exceptions import RepositoryError
 from app.shared.infra.database.error_handler import handle_db_error
-from interfaces.i_logger import ILogger
+from app.shared.interfaces.i_logger import ILogger
 
 Row = asyncpg.Record | Mapping[str, Any]
 
