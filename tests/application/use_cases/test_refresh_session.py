@@ -8,8 +8,8 @@ from app.modules.identity.domain.entities.account import Account, RoleCode
 from app.modules.identity.domain.value_objects.email import Email
 from app.modules.identity.domain.value_objects.username import Username
 from app.shared.domain.entities.base import _utcnow
-from app.modules.identity.application.use_cases.logout_usecase import LogoutUseCase
-from app.modules.identity.application.use_cases.refresh_session_usecase import (
+from app.modules.identity.application.commands.auth_command import (
+    LogoutUseCase,
     RefreshSessionUseCase,
 )
 from app.modules.identity.infra.security import TokenService, hash_refresh_token

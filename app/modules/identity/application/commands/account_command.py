@@ -1,14 +1,8 @@
 from app.modules.identity.application.dto.account_dto import (
-    AccountListResultDto,
     AccountResultDto,
     RegisterAccountCmd,
 )
-from app.modules.identity.application.queries.models import (
-    AccountListFilterDto,
-)
-from app.modules.identity.application.queries.account_query_repository import (
-    IAccountQueryRepository,
-)
+from app.modules.identity.application.dto.account_mapper import to_account_result
 from app.modules.identity.application.services.i_password_hasher import IPasswordHasher
 from app.modules.identity.domain.entities.account import Account, RoleCode
 from app.modules.identity.domain.repositories.i_account_repo import IAccountRepository
@@ -21,17 +15,6 @@ from app.shared.domain.exceptions.exceptions import (
     EntityAlreadyExists,
     EntityNotFound,
 )
-
-def _to_account_result(account: Account) -> AccountResultDto:
-    return AccountResultDto(
-        id=account.id,
-        username=account.username.value,
-        email=account.email.value,
-        role=account.role.value,
-        is_active=account.is_active,
-        created_at=account.created_at,
-        updated_at=account.updated_at,
-    )
 
 
 def _parse_role(role: RoleCode | str) -> RoleCode:
@@ -72,55 +55,7 @@ class RegisterAccountUseCase:
         )
 
         created_account = await self.account_repo.create(account)
-        return _to_account_result(created_account)
-
-
-class GetAccountUseCase:
-    def __init__(self, account_repo: IAccountRepository):
-        self.account_repo = account_repo
-
-    async def execute(self, account_id: int) -> AccountResultDto:
-        account = await self.account_repo.find_by_id(account_id)
-        if account is None:
-            raise EntityNotFound("Account", account_id)
-
-        return _to_account_result(account)
-
-
-class ListAccountsUseCase:
-    def __init__(self, account_query: IAccountQueryRepository):
-        self.account_query = account_query
-
-    async def execute(
-        self,
-        role: RoleCode | str | None = None,
-        is_active: bool | None = None,
-        page: int = 1,
-        limit: int = 20,
-    ) -> AccountListResultDto:
-        if page < 1:
-            raise BusinessRuleViolation("Page must be greater than or equal to 1")
-
-        if limit < 1:
-            raise BusinessRuleViolation("Limit must be greater than or equal to 1")
-
-        parsed_role = _parse_role(role) if role is not None else None
-        offset = (page - 1) * limit
-        accounts, total = await self.account_query.list(
-            filters=AccountListFilterDto(
-                role=parsed_role,
-                is_active=is_active,
-            ),
-            limit=limit,
-            offset=offset,
-        )
-
-        return AccountListResultDto(
-            items=[_to_account_result(account) for account in accounts],
-            total=total,
-            page=page,
-            limit=limit,
-        )
+        return to_account_result(created_account)
 
 
 class ActivateAccountUseCase:
@@ -134,7 +69,7 @@ class ActivateAccountUseCase:
 
         account.activate()
         saved_account = await self.account_repo.save(account)
-        return _to_account_result(saved_account)
+        return to_account_result(saved_account)
 
 
 class DeactivateAccountUseCase:
@@ -148,7 +83,7 @@ class DeactivateAccountUseCase:
 
         account.deactivate()
         saved_account = await self.account_repo.save(account)
-        return _to_account_result(saved_account)
+        return to_account_result(saved_account)
 
 
 class DeleteAccountUseCase:
@@ -163,3 +98,4 @@ class DeleteAccountUseCase:
         deleted_account_id = await self.account_repo.delete(account_id)
         if deleted_account_id != account_id:
             raise DeletedAccountMismatchError("Deleted account id mismatch")
+

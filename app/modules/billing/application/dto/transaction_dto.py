@@ -3,9 +3,6 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from app.modules.billing.application.queries.payment_transaction_query_repository import (
-    TransactionListFilterDto,
-)
 from app.modules.billing.domain.value_objects.payment import PaymentMethodEnum
 
 

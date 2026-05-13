@@ -5,9 +5,6 @@ import asyncpg
 from app.modules.carwash_operation.application.queries.models import (
     TicketListFilterDto,
 )
-from app.modules.carwash_operation.application.queries.ticket_query_repository import (
-    ITicketQueryRepository,
-)
 from app.modules.carwash_operation.infra.repositories.ticket_repo import (
     SELECT_ALL_COLUMNS,
     _mapper,
@@ -16,7 +13,7 @@ from app.shared.infra.database.error_handler import handle_db_error
 from app.shared.interfaces.i_logger import ILogger
 
 
-class PostgresTicketQueryRepository(ITicketQueryRepository):
+class PostgresTicketQueryRepository:
     def __init__(self, db: asyncpg.Connection, logger: ILogger):
         self.db = db
         self.logger = logger

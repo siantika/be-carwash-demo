@@ -23,11 +23,11 @@ from app.modules.carwash_operation.application.queries.models import (
 from app.modules.carwash_operation.application.dto.ticket_void_dto import (
     CreateTicketVoidCmd,
 )
-from app.modules.carwash_operation.application.use_cases.ticket_usecase import (
+from app.modules.carwash_operation.application.commands.ticket_command import (
     CreateTicketUseCase,
-    ListTicketsUseCase,
     VoidTicketUseCase,
 )
+from app.modules.carwash_operation.application.queries.ticket_query import ListTicketsUseCase
 from app.modules.carwash_operation.domain.entities.ticket import TicketStatusEnum
 from app.modules.identity.domain.entities.account import RoleCode
 from app.shared.response import BaseResponse, Metadata

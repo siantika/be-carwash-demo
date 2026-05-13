@@ -1,9 +1,9 @@
 from fastapi import Depends
 
-from app.modules.billing.application.use_cases.transaction_usecase import (
-    ListTransactionsUseCase,
+from app.modules.billing.application.commands.transaction_command import (
     ProcessTransactionUseCase,
 )
+from app.modules.billing.application.queries.transaction_query import ListTransactionsUseCase
 from app.modules.billing.infra.repositories.transaction_repo import (
     AsyncPgTransactionRepository,
 )

@@ -25,18 +25,20 @@ from app.modules.identity.api.schemas import (
     TokenResponse,
 )
 from app.modules.identity.application.dto.account_dto import RegisterAccountCmd
-from app.modules.identity.application.use_cases.account_usecase import (
+from app.modules.identity.application.commands.account_command import (
     ActivateAccountUseCase,
     DeactivateAccountUseCase,
     DeleteAccountUseCase,
-    GetAccountUseCase,
-    ListAccountsUseCase,
     RegisterAccountUseCase,
 )
-from app.modules.identity.application.use_cases.login_usecase import LoginUseCase
-from app.modules.identity.application.use_cases.logout_usecase import LogoutUseCase
-from app.modules.identity.application.use_cases.refresh_session_usecase import (
+from app.modules.identity.application.commands.auth_command import (
+    LoginUseCase,
+    LogoutUseCase,
     RefreshSessionUseCase,
+)
+from app.modules.identity.application.queries.account_query import (
+    GetAccountUseCase,
+    ListAccountsUseCase,
 )
 from app.modules.identity.domain.entities.account import RoleCode
 from app.shared.middleware.limiter import limiter
