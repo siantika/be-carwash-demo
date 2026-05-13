@@ -1,14 +1,8 @@
 from app.modules.billing.application.dto.transaction_dto import (
     ProcessTransactionCmd,
-    TransactionListResultDto,
     TransactionResultDto,
 )
-from app.modules.billing.application.queries.models import (
-    TransactionListFilterDto,
-)
-from app.modules.billing.application.queries.payment_transaction_query_repository import (
-    IPaymentTransactionQueryRepository,
-)
+from app.modules.billing.application.dto.transaction_mapper import to_transaction_result
 from app.modules.billing.domain.entities.payment_transaction import PaymentTransaction
 from app.modules.billing.domain.repositories.i_billing_uow import IBillingUnitOfWork
 from app.modules.billing.domain.value_objects.payment import Payment, PaymentMethodEnum
@@ -42,45 +36,6 @@ def _parse_payment_method(
         return PaymentMethodEnum(payment_method.strip().upper())
     except ValueError as exc:
         raise BusinessRuleViolation("Invalid payment method") from exc
-
-
-def _parse_payment_status(
-    payment_status: PaymentStatus | str | None,
-) -> PaymentStatus | None:
-    if payment_status is None:
-        return None
-
-    if isinstance(payment_status, PaymentStatus):
-        return payment_status
-
-    try:
-        return PaymentStatus(payment_status.strip().upper())
-    except ValueError as exc:
-        raise BusinessRuleViolation("Invalid payment status") from exc
-
-
-def _to_transaction_result(
-    transaction: PaymentTransaction,
-    *,
-    ticket_number: str,
-    cashier: str,
-) -> TransactionResultDto:
-    return TransactionResultDto(
-        id=transaction.id,
-        ticket_id=transaction.ticket_id,
-        ticket_number=ticket_number,
-        cashier_id=transaction.cashier_id,
-        cashier=cashier,
-        plate_number=transaction.plate_number.value,
-        payment_method=transaction.payment.method.value,
-        payment_metadata=transaction.payment.metadata,
-        subtotal_amount=transaction.subtotal_amount.amount,
-        total_amount=transaction.total_amount.amount,
-        payment_status=transaction.payment_status.status.value,
-        paid_at=transaction.payment_status.paid_at,
-        created_at=transaction.created_at,
-        updated_at=transaction.updated_at,
-    )
 
 
 class ProcessTransactionUseCase:
@@ -133,64 +88,9 @@ class ProcessTransactionUseCase:
             await u.ticket.save(ticket)
             await u.commit()
 
-        return _to_transaction_result(
+        return to_transaction_result(
             transaction,
             ticket_number=ticket.ticket_number.value,
             cashier=cashier.username.value,
         )
 
-
-class ListTransactionsUseCase:
-    def __init__(self, transaction_query: IPaymentTransactionQueryRepository):
-        self.transaction_query = transaction_query
-
-    async def execute(
-        self,
-        filters: TransactionListFilterDto | None = None,
-        page: int = 1,
-        limit: int = 20,
-    ) -> TransactionListResultDto:
-        if page < 1:
-            raise BusinessRuleViolation("Page must be greater than or equal to 1")
-
-        if limit < 1:
-            raise BusinessRuleViolation("Limit must be greater than or equal to 1")
-
-        filters = filters or TransactionListFilterDto()
-
-        if filters.ticket_id is not None and filters.ticket_id < 1:
-            raise BusinessRuleViolation("Ticket id must be greater than or equal to 1")
-
-        if filters.cashier_id is not None and filters.cashier_id < 1:
-            raise BusinessRuleViolation("Cashier id must be greater than or equal to 1")
-
-        plate_number = filters.plate_number.strip().upper() if filters.plate_number else None
-        if plate_number == "":
-            plate_number = None
-
-        offset = (page - 1) * limit
-        records, total = await self.transaction_query.list(
-            filters=TransactionListFilterDto(
-                ticket_id=filters.ticket_id,
-                cashier_id=filters.cashier_id,
-                payment_method=_parse_payment_method(filters.payment_method),
-                payment_status=_parse_payment_status(filters.payment_status),
-                plate_number=plate_number,
-            ),
-            limit=limit,
-            offset=offset,
-        )
-
-        return TransactionListResultDto(
-            items=[
-                _to_transaction_result(
-                    record.transaction,
-                    ticket_number=record.ticket_number,
-                    cashier=record.cashier,
-                )
-                for record in records
-            ],
-            total=total,
-            page=page,
-            limit=limit,
-        )

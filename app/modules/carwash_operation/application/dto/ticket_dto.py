@@ -2,11 +2,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 
-from app.modules.carwash_operation.application.queries.ticket_query_repository import (
-    TicketListFilterDto,
-)
-
-
 @dataclass(frozen=True)
 class CreateTicketCmd:
     service_type_id: int

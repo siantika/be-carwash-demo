@@ -4,23 +4,17 @@ from dataclasses import dataclass
 
 from app.modules.carwash_operation.application.dto.ticket_dto import (
     CreateTicketCmd,
-    TicketListResultDto,
     TicketResultDto,
 )
+from app.modules.carwash_operation.application.dto.ticket_mapper import to_ticket_result
 from app.modules.carwash_operation.application.dto.ticket_void_dto import (
     CreateTicketVoidCmd,
     TicketVoidResultDto,
 )
-from app.modules.carwash_operation.application.queries.models import (
-    TicketListFilterDto,
-)
-from app.modules.carwash_operation.application.queries.ticket_query_repository import (
-    ITicketQueryRepository,
-)
 from app.modules.carwash_operation.application.services.i_barcode_generator import (
     IBarcodeGenerator,
 )
-from app.modules.carwash_operation.domain.entities.ticket import Ticket, TicketStatusEnum
+from app.modules.carwash_operation.domain.entities.ticket import Ticket
 from app.modules.carwash_operation.domain.entities.ticket_void import TicketVoid
 from app.modules.carwash_operation.domain.repositories.i_carwash_operation_uow import (
     ICarwashOperationUnitOfWork,
@@ -34,38 +28,9 @@ from app.modules.service_catalog.domain.repositories.i_service_type_repo import 
     IServiceTypeRepository,
 )
 from app.shared.domain.exceptions.exceptions import (
-    BusinessRuleViolation,
     EntityNotFound,
     InactiveServiceTypeCannotBeUsed,
 )
-
-
-def _to_ticket_result(ticket: Ticket) -> TicketResultDto:
-    return TicketResultDto(
-        id=ticket.id,
-        ticket_number=ticket.ticket_number.value,
-        entry_time=ticket.entry_time.value,
-        status=ticket.status.value,
-        service_type_id=ticket.service_type_id,
-        service_name=ticket.service_snapshot.service_name,
-        service_desc=ticket.service_snapshot.service_desc,
-        service_price=ticket.service_snapshot.service_price.amount,
-        created_at=ticket.created_at,
-        updated_at=ticket.updated_at,
-    )
-
-
-def _parse_ticket_status(status: TicketStatusEnum | str | None) -> TicketStatusEnum | None:
-    if status is None:
-        return None
-
-    if isinstance(status, TicketStatusEnum):
-        return status
-
-    try:
-        return TicketStatusEnum(status.strip().upper())
-    except ValueError as exc:
-        raise BusinessRuleViolation("Invalid ticket status") from exc
 
 
 @dataclass
@@ -130,51 +95,7 @@ class CreateTicketUseCase:
         )
 
         created_ticket = await self.ticket_repo.add(ticket)
-        return _to_ticket_result(created_ticket)
-
-
-class ListTicketsUseCase:
-    def __init__(self, ticket_query: ITicketQueryRepository):
-        self.ticket_query = ticket_query
-
-    async def execute(
-        self,
-        filters: TicketListFilterDto | None = None,
-        page: int = 1,
-        limit: int = 20,
-    ) -> TicketListResultDto:
-        if page < 1:
-            raise BusinessRuleViolation("Page must be greater than or equal to 1")
-
-        if limit < 1:
-            raise BusinessRuleViolation("Limit must be greater than or equal to 1")
-
-        filters = filters or TicketListFilterDto()
-        status = _parse_ticket_status(filters.status)
-        ticket_number = filters.ticket_number.strip() if filters.ticket_number else None
-        if ticket_number == "":
-            ticket_number = None
-
-        if filters.service_type_id is not None and filters.service_type_id < 1:
-            raise BusinessRuleViolation("Service type id must be greater than or equal to 1")
-
-        offset = (page - 1) * limit
-        tickets, total = await self.ticket_query.list(
-            filters=TicketListFilterDto(
-                status=status,
-                service_type_id=filters.service_type_id,
-                ticket_number=ticket_number,
-            ),
-            limit=limit,
-            offset=offset,
-        )
-
-        return TicketListResultDto(
-            items=[_to_ticket_result(ticket) for ticket in tickets],
-            total=total,
-            page=page,
-            limit=limit,
-        )
+        return to_ticket_result(created_ticket)
 
 
 class VoidTicketUseCase:
@@ -212,3 +133,4 @@ class VoidTicketUseCase:
             entry_time=ticket.entry_time.value,
             void_time=ticket_void.void_time,
         )
+

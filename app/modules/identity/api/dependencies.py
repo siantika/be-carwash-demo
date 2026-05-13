@@ -1,18 +1,20 @@
 from fastapi import Depends
 
 from app.modules.identity.application.config.auth_config import AuthConfig
-from app.modules.identity.application.use_cases.account_usecase import (
+from app.modules.identity.application.commands.account_command import (
     ActivateAccountUseCase,
     DeactivateAccountUseCase,
     DeleteAccountUseCase,
-    GetAccountUseCase,
-    ListAccountsUseCase,
     RegisterAccountUseCase,
 )
-from app.modules.identity.application.use_cases.login_usecase import LoginUseCase
-from app.modules.identity.application.use_cases.logout_usecase import LogoutUseCase
-from app.modules.identity.application.use_cases.refresh_session_usecase import (
+from app.modules.identity.application.commands.auth_command import (
+    LoginUseCase,
+    LogoutUseCase,
     RefreshSessionUseCase,
+)
+from app.modules.identity.application.queries.account_query import (
+    GetAccountUseCase,
+    ListAccountsUseCase,
 )
 from app.modules.identity.infra.repositories.account_repo import (
     AsyncPgAccountRepository,

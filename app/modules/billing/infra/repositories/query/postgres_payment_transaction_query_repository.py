@@ -6,15 +6,12 @@ from app.modules.billing.application.queries.models import (
     TransactionListFilterDto,
     TransactionRecord,
 )
-from app.modules.billing.application.queries.payment_transaction_query_repository import (
-    IPaymentTransactionQueryRepository,
-)
 from app.modules.billing.infra.repositories.transaction_repo import _mapper
 from app.shared.infra.database.error_handler import handle_db_error
 from app.shared.interfaces.i_logger import ILogger
 
 
-class PostgresPaymentTransactionQueryRepository(IPaymentTransactionQueryRepository):
+class PostgresPaymentTransactionQueryRepository:
     def __init__(self, db: asyncpg.Connection, logger: ILogger):
         self.db = db
         self.logger = logger

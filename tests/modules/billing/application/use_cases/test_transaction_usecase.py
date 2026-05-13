@@ -10,10 +10,10 @@ from app.modules.billing.application.queries.models import (
     TransactionListFilterDto,
     TransactionRecord,
 )
-from app.modules.billing.application.use_cases.transaction_usecase import (
-    ListTransactionsUseCase,
+from app.modules.billing.application.commands.transaction_command import (
     ProcessTransactionUseCase,
 )
+from app.modules.billing.application.queries.transaction_query import ListTransactionsUseCase
 from app.modules.billing.domain.entities.payment_transaction import PaymentTransaction
 from app.modules.billing.domain.value_objects.payment import Payment, PaymentMethodEnum
 from app.modules.billing.domain.value_objects.payment_state import (

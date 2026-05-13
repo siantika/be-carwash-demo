@@ -1,11 +1,11 @@
 from fastapi import Depends
 
-from app.modules.carwash_operation.application.use_cases.ticket_usecase import (
+from app.modules.carwash_operation.application.commands.ticket_command import (
     CreateTicketUseCase,
     GenerateEan13TimeBased,
-    ListTicketsUseCase,
     VoidTicketUseCase,
 )
+from app.modules.carwash_operation.application.queries.ticket_query import ListTicketsUseCase
 from app.modules.carwash_operation.infra.repositories.ticket_repo import (
     AsyncPgTicketRepository,
 )

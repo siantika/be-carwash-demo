@@ -17,10 +17,10 @@ from app.modules.billing.application.dto.transaction_dto import (
 from app.modules.billing.application.queries.models import (
     TransactionListFilterDto,
 )
-from app.modules.billing.application.use_cases.transaction_usecase import (
-    ListTransactionsUseCase,
+from app.modules.billing.application.commands.transaction_command import (
     ProcessTransactionUseCase,
 )
+from app.modules.billing.application.queries.transaction_query import ListTransactionsUseCase
 from app.modules.billing.domain.value_objects.payment import PaymentMethodEnum
 from app.modules.billing.domain.value_objects.payment_state import PaymentStatus
 from app.modules.identity.domain.entities.account import RoleCode

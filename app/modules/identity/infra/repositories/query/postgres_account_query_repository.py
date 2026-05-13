@@ -5,9 +5,6 @@ import asyncpg
 from app.modules.identity.application.queries.models import (
     AccountListFilterDto,
 )
-from app.modules.identity.application.queries.account_query_repository import (
-    IAccountQueryRepository,
-)
 from app.modules.identity.infra.repositories.account_repo import (
     SELECT_ALL_COLUMNS,
     _mapper,
@@ -16,7 +13,7 @@ from app.shared.infra.database.error_handler import handle_db_error
 from app.shared.interfaces.i_logger import ILogger
 
 
-class PostgresAccountQueryRepository(IAccountQueryRepository):
+class PostgresAccountQueryRepository:
     def __init__(self, db: asyncpg.Connection, logger: ILogger):
         self.db = db
         self.logger = logger

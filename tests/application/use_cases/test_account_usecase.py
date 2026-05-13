@@ -2,12 +2,14 @@ import pytest
 
 from app.modules.identity.application.dto.account_dto import RegisterAccountCmd
 from app.modules.identity.application.queries.models import AccountListFilterDto
-from app.modules.identity.application.use_cases.account_usecase import (
+from app.modules.identity.application.commands.account_command import (
     ActivateAccountUseCase,
     DeleteAccountUseCase,
+    RegisterAccountUseCase,
+)
+from app.modules.identity.application.queries.account_query import (
     GetAccountUseCase,
     ListAccountsUseCase,
-    RegisterAccountUseCase,
 )
 from app.modules.identity.domain.entities.account import Account, RoleCode
 from app.modules.identity.domain.value_objects.email import Email

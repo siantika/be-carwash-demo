@@ -1,7 +1,7 @@
 import pytest
 
 from app.modules.identity.application.config.auth_config import AuthConfig
-from app.modules.identity.application.use_cases.login_usecase import LoginUseCase
+from app.modules.identity.application.commands.auth_command import LoginUseCase
 from app.modules.identity.domain.entities.account import Account, RoleCode
 from app.modules.identity.domain.value_objects.email import Email
 from app.modules.identity.domain.value_objects.username import Username
