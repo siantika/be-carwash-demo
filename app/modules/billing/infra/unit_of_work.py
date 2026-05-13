@@ -4,6 +4,9 @@ from app.modules.billing.domain.repositories.i_billing_uow import IBillingUnitOf
 from app.modules.billing.infra.repositories.transaction_repo import (
     AsyncPgTransactionRepository,
 )
+from app.modules.billing.infra.repositories.idempotency_repo import (
+    AsyncPgIdempotencyRepository,
+)
 from app.modules.carwash_operation.infra.repositories.ticket_repo import (
     AsyncPgTicketRepository,
 )
@@ -26,6 +29,7 @@ class AsyncPgBillingUnitOfWork(IBillingUnitOfWork):
         self._committed = False
 
         self.transaction = AsyncPgTransactionRepository(self._conn, self.logger)
+        self.idempotency = AsyncPgIdempotencyRepository(self._conn, self.logger)
         self.ticket = AsyncPgTicketRepository(self._conn, self.logger)
         self.account = AsyncPgAccountRepository(self._conn, self.logger)
 

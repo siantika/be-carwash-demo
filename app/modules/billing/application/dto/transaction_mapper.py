@@ -25,3 +25,21 @@ def to_transaction_result(
         updated_at=transaction.updated_at,
     )
 
+
+def transaction_result_to_dict(result: TransactionResultDto) -> dict:
+    return {
+        "id": result.id,
+        "ticket_id": result.ticket_id,
+        "ticket_number": result.ticket_number,
+        "cashier_id": result.cashier_id,
+        "cashier": result.cashier,
+        "plate_number": result.plate_number,
+        "payment_method": result.payment_method,
+        "payment_metadata": result.payment_metadata,
+        "subtotal_amount": str(result.subtotal_amount),
+        "total_amount": str(result.total_amount),
+        "payment_status": result.payment_status,
+        "paid_at": result.paid_at.isoformat() if result.paid_at is not None else None,
+        "created_at": result.created_at.isoformat(),
+        "updated_at": result.updated_at.isoformat(),
+    }
