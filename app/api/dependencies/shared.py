@@ -5,22 +5,18 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from pydantic import ValidationError
 
-from app.modules.identity.infra.repositories.account_repo import AsyncPgAccountRepository
+from app.modules.identity.application.dto.auth_context_dto import AuthContextDto
+from app.modules.identity.infra.repositories.account_repo import (
+    AsyncPgAccountRepository,
+)
 from app.modules.identity.infra.security import decode_token
+from app.shared.infra.database.db import get_db, get_db_pool
 from app.shared.middleware.logger import StructlogLogger, setup_logger
-from application.dto.auth_context_dto import AuthContextDto
-from application.i_unit_of_work import IUnitOfWork
-from infra.db import get_db, get_db_pool
-from infra.unit_of_work import AsyncpgUnitOfWork
 from interfaces.i_logger import ILogger
 
 
 def get_logger() -> ILogger:
     return StructlogLogger("api")
-
-
-async def get_uow(pool = Depends(get_db_pool), logger = Depends(setup_logger)) -> IUnitOfWork:
-    return AsyncpgUnitOfWork(pool, logger)
 
 
 def get_account_repo(db=Depends(get_db), logger=Depends(get_logger)):

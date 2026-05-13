@@ -9,19 +9,21 @@ from app.modules.identity.application.use_cases.account_usecase import (
     ListAccountsUseCase,
     RegisterAccountUseCase,
 )
-from app.modules.identity.infra.repositories.refresh_token_repo import (
-    AsyncPgRefreshTokenRepository,
-)
 from app.modules.identity.application.use_cases.login_usecase import LoginUseCase
 from app.modules.identity.application.use_cases.logout_usecase import LogoutUseCase
 from app.modules.identity.application.use_cases.refresh_session_usecase import (
     RefreshSessionUseCase,
 )
-from app.modules.identity.infra.repositories.account_repo import AsyncPgAccountRepository
+from app.modules.identity.infra.repositories.account_repo import (
+    AsyncPgAccountRepository,
+)
+from app.modules.identity.infra.repositories.refresh_token_repo import (
+    AsyncPgRefreshTokenRepository,
+)
 from app.modules.identity.infra.security import PasswordHasher, TokenService
 from app.shared.config.settings import settings
+from app.shared.infra.database.db import get_db
 from app.shared.middleware.logger import StructlogLogger
-from infra.db import get_db
 from interfaces.i_logger import ILogger
 
 

@@ -13,8 +13,8 @@ from app.modules.service_catalog.application.use_cases.service_type_usecase impo
 from app.modules.service_catalog.infra.repositories.service_type_repo import (
     AsyncPgServiceTypeRepository,
 )
+from app.shared.infra.database.db import get_db
 from app.shared.middleware.logger import StructlogLogger
-from infra.db import get_db
 from interfaces.i_logger import ILogger
 
 

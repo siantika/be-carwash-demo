@@ -13,8 +13,8 @@ from app.modules.carwash_operation.infra.unit_of_work import (
     AsyncPgCarwashOperationUnitOfWork,
 )
 from app.modules.service_catalog.api.dependencies import get_service_type_repo
+from app.shared.infra.database.db import get_db, get_db_pool
 from app.shared.middleware.logger import StructlogLogger
-from infra.db import get_db, get_db_pool
 from interfaces.i_logger import ILogger
 
 

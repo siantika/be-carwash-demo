@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, Query, Request, status
 
 from app.api.dependencies.shared import RoleChecker, get_current_user
-from application.dto.auth_context_dto import AuthContextDto
+from app.modules.identity.application.dto.auth_context_dto import AuthContextDto
 from app.modules.identity.api.dependencies import (
     get_activate_account_usecase,
     get_deactivate_account_usecase,

@@ -7,10 +7,10 @@ from slowapi.errors import RateLimitExceeded
 from app.api.v1.router import api_router
 from app.shared.config.settings import settings
 from app.shared.error_handling.handlers import register_exception_handlers
+from app.shared.infra.database.db import lifespan
 from app.shared.middleware.limiter import limiter
 from app.shared.middleware.logger import setup_logger
 from app.shared.middleware.security_headers import SecurityHeadersMiddleware
-from infra.db import lifespan
 
 setup_logger(json_format=False)  # set true for prod
 
