@@ -1,14 +1,16 @@
 from typing import List
 
-from fastapi import Depends
+from fastapi import Depends, Header
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from pydantic import ValidationError
 
 from app.modules.identity.application.dto.auth_context_dto import AuthContextDto
+from app.modules.identity.domain.entities.device import Device
 from app.modules.identity.infra.repositories.account_repo import (
     AsyncPgAccountRepository,
 )
+from app.modules.identity.infra.repositories.device_repo import AsyncPgDeviceRepository
 from app.modules.identity.infra.security import decode_token
 from app.shared.domain.exceptions.exceptions import (
     InactiveUserError,
@@ -27,6 +29,10 @@ def get_logger() -> ILogger:
 
 def get_account_repo(db=Depends(get_db), logger=Depends(get_logger)):
     return AsyncPgAccountRepository(db, logger)
+
+
+def get_device_repo(db=Depends(get_db), logger=Depends(get_logger)):
+    return AsyncPgDeviceRepository(db, logger)
 
 # should be same as login path
 oauth2_scheme = OAuth2PasswordBearer(
@@ -76,5 +82,29 @@ def RoleChecker(required_roles: List[str]):
         if user.role not in allowed_roles:
             raise PermissionDeniedError("You don't have permission")
         return user
+
+    return verify
+
+
+async def get_current_device(
+    device_code: str | None = Header(default=None, alias="X-Device-Code"),
+    device_repo=Depends(get_device_repo),
+) -> Device:
+    if device_code is None or device_code.strip() == "":
+        raise PermissionDeniedError("Device code is required")
+
+    device = await device_repo.find_by_code(device_code.strip())
+    if device is None:
+        raise PermissionDeniedError("Device is not registered")
+    if not device.is_active:
+        raise PermissionDeniedError("Device is inactive")
+
+    await device_repo.touch_last_seen(device.id)
+    return device
+
+
+def DeviceChecker():
+    async def verify(device: Device = Depends(get_current_device)) -> Device:
+        return device
 
     return verify
