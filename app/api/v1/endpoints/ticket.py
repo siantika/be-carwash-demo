@@ -11,10 +11,14 @@ from app.api.dependencies.ticket import (
 )
 from app.api.schema.ticket_schema import CreateTicketRequest, TicketResponse
 from app.api.schema.ticket_void_schema import TicketVoidRequest, TicketVoidResponse
-from application.dto.ticket_dto import CreateTicketCmd
-from application.dto.ticket_void_dto import CreateTicketVoidCmd
-from application.use_cases.ticket.create_ticket_usecase import CreateTicketUseCase
-from application.use_cases.ticket.void_ticket_usecase import VoidTicketUseCase
+from app.modules.carwash_operation.application.dto.ticket_dto import CreateTicketCmd
+from app.modules.carwash_operation.application.dto.ticket_void_dto import (
+    CreateTicketVoidCmd,
+)
+from app.modules.carwash_operation.application.use_cases.ticket_usecase import (
+    CreateTicketUseCase,
+    VoidTicketUseCase,
+)
 from app.modules.identity.domain.entities.account import RoleCode
 from app.shared.response import BaseResponse
 from app.shared.interfaces.i_usecase import IUseCase
@@ -44,7 +48,10 @@ async def list_tickets(
     pagination = Depends(get_offset_pagination),
     usecase: IUseCase = Depends(get_list_tickets_usecase)
 ):
-    list_tickets = await usecase.execute(pagination.limit, pagination.offset)
+    list_tickets = await usecase.execute(
+        page=(pagination.offset // pagination.limit) + 1,
+        limit=pagination.limit,
+    )
     return BaseResponse(
         status="success",
         message="List tickets retrieved successfully",
@@ -67,7 +74,7 @@ async def void_ticket(
 ):
     cmd = CreateTicketVoidCmd(
         ticket_id= ticket_id,
-        user_id = user.user_id,
+        account_id = int(user.user_id),
         reason = payload.reason
     )
     voided_ticket = await usecase.execute(cmd)

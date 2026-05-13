@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 
+from app.shared.infra.database.db import get_db
 from app.shared.middleware.limiter import limiter
-from infra.db import get_db
 
 router = APIRouter(tags=["test-db"])
 

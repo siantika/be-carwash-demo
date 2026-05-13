@@ -1,7 +1,7 @@
 import pytest
 
 from app.shared.domain.exceptions.exceptions import InvalidValueObject
-from domain.value_object.payment import Payment, PaymentMethodEnum
+from app.modules.billing.domain.value_objects.payment import Payment, PaymentMethodEnum
 
 
 def test_payment_accepts_enum_method():
