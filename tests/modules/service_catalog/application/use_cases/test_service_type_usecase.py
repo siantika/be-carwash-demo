@@ -24,6 +24,8 @@ from app.shared.domain.exceptions.exceptions import (
     BusinessRuleViolation,
     EntityAlreadyExists,
     EntityNotFound,
+    PrimaryServiceCannotBeDeactivated,
+    PrimaryServiceCannotBeDeleted,
 )
 from app.shared.domain.value_objects.money import Money
 
@@ -358,7 +360,7 @@ async def test_deactivate_primary_service_is_rejected() -> None:
         )
     )
 
-    with pytest.raises(BusinessRuleViolation):
+    with pytest.raises(PrimaryServiceCannotBeDeactivated):
         await DeactivateServiceTypeUseCase(repo).execute(service_type.id)
 
 
@@ -408,7 +410,7 @@ async def test_delete_primary_service_is_rejected() -> None:
         )
     )
 
-    with pytest.raises(BusinessRuleViolation, match="Primary service cannot be deleted"):
+    with pytest.raises(PrimaryServiceCannotBeDeleted, match="Primary service cannot be deleted"):
         await DeleteServiceTypeUseCase(repo).execute(service_type.id)
 
     assert repo.service_types[service_type.id].deleted_at is None

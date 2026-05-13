@@ -29,8 +29,8 @@ from app.modules.carwash_operation.domain.value_objects.service_snapshot import 
 from app.modules.carwash_operation.domain.value_objects.ticket_number import TicketNumber
 from app.shared.domain.entities.base import _utcnow
 from app.shared.domain.exceptions.exceptions import (
-    EntityAlreadyExists,
-    InvalidTicketStateError,
+    TicketAlreadyPaidError,
+    TicketNotPayableError,
 )
 from app.shared.domain.value_objects.money import Money
 
@@ -223,7 +223,7 @@ async def test_process_transaction_rejects_non_payable_ticket() -> None:
     uow = make_uow()
     uow.ticket.tickets[1] = make_ticket(TicketStatusEnum.PAID)
 
-    with pytest.raises(InvalidTicketStateError):
+    with pytest.raises(TicketNotPayableError):
         await ProcessTransactionUseCase(uow).execute(
             ProcessTransactionCmd(
                 ticket_id=1,
@@ -250,7 +250,7 @@ async def test_process_transaction_rejects_duplicate_ticket_payment() -> None:
         )
     )
 
-    with pytest.raises(EntityAlreadyExists):
+    with pytest.raises(TicketAlreadyPaidError):
         await ProcessTransactionUseCase(uow).execute(
             ProcessTransactionCmd(
                 ticket_id=1,

@@ -17,6 +17,7 @@ from app.modules.identity.domain.value_objects.plain_password import PlainPasswo
 from app.modules.identity.domain.value_objects.username import Username
 from app.shared.domain.exceptions.exceptions import (
     BusinessRuleViolation,
+    DeletedAccountMismatchError,
     EntityAlreadyExists,
     EntityNotFound,
 )
@@ -161,4 +162,4 @@ class DeleteAccountUseCase:
 
         deleted_account_id = await self.account_repo.delete(account_id)
         if deleted_account_id != account_id:
-            raise BusinessRuleViolation("Deleted account id mismatch")
+            raise DeletedAccountMismatchError("Deleted account id mismatch")

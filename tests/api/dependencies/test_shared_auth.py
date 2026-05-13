@@ -1,11 +1,11 @@
 import pytest
-from fastapi import HTTPException, status
 
 from app.api.dependencies.shared import get_current_user
 from app.modules.identity.domain.entities.account import Account, RoleCode
 from app.modules.identity.domain.value_objects.email import Email
 from app.modules.identity.domain.value_objects.username import Username
 from app.modules.identity.infra.security import create_access_token
+from app.shared.domain.exceptions.exceptions import InactiveUserError, InvalidTokenError
 
 
 class FakeAccountRepository:
@@ -51,25 +51,23 @@ async def test_get_current_user_loads_active_account_from_database() -> None:
 async def test_get_current_user_rejects_inactive_account() -> None:
     token = create_access_token("1", "cashier_01", RoleCode.CASHIER, 1)
 
-    with pytest.raises(HTTPException) as exc_info:
+    with pytest.raises(InactiveUserError) as exc_info:
         await get_current_user(
             token=token,
             account_repo=FakeAccountRepository(_account(is_active=False)),
         )
 
-    assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
-    assert exc_info.value.detail == "Account is inactive"
+    assert str(exc_info.value) == "Account is inactive"
 
 
 @pytest.mark.anyio
 async def test_get_current_user_rejects_missing_account() -> None:
     token = create_access_token("1", "cashier_01", RoleCode.CASHIER, 1)
 
-    with pytest.raises(HTTPException) as exc_info:
+    with pytest.raises(InvalidTokenError) as exc_info:
         await get_current_user(
             token=token,
             account_repo=FakeAccountRepository(None),
         )
 
-    assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
-    assert exc_info.value.detail == "Invalid token"
+    assert str(exc_info.value) == "Invalid token"

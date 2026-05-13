@@ -36,6 +36,7 @@ from app.modules.service_catalog.domain.repositories.i_service_type_repo import 
 from app.shared.domain.exceptions.exceptions import (
     BusinessRuleViolation,
     EntityNotFound,
+    InactiveServiceTypeCannotBeUsed,
 )
 
 
@@ -114,7 +115,9 @@ class CreateTicketUseCase:
             raise EntityNotFound("ServiceType", cmd.service_type_id)
 
         if not service_type.is_active:
-            raise BusinessRuleViolation("Inactive service type cannot be used for ticket")
+            raise InactiveServiceTypeCannotBeUsed(
+                "Inactive service type cannot be used for ticket"
+            )
 
         ticket = Ticket(
             service_type_id=service_type.id,

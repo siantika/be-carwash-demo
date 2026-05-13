@@ -20,7 +20,7 @@ from app.modules.carwash_operation.application.use_cases.ticket_usecase import (
 from app.modules.carwash_operation.domain.entities.ticket import Ticket, TicketStatusEnum
 from app.modules.carwash_operation.domain.entities.ticket_void import TicketVoid
 from app.modules.service_catalog.domain.entities.service_type import ServiceType
-from app.shared.domain.exceptions.exceptions import BusinessRuleViolation
+from app.shared.domain.exceptions.exceptions import InactiveServiceTypeCannotBeUsed
 from app.shared.domain.value_objects.money import Money
 
 
@@ -170,7 +170,7 @@ async def test_create_ticket_rejects_inactive_service_type() -> None:
         is_active=False,
     )
 
-    with pytest.raises(BusinessRuleViolation):
+    with pytest.raises(InactiveServiceTypeCannotBeUsed):
         await CreateTicketUseCase(
             ticket_repo,
             service_type_repo,

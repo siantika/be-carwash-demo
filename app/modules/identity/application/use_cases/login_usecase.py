@@ -17,9 +17,10 @@ from app.modules.identity.domain.repositories.i_refresh_token_repo import (
 from app.modules.identity.domain.value_objects.username import Username
 from app.shared.domain.entities.base import _utcnow
 from app.shared.domain.exceptions.exceptions import (
-    BusinessRuleViolation,
+    AccountTemporarilyLockedError,
     InactiveUserError,
     InvalidPasswordError,
+    MissingPersistedEntityIdError,
 )
 
 
@@ -51,7 +52,7 @@ class LoginUseCase:
         if not account.can_login(now):
             if not account.is_active:
                 raise InactiveUserError("Account is inactive")
-            raise BusinessRuleViolation("Account is temporarily locked")
+            raise AccountTemporarilyLockedError("Account is temporarily locked")
 
         if not self.password_hasher.verify(password, account.password_hash):
             account.record_failed_login(now)
@@ -59,7 +60,7 @@ class LoginUseCase:
             raise InvalidPasswordError("Invalid credentials")
 
         if account.id is None:
-            raise BusinessRuleViolation("Authenticated account must have an id")
+            raise MissingPersistedEntityIdError("Authenticated account must have an id")
 
         account.record_successful_login(now)
         await self.account_repo.save(account)

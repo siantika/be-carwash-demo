@@ -13,6 +13,7 @@ from app.shared.domain.exceptions.exceptions import (
     InactiveUserError,
     InvalidPasswordError,
     InvalidTokenError,
+    PermissionDeniedError,
     RepositoryError,
 )
 from app.shared.response import BaseErrorResponse, ErrorResponse
@@ -24,6 +25,7 @@ EXCEPTION_STATUS_MAP = {
     InvalidPasswordError: status.HTTP_401_UNAUTHORIZED,
     InvalidTokenError: status.HTTP_401_UNAUTHORIZED,
     InactiveUserError: status.HTTP_403_FORBIDDEN,
+    PermissionDeniedError: status.HTTP_403_FORBIDDEN,
     EntityNotFound: status.HTTP_404_NOT_FOUND,
     EntityAlreadyExists: status.HTTP_409_CONFLICT,
     BusinessRuleViolation: status.HTTP_400_BAD_REQUEST,

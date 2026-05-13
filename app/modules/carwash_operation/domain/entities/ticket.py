@@ -7,7 +7,11 @@ from app.modules.carwash_operation.domain.value_objects.service_snapshot import 
 )
 from app.modules.carwash_operation.domain.value_objects.ticket_number import TicketNumber
 from app.shared.domain.entities.base import BaseEntity
-from app.shared.domain.exceptions.exceptions import BusinessRuleViolation
+from app.shared.domain.exceptions.exceptions import (
+    BusinessRuleViolation,
+    InvalidTargetTicketStateError,
+    TerminalTicketStateError,
+)
 
 
 class TicketStatusEnum(str, Enum):
@@ -35,12 +39,12 @@ class Ticket(BaseEntity):
 
     def change_status(self, new_status: TicketStatusEnum) -> None:
         if self.status in [TicketStatusEnum.PAID, TicketStatusEnum.VOID]:
-            raise BusinessRuleViolation(
+            raise TerminalTicketStateError(
                 f"Cannot change status from terminal state '{self.status}'."
             )
 
         if new_status not in TicketStatusEnum:
-            raise BusinessRuleViolation(f"Invalid target status '{new_status}'.")
+            raise InvalidTargetTicketStateError(f"Invalid target status '{new_status}'.")
 
         self.status = new_status
 
