@@ -81,13 +81,20 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(StarletteHTTPException)
     async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
+        if exc.status_code == status.HTTP_404_NOT_FOUND:
+            code = "NotFound"
+            message = "Page not found"
+        else:
+            code = exc.__class__.__name__
+            message = str(exc.detail)
+
         return JSONResponse(
             status_code=exc.status_code,
             headers=getattr(exc, "headers", None),
             content=_dump_error_response(BaseErrorResponse(
                 error=ErrorResponse(
-                    code=exc.__class__.__name__,
-                    message=str(exc.detail),
+                    code=code,
+                    message=message,
                 )
             )),
         )
