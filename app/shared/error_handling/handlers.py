@@ -82,8 +82,8 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(StarletteHTTPException)
     async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
         if exc.status_code == status.HTTP_404_NOT_FOUND:
-            code = "NotFound"
-            message = "Page not found"
+            code = "RouteNotFound"
+            message = "Route not found"
         else:
             code = exc.__class__.__name__
             message = str(exc.detail)
