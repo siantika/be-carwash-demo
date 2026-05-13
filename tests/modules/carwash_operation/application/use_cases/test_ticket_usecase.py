@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
 from app.modules.carwash_operation.application.dto.ticket_dto import (
     CreateTicketCmd,
 )
+from app.modules.carwash_operation.application.services.i_request_hasher import IRequestHasher
 from app.modules.carwash_operation.application.queries.models import (
     TicketListFilterDto,
 )
@@ -17,10 +19,17 @@ from app.modules.carwash_operation.application.commands.ticket_command import (
     VoidTicketUseCase,
 )
 from app.modules.carwash_operation.application.queries.ticket_query import ListTicketsUseCase
+from app.modules.carwash_operation.domain.entities.idempotency_record import (
+    IdempotencyRecord,
+)
 from app.modules.carwash_operation.domain.entities.ticket import Ticket, TicketStatusEnum
 from app.modules.carwash_operation.domain.entities.ticket_void import TicketVoid
 from app.modules.service_catalog.domain.entities.service_type import ServiceType
-from app.shared.domain.exceptions.exceptions import InactiveServiceTypeCannotBeUsed
+from app.shared.domain.entities.base import _utcnow
+from app.shared.domain.exceptions.exceptions import (
+    BusinessRuleViolation,
+    InactiveServiceTypeCannotBeUsed,
+)
 from app.shared.domain.value_objects.money import Money
 
 
@@ -97,6 +106,80 @@ class FakeTicketVoidRepository:
         return ticket_void
 
 
+class FakeIdempotencyRepository:
+    def __init__(self):
+        self.records: dict[tuple[str, str], IdempotencyRecord] = {}
+        self.next_id = 1
+
+    async def find_by_scope_and_key(
+        self,
+        *,
+        scope: str,
+        idempotency_key: str,
+    ) -> IdempotencyRecord | None:
+        return self.records.get((scope, idempotency_key))
+
+    async def create_processing(
+        self,
+        *,
+        scope: str,
+        idempotency_key: str,
+        request_hash: str,
+        expires_at,
+    ) -> IdempotencyRecord:
+        key = (scope, idempotency_key)
+        if key in self.records:
+            from app.shared.domain.exceptions.exceptions import EntityAlreadyExists
+
+            raise EntityAlreadyExists("IdempotencyKey", idempotency_key)
+        now = _utcnow()
+        record = IdempotencyRecord(
+            id=self.next_id,
+            scope=scope,
+            idempotency_key=idempotency_key,
+            request_hash=request_hash,
+            status="PROCESSING",
+            response_payload=None,
+            http_status=None,
+            created_at=now,
+            updated_at=now,
+            expires_at=expires_at,
+        )
+        self.next_id += 1
+        self.records[key] = record
+        return record
+
+    async def mark_completed(
+        self,
+        *,
+        record_id: int,
+        response_payload: dict,
+        http_status: int,
+    ) -> IdempotencyRecord:
+        for key, record in self.records.items():
+            if record.id == record_id:
+                updated = IdempotencyRecord(
+                    id=record.id,
+                    scope=record.scope,
+                    idempotency_key=record.idempotency_key,
+                    request_hash=record.request_hash,
+                    status="COMPLETED",
+                    response_payload=response_payload,
+                    http_status=http_status,
+                    created_at=record.created_at,
+                    updated_at=_utcnow(),
+                    expires_at=record.expires_at,
+                )
+                self.records[key] = updated
+                return updated
+        raise AssertionError("record not found")
+
+
+class FixedRequestHasher(IRequestHasher):
+    def hash(self, payload: dict[str, Any]) -> str:
+        return str(payload)
+
+
 @dataclass
 class FakeAccount:
     id: int
@@ -146,11 +229,17 @@ async def test_create_ticket_uses_service_snapshot() -> None:
         price=Money(Decimal("50000")),
     )
 
+    idempotency_repo = FakeIdempotencyRepository()
     result = await CreateTicketUseCase(
         ticket_repo,
         service_type_repo,
         FixedBarcodeGenerator(),
-    ).execute(CreateTicketCmd(service_type_id=1))
+        idempotency_repo,
+        FixedRequestHasher(),
+    ).execute(
+        CreateTicketCmd(service_type_id=1),
+        idempotency_key="ticket-key-0001",
+    )
 
     assert result.id == 1
     assert result.ticket_number == "4006381333931"
@@ -170,12 +259,18 @@ async def test_create_ticket_rejects_inactive_service_type() -> None:
         is_active=False,
     )
 
+    idempotency_repo = FakeIdempotencyRepository()
     with pytest.raises(InactiveServiceTypeCannotBeUsed):
         await CreateTicketUseCase(
             ticket_repo,
             service_type_repo,
             FixedBarcodeGenerator(),
-        ).execute(CreateTicketCmd(service_type_id=1))
+            idempotency_repo,
+            FixedRequestHasher(),
+        ).execute(
+            CreateTicketCmd(service_type_id=1),
+            idempotency_key="ticket-key-0002",
+        )
 
 
 @pytest.mark.anyio
@@ -188,11 +283,17 @@ async def test_list_tickets_applies_filters() -> None:
         desc="Basic exterior wash",
         price=Money(Decimal("50000")),
     )
+    idempotency_repo = FakeIdempotencyRepository()
     ticket = await CreateTicketUseCase(
         ticket_repo,
         service_type_repo,
         FixedBarcodeGenerator(),
-    ).execute(CreateTicketCmd(service_type_id=1))
+        idempotency_repo,
+        FixedRequestHasher(),
+    ).execute(
+        CreateTicketCmd(service_type_id=1),
+        idempotency_key="ticket-key-0003",
+    )
 
     result = await ListTicketsUseCase(ticket_repo).execute(
         filters=TicketListFilterDto(
@@ -219,11 +320,17 @@ async def test_void_ticket_marks_ticket_and_creates_void_record() -> None:
         desc="Basic exterior wash",
         price=Money(Decimal("50000")),
     )
+    idempotency_repo = FakeIdempotencyRepository()
     ticket = await CreateTicketUseCase(
         ticket_repo,
         service_type_repo,
         FixedBarcodeGenerator(),
-    ).execute(CreateTicketCmd(service_type_id=1))
+        idempotency_repo,
+        FixedRequestHasher(),
+    ).execute(
+        CreateTicketCmd(service_type_id=1),
+        idempotency_key="ticket-key-0004",
+    )
     uow = FakeCarwashOperationUnitOfWork(
         ticket_repo,
         ticket_void_repo,
@@ -239,3 +346,67 @@ async def test_void_ticket_marks_ticket_and_creates_void_record() -> None:
     assert result.reason == "Wrong service"
     assert ticket_repo.tickets[ticket.id].status == TicketStatusEnum.VOID
     assert uow.committed is True
+
+
+@pytest.mark.anyio
+async def test_create_ticket_replays_completed_response_for_same_idempotency_key() -> None:
+    ticket_repo = FakeTicketRepository()
+    service_type_repo = FakeServiceTypeRepository()
+    service_type_repo.service_types[1] = ServiceType(
+        id=1,
+        name="Basic Wash",
+        desc="Basic exterior wash",
+        price=Money(Decimal("50000")),
+    )
+    idempotency_repo = FakeIdempotencyRepository()
+    usecase = CreateTicketUseCase(
+        ticket_repo,
+        service_type_repo,
+        FixedBarcodeGenerator(),
+        idempotency_repo,
+        FixedRequestHasher(),
+    )
+
+    first = await usecase.execute(
+        CreateTicketCmd(service_type_id=1),
+        idempotency_key="ticket-key-0005",
+    )
+    second = await usecase.execute(
+        CreateTicketCmd(service_type_id=1),
+        idempotency_key="ticket-key-0005",
+    )
+
+    assert first.id == second.id
+    assert len(ticket_repo.tickets) == 1
+
+
+@pytest.mark.anyio
+async def test_create_ticket_rejects_same_idempotency_key_different_payload() -> None:
+    ticket_repo = FakeTicketRepository()
+    service_type_repo = FakeServiceTypeRepository()
+    service_type_repo.service_types[1] = ServiceType(
+        id=1,
+        name="Basic Wash",
+        desc="Basic exterior wash",
+        price=Money(Decimal("50000")),
+    )
+    service_type_repo.service_types[2] = ServiceType(
+        id=2,
+        name="Premium Wash",
+        desc="Premium exterior wash",
+        price=Money(Decimal("90000")),
+    )
+    usecase = CreateTicketUseCase(
+        ticket_repo,
+        service_type_repo,
+        FixedBarcodeGenerator(),
+        FakeIdempotencyRepository(),
+        FixedRequestHasher(),
+    )
+
+    await usecase.execute(CreateTicketCmd(service_type_id=1), idempotency_key="ticket-key-0006")
+    with pytest.raises(BusinessRuleViolation):
+        await usecase.execute(
+            CreateTicketCmd(service_type_id=2),
+            idempotency_key="ticket-key-0006",
+        )
