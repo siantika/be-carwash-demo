@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.modules.billing.api.routes import router as billing_router
 from app.modules.carwash_operation.api.routes import router as carwash_operation_router
 from app.modules.identity.api.routes import account_router, auth_router
 from app.modules.service_catalog.api.routes import router as service_catalog_router
@@ -16,4 +17,9 @@ api_router.include_router(
     carwash_operation_router,
     prefix="/tickets",
     tags=["carwash-operation"],
+)
+api_router.include_router(
+    billing_router,
+    prefix="/transactions",
+    tags=["billing"],
 )

@@ -1,4 +1,6 @@
-from application.use_cases.ticket.create_ticket_usecase import GenerateEan13TimeBased
+from app.modules.carwash_operation.application.use_cases.ticket_usecase import (
+    GenerateEan13TimeBased,
+)
 
 
 def is_valid_ean13(code: str) -> bool:

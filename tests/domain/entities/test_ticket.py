@@ -1,6 +1,6 @@
 import pytest
 
-from domain.entities.ticket import Ticket, TicketStatusEnum
+from app.modules.carwash_operation.domain.entities.ticket import Ticket, TicketStatusEnum
 from app.shared.domain.exceptions.exceptions import BusinessRuleViolation
 
 
@@ -76,4 +76,3 @@ def test_mark_void_when_already_void_raises():
 
     with pytest.raises(BusinessRuleViolation):
         t.mark_void()
-

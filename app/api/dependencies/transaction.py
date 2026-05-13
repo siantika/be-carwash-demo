@@ -1,22 +1,13 @@
-from fastapi import Depends
-
-from app.api.dependencies.shared import get_logger, get_uow
-from application.use_cases.transaction.list_transaction_usecase import (
-    ListTransactionUseCase,
+from app.modules.billing.api.dependencies import (
+    get_billing_uow,
+    get_list_transactions_usecase,
+    get_process_transaction_usecase,
+    get_transaction_repo,
 )
-from application.use_cases.transaction.process_transaction_usecase import (
-    ProcessTransactionUseCase,
-)
-from infra.db import get_db
-from infra.repositories.transaction_repo import AsyncPgTransactionRepository
 
-
-def get_transaction_repo(db=Depends(get_db), 
-                         logger= Depends(get_logger)) -> AsyncPgTransactionRepository:
-    return AsyncPgTransactionRepository(db, logger)
-    
-def get_process_transaction_usecase(uow=Depends(get_uow)) -> ProcessTransactionUseCase:
-    return ProcessTransactionUseCase(uow)
-
-def get_list_transactions_usecase(repo= Depends(get_transaction_repo)) -> ListTransactionUseCase:
-    return ListTransactionUseCase(repo)
+__all__ = [
+    "get_billing_uow",
+    "get_list_transactions_usecase",
+    "get_process_transaction_usecase",
+    "get_transaction_repo",
+]

@@ -3,7 +3,7 @@ import pytest
 
 from app.api.dependencies.shared import get_current_user
 from app.main import app
-from application.dto.auth_context_dto import AuthContextDto
+from app.modules.identity.application.dto.auth_context_dto import AuthContextDto
 
 
 async def _current_user_override() -> AuthContextDto:

@@ -12,13 +12,13 @@ from app.api.dependencies.service_type import (
 from app.api.dependencies.shared import RoleChecker
 from app.api.schema.pagination_schema import OffsetPagination
 from app.api.schema.service_type_schema import CreateServiceTypeRequest, ServiceTypeResponse
-from application.dto.service_type_dto import CreateServiceTypeCmd
-from application.use_cases.service_type.create_service_type_usecase import (
-    CreateServiceTypeUseCase,
+from app.modules.service_catalog.application.dto.service_type_dto import (
+    CreateServiceTypeCmd,
 )
-from application.use_cases.service_type.manage_activation_status_usecase import (
-    ActivateStatusServiceTypeUseCase,
-    DeactivateStatusServiceTypeUseCase,
+from app.modules.service_catalog.application.use_cases.service_type_usecase import (
+    ActivateServiceTypeUseCase,
+    CreateServiceTypeUseCase,
+    DeactivateServiceTypeUseCase,
 )
 from app.modules.identity.domain.entities.account import RoleCode
 from app.shared.response import BaseResponse
@@ -35,8 +35,10 @@ async def list_service_types(
         ])),
     usecase:IUseCase = Depends(get_list_service_types_usecase)
 ):
-    service_types = await usecase.execute(pagination.limit,
-                                          pagination.offset)
+    service_types = await usecase.execute(
+        page=(pagination.offset // pagination.limit) + 1,
+        limit=pagination.limit,
+    )
     
     return BaseResponse(
         status="success",

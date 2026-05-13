@@ -12,7 +12,7 @@ from app.api.schema.transaction_schema import (
     ProcessTransactionRequest,
     ProcessTransactionResponse,
 )
-from application.dto.transaction_dto import ProcessTransactionCmd
+from app.modules.billing.application.dto.transaction_dto import ProcessTransactionCmd
 from app.modules.identity.domain.entities.account import RoleCode
 from app.shared.response import BaseResponse
 from app.shared.interfaces.i_usecase import IUseCase
@@ -27,7 +27,7 @@ async def create_transaction(
 ):
     cmd = ProcessTransactionCmd(
         ticket_id=payload.ticket_id,
-        user_id = user.user_id,
+        cashier_id = int(user.user_id),
         plate_number= payload.plate_number,
         payment_method= payload.payment_method,
         payment_metadata= payload.payment_metadata
@@ -46,8 +46,10 @@ async def list_transaction(
     user= Depends(RoleChecker([RoleCode.CASHIER, RoleCode.ADMIN])),
     usecase:IUseCase = Depends(get_list_transactions_usecase)
 ):
-    processed_transaction = await usecase.execute(pagination.limit, 
-                                                  pagination.offset)
+    processed_transaction = await usecase.execute(
+        page=(pagination.offset // pagination.limit) + 1,
+        limit=pagination.limit,
+    )
     
     return BaseResponse(
         status="success",

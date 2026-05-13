@@ -1,7 +1,7 @@
 import pytest
 
 from app.shared.domain.exceptions.exceptions import InvalidTicketNumber
-from domain.value_object.ticket_number import TicketNumber
+from app.modules.carwash_operation.domain.value_objects.ticket_number import TicketNumber
 
 VALID_EAN13_TICKET_NUMBER = [
     '5901234123457',
@@ -28,4 +28,3 @@ def test_ticket_number_should_raise_invalid_ean13(number):
     
     with pytest.raises(InvalidTicketNumber):
         TicketNumber(number)
-
