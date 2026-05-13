@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 
 from app.api.dependencies.pagination import get_offset_pagination
 from app.api.dependencies.shared import RoleChecker
@@ -29,12 +29,13 @@ router = APIRouter()
 @router.post("/tickets", response_model=BaseResponse[TicketResponse])
 async def create_ticket(
     payload:CreateTicketRequest,
+    idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
     usecase: CreateTicketUseCase=Depends(get_create_ticket_usecase)
 ):
     cmd = CreateTicketCmd(
         service_type_id = payload.service_type_id
     )
-    created_ticket = await usecase.execute(cmd)
+    created_ticket = await usecase.execute(cmd, idempotency_key=idempotency_key)
     
     return BaseResponse(
         status="success",

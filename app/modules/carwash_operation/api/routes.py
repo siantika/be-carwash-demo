@@ -1,6 +1,6 @@
 from typing import Annotated, List
 
-from fastapi import APIRouter, Depends, Path, Query, status
+from fastapi import APIRouter, Depends, Header, Path, Query, status
 
 from app.api.dependencies.shared import RoleChecker
 from app.modules.carwash_operation.api.dependencies import (
@@ -40,10 +40,14 @@ CARWASH_OPERATION_ROLES = [RoleCode.ADMIN, RoleCode.OWNER, RoleCode.CASHIER]
 @router.post("", response_model=BaseResponse[TicketResponse], status_code=status.HTTP_201_CREATED)
 async def create_ticket(
     payload: CreateTicketRequest,
+    idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
     user=Depends(RoleChecker(CARWASH_OPERATION_ROLES)),
     usecase: CreateTicketUseCase = Depends(get_create_ticket_usecase),
 ):
-    ticket = await usecase.execute(CreateTicketCmd(service_type_id=payload.service_type_id))
+    ticket = await usecase.execute(
+        CreateTicketCmd(service_type_id=payload.service_type_id),
+        idempotency_key=idempotency_key,
+    )
     return BaseResponse(data=ticket)
 
 

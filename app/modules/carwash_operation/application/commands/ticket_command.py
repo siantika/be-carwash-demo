@@ -1,12 +1,17 @@
 import threading
 import time
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from decimal import Decimal
 
 from app.modules.carwash_operation.application.dto.ticket_dto import (
     CreateTicketCmd,
     TicketResultDto,
 )
-from app.modules.carwash_operation.application.dto.ticket_mapper import to_ticket_result
+from app.modules.carwash_operation.application.dto.ticket_mapper import (
+    ticket_result_to_dict,
+    to_ticket_result,
+)
 from app.modules.carwash_operation.application.dto.ticket_void_dto import (
     CreateTicketVoidCmd,
     TicketVoidResultDto,
@@ -14,8 +19,12 @@ from app.modules.carwash_operation.application.dto.ticket_void_dto import (
 from app.modules.carwash_operation.application.services.i_barcode_generator import (
     IBarcodeGenerator,
 )
+from app.modules.carwash_operation.application.services.i_request_hasher import IRequestHasher
 from app.modules.carwash_operation.domain.entities.ticket import Ticket
 from app.modules.carwash_operation.domain.entities.ticket_void import TicketVoid
+from app.modules.carwash_operation.domain.repositories.i_idempotency_repo import (
+    IIdempotencyRepository,
+)
 from app.modules.carwash_operation.domain.repositories.i_carwash_operation_uow import (
     ICarwashOperationUnitOfWork,
 )
@@ -27,7 +36,10 @@ from app.modules.carwash_operation.domain.value_objects.ticket_number import Tic
 from app.modules.service_catalog.domain.repositories.i_service_type_repo import (
     IServiceTypeRepository,
 )
+from app.shared.domain.entities.base import _utcnow
 from app.shared.domain.exceptions.exceptions import (
+    BusinessRuleViolation,
+    EntityAlreadyExists,
     EntityNotFound,
     InactiveServiceTypeCannotBeUsed,
 )
@@ -64,17 +76,72 @@ class GenerateEan13TimeBased:
 
 
 class CreateTicketUseCase:
+    IDEMPOTENCY_SCOPE = "create_ticket"
+
     def __init__(
         self,
         ticket_repo: ITicketRepository,
         service_type_repo: IServiceTypeRepository,
         barcode_generator: IBarcodeGenerator,
+        idempotency_repo: IIdempotencyRepository,
+        request_hasher: IRequestHasher,
     ):
         self.ticket_repo = ticket_repo
         self.service_type_repo = service_type_repo
         self.barcode_generator = barcode_generator
+        self.idempotency_repo = idempotency_repo
+        self.request_hasher = request_hasher
 
-    async def execute(self, cmd: CreateTicketCmd) -> TicketResultDto:
+    async def execute(
+        self,
+        cmd: CreateTicketCmd,
+        *,
+        idempotency_key: str,
+    ) -> TicketResultDto:
+        key = idempotency_key.strip()
+        if key == "":
+            raise BusinessRuleViolation("Idempotency key is required")
+
+        request_hash = self.request_hasher.hash(
+            {
+                "service_type_id": cmd.service_type_id,
+            }
+        )
+        existing = await self.idempotency_repo.find_by_scope_and_key(
+            scope=self.IDEMPOTENCY_SCOPE,
+            idempotency_key=key,
+        )
+        if existing is not None:
+            if existing.request_hash != request_hash:
+                raise BusinessRuleViolation(
+                    "Idempotency key already used with a different request payload"
+                )
+            if existing.status == "COMPLETED" and existing.response_payload is not None:
+                payload = existing.response_payload
+                return TicketResultDto(
+                    id=int(payload["id"]),
+                    ticket_number=str(payload["ticket_number"]),
+                    entry_time=datetime.fromisoformat(payload["entry_time"]),
+                    status=str(payload["status"]),
+                    service_type_id=int(payload["service_type_id"]),
+                    service_name=str(payload["service_name"]),
+                    service_desc=str(payload["service_desc"]),
+                    service_price=Decimal(str(payload["service_price"])),
+                    created_at=datetime.fromisoformat(payload["created_at"]),
+                    updated_at=datetime.fromisoformat(payload["updated_at"]),
+                )
+            raise BusinessRuleViolation("Idempotency key is currently being processed")
+
+        try:
+            idempotency = await self.idempotency_repo.create_processing(
+                scope=self.IDEMPOTENCY_SCOPE,
+                idempotency_key=key,
+                request_hash=request_hash,
+                expires_at=_utcnow() + timedelta(hours=24),
+            )
+        except EntityAlreadyExists:
+            raise BusinessRuleViolation("Idempotency key is currently being processed")
+
         service_type = await self.service_type_repo.find_by_id(cmd.service_type_id)
         if service_type is None:
             raise EntityNotFound("ServiceType", cmd.service_type_id)
@@ -95,7 +162,13 @@ class CreateTicketUseCase:
         )
 
         created_ticket = await self.ticket_repo.add(ticket)
-        return to_ticket_result(created_ticket)
+        result = to_ticket_result(created_ticket)
+        await self.idempotency_repo.mark_completed(
+            record_id=idempotency.id,
+            response_payload=ticket_result_to_dict(result),
+            http_status=201,
+        )
+        return result
 
 
 class VoidTicketUseCase:
@@ -133,4 +206,3 @@ class VoidTicketUseCase:
             entry_time=ticket.entry_time.value,
             void_time=ticket_void.void_time,
         )
-

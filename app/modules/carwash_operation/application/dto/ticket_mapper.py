@@ -16,3 +16,17 @@ def to_ticket_result(ticket: Ticket) -> TicketResultDto:
         updated_at=ticket.updated_at,
     )
 
+
+def ticket_result_to_dict(result: TicketResultDto) -> dict:
+    return {
+        "id": result.id,
+        "ticket_number": result.ticket_number,
+        "entry_time": result.entry_time.isoformat(),
+        "status": result.status,
+        "service_type_id": result.service_type_id,
+        "service_name": result.service_name,
+        "service_desc": result.service_desc,
+        "service_price": str(result.service_price),
+        "created_at": result.created_at.isoformat(),
+        "updated_at": result.updated_at.isoformat(),
+    }
