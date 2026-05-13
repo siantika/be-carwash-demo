@@ -3,8 +3,10 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
+from app.modules.billing.application.queries.payment_transaction_query_repository import (
+    TransactionListFilterDto,
+)
 from app.modules.billing.domain.value_objects.payment import PaymentMethodEnum
-from app.modules.billing.domain.value_objects.payment_state import PaymentStatus
 
 
 @dataclass(frozen=True)
@@ -14,15 +16,6 @@ class ProcessTransactionCmd:
     plate_number: str
     payment_method: PaymentMethodEnum | str
     payment_metadata: dict[str, Any]
-
-
-@dataclass(frozen=True)
-class TransactionListFilterDto:
-    ticket_id: int | None = None
-    cashier_id: int | None = None
-    payment_method: PaymentMethodEnum | str | None = None
-    payment_status: PaymentStatus | str | None = None
-    plate_number: str | None = None
 
 
 @dataclass(frozen=True)

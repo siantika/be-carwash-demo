@@ -16,6 +16,8 @@ from app.modules.carwash_operation.api.schemas import (
 )
 from app.modules.carwash_operation.application.dto.ticket_dto import (
     CreateTicketCmd,
+)
+from app.modules.carwash_operation.application.queries.models import (
     TicketListFilterDto,
 )
 from app.modules.carwash_operation.application.dto.ticket_void_dto import (

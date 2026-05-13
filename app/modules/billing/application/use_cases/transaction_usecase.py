@@ -1,12 +1,16 @@
 from app.modules.billing.application.dto.transaction_dto import (
     ProcessTransactionCmd,
-    TransactionListFilterDto,
     TransactionListResultDto,
     TransactionResultDto,
 )
+from app.modules.billing.application.queries.models import (
+    TransactionListFilterDto,
+)
+from app.modules.billing.application.queries.payment_transaction_query_repository import (
+    IPaymentTransactionQueryRepository,
+)
 from app.modules.billing.domain.entities.payment_transaction import PaymentTransaction
 from app.modules.billing.domain.repositories.i_billing_uow import IBillingUnitOfWork
-from app.modules.billing.domain.repositories.i_transaction_repo import ITransactionRepository
 from app.modules.billing.domain.value_objects.payment import Payment, PaymentMethodEnum
 from app.modules.billing.domain.value_objects.payment_state import (
     PaymentState,
@@ -135,8 +139,8 @@ class ProcessTransactionUseCase:
 
 
 class ListTransactionsUseCase:
-    def __init__(self, transaction_repo: ITransactionRepository):
-        self.transaction_repo = transaction_repo
+    def __init__(self, transaction_query: IPaymentTransactionQueryRepository):
+        self.transaction_query = transaction_query
 
     async def execute(
         self,
@@ -163,12 +167,14 @@ class ListTransactionsUseCase:
             plate_number = None
 
         offset = (page - 1) * limit
-        records, total = await self.transaction_repo.list(
-            ticket_id=filters.ticket_id,
-            cashier_id=filters.cashier_id,
-            payment_method=_parse_payment_method(filters.payment_method),
-            payment_status=_parse_payment_status(filters.payment_status),
-            plate_number=plate_number,
+        records, total = await self.transaction_query.list(
+            filters=TransactionListFilterDto(
+                ticket_id=filters.ticket_id,
+                cashier_id=filters.cashier_id,
+                payment_method=_parse_payment_method(filters.payment_method),
+                payment_status=_parse_payment_status(filters.payment_status),
+                plate_number=plate_number,
+            ),
             limit=limit,
             offset=offset,
         )

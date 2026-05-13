@@ -4,13 +4,21 @@ from dataclasses import dataclass
 
 from app.modules.carwash_operation.application.dto.ticket_dto import (
     CreateTicketCmd,
-    TicketListFilterDto,
     TicketListResultDto,
     TicketResultDto,
 )
 from app.modules.carwash_operation.application.dto.ticket_void_dto import (
     CreateTicketVoidCmd,
     TicketVoidResultDto,
+)
+from app.modules.carwash_operation.application.queries.models import (
+    TicketListFilterDto,
+)
+from app.modules.carwash_operation.application.queries.ticket_query_repository import (
+    ITicketQueryRepository,
+)
+from app.modules.carwash_operation.application.services.i_barcode_generator import (
+    IBarcodeGenerator,
 )
 from app.modules.carwash_operation.domain.entities.ticket import Ticket, TicketStatusEnum
 from app.modules.carwash_operation.domain.entities.ticket_void import TicketVoid
@@ -29,7 +37,6 @@ from app.shared.domain.exceptions.exceptions import (
     BusinessRuleViolation,
     EntityNotFound,
 )
-from app.modules.carwash_operation.application.services.i_barcode_generator import IBarcodeGenerator
 
 
 def _to_ticket_result(ticket: Ticket) -> TicketResultDto:
@@ -124,8 +131,8 @@ class CreateTicketUseCase:
 
 
 class ListTicketsUseCase:
-    def __init__(self, ticket_repo: ITicketRepository):
-        self.ticket_repo = ticket_repo
+    def __init__(self, ticket_query: ITicketQueryRepository):
+        self.ticket_query = ticket_query
 
     async def execute(
         self,
@@ -149,10 +156,12 @@ class ListTicketsUseCase:
             raise BusinessRuleViolation("Service type id must be greater than or equal to 1")
 
         offset = (page - 1) * limit
-        tickets, total = await self.ticket_repo.list(
-            status=status,
-            service_type_id=filters.service_type_id,
-            ticket_number=ticket_number,
+        tickets, total = await self.ticket_query.list(
+            filters=TicketListFilterDto(
+                status=status,
+                service_type_id=filters.service_type_id,
+                ticket_number=ticket_number,
+            ),
             limit=limit,
             offset=offset,
         )

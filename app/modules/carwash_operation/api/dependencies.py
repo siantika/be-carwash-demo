@@ -9,6 +9,9 @@ from app.modules.carwash_operation.application.use_cases.ticket_usecase import (
 from app.modules.carwash_operation.infra.repositories.ticket_repo import (
     AsyncPgTicketRepository,
 )
+from app.modules.carwash_operation.infra.repositories.query.postgres_ticket_query_repository import (
+    PostgresTicketQueryRepository,
+)
 from app.modules.carwash_operation.infra.unit_of_work import (
     AsyncPgCarwashOperationUnitOfWork,
 )
@@ -24,6 +27,10 @@ def get_logger() -> ILogger:
 
 def get_ticket_repo(db=Depends(get_db), logger=Depends(get_logger)):
     return AsyncPgTicketRepository(db, logger)
+
+
+def get_ticket_query(db=Depends(get_db), logger=Depends(get_logger)):
+    return PostgresTicketQueryRepository(db, logger)
 
 
 def get_barcode_generator():
@@ -42,8 +49,8 @@ def get_create_ticket_usecase(
     return CreateTicketUseCase(ticket_repo, service_type_repo, barcode_generator)
 
 
-def get_list_tickets_usecase(ticket_repo=Depends(get_ticket_repo)):
-    return ListTicketsUseCase(ticket_repo)
+def get_list_tickets_usecase(ticket_query=Depends(get_ticket_query)):
+    return ListTicketsUseCase(ticket_query)
 
 
 def get_void_ticket_usecase(uow=Depends(get_carwash_operation_uow)):

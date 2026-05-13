@@ -4,6 +4,7 @@ from app.modules.service_catalog.api.dependencies import (
     get_create_service_type_usecase,
     get_deactivate_service_type_usecase,
     get_list_service_types_usecase,
+    get_service_type_query,
     get_service_type_repo,
 )
 
@@ -21,5 +22,6 @@ __all__ = [
     "get_deactivate_service_type_usecase",
     "get_deactivate_service_type_usercase",
     "get_list_service_types_usecase",
+    "get_service_type_query",
     "get_service_type_repo",
 ]

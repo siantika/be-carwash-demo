@@ -5,14 +5,16 @@ import pytest
 
 from app.modules.billing.application.dto.transaction_dto import (
     ProcessTransactionCmd,
+)
+from app.modules.billing.application.queries.models import (
     TransactionListFilterDto,
+    TransactionRecord,
 )
 from app.modules.billing.application.use_cases.transaction_usecase import (
     ListTransactionsUseCase,
     ProcessTransactionUseCase,
 )
 from app.modules.billing.domain.entities.payment_transaction import PaymentTransaction
-from app.modules.billing.domain.repositories.i_transaction_repo import TransactionRecord
 from app.modules.billing.domain.value_objects.payment import Payment, PaymentMethodEnum
 from app.modules.billing.domain.value_objects.payment_state import (
     PaymentState,
@@ -100,49 +102,45 @@ class FakeTransactionRepository:
     async def list(
         self,
         *,
-        ticket_id: int | None,
-        cashier_id: int | None,
-        payment_method: PaymentMethodEnum | None,
-        payment_status: PaymentStatus | None,
-        plate_number: str | None,
+        filters: TransactionListFilterDto,
         limit: int,
         offset: int,
     ) -> tuple[list[TransactionRecord], int]:
         transactions = list(self.transactions.values())
 
-        if ticket_id is not None:
+        if filters.ticket_id is not None:
             transactions = [
                 transaction
                 for transaction in transactions
-                if transaction.ticket_id == ticket_id
+                if transaction.ticket_id == filters.ticket_id
             ]
 
-        if cashier_id is not None:
+        if filters.cashier_id is not None:
             transactions = [
                 transaction
                 for transaction in transactions
-                if transaction.cashier_id == cashier_id
+                if transaction.cashier_id == filters.cashier_id
             ]
 
-        if payment_method is not None:
+        if filters.payment_method is not None:
             transactions = [
                 transaction
                 for transaction in transactions
-                if transaction.payment.method == payment_method
+                if transaction.payment.method == filters.payment_method
             ]
 
-        if payment_status is not None:
+        if filters.payment_status is not None:
             transactions = [
                 transaction
                 for transaction in transactions
-                if transaction.payment_status.status == payment_status
+                if transaction.payment_status.status == filters.payment_status
             ]
 
-        if plate_number is not None:
+        if filters.plate_number is not None:
             transactions = [
                 transaction
                 for transaction in transactions
-                if plate_number in transaction.plate_number.value
+                if filters.plate_number in transaction.plate_number.value
             ]
 
         transactions.sort(key=lambda transaction: transaction.id or 0, reverse=True)

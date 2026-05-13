@@ -9,14 +9,6 @@ class IAccountRepository(Protocol):
 
     async def find_by_username(self, username: Username) -> Account | None: ...
 
-    async def find_all_filtered(
-        self,
-        role: RoleCode | None,
-        is_active: bool | None,
-        limit: int,
-        offset: int,
-    ) -> tuple[list[Account], int]: ...
-
     async def create(self, account: Account) -> Account: ...
 
     async def save(self, account: Account) -> Account: ...

@@ -1,4 +1,3 @@
-from decimal import Decimal
 from typing import Any, Mapping
 
 import asyncpg
@@ -87,84 +86,6 @@ class AsyncPgServiceTypeRepository(IServiceTypeRepository):
             logger=self.logger,
             context={"service_name": service_name},
             operation_name="fetch service type by name",
-        )
-
-    async def list(
-        self,
-        *,
-        q: str | None,
-        is_active: bool | None,
-        is_primary: bool | None,
-        min_price: Decimal | None,
-        max_price: Decimal | None,
-        limit: int,
-        offset: int,
-    ) -> tuple[list[ServiceType], int]:
-        async def _fetch():
-            conditions = ["deleted_at IS NULL"]
-            params: list[Any] = []
-
-            if q is not None:
-                params.append(f"%{q}%")
-                conditions.append(
-                    f"(name ILIKE ${len(params)} OR description ILIKE ${len(params)})"
-                )
-
-            if is_active is not None:
-                params.append(is_active)
-                conditions.append(f"is_active = ${len(params)}")
-
-            if is_primary is not None:
-                params.append(is_primary)
-                conditions.append(f"is_primary = ${len(params)}")
-
-            if min_price is not None:
-                params.append(min_price)
-                conditions.append(f"price >= ${len(params)}")
-
-            if max_price is not None:
-                params.append(max_price)
-                conditions.append(f"price <= ${len(params)}")
-
-            where_clause = " AND ".join(conditions)
-            limit_param = len(params) + 1
-            offset_param = len(params) + 2
-
-            rows = await self.db.fetch(
-                f"""
-                SELECT {SELECT_ALL_COLUMNS}
-                FROM service_catalog.service_types
-                WHERE {where_clause}
-                ORDER BY created_at DESC, id DESC
-                LIMIT ${limit_param} OFFSET ${offset_param};
-                """,
-                *params,
-                limit,
-                offset,
-            )
-            total = await self.db.fetchval(
-                f"""
-                SELECT COUNT(*)
-                FROM service_catalog.service_types
-                WHERE {where_clause};
-                """,
-                *params,
-            )
-            return [_mapper(row) for row in rows], int(total or 0)
-
-        return await handle_db_error(
-            operation=_fetch,
-            logger=self.logger,
-            context={
-                "q": q,
-                "is_active": is_active,
-                "is_primary": is_primary,
-                "min_price": str(min_price) if min_price is not None else None,
-                "max_price": str(max_price) if max_price is not None else None,
-                "limit": limit,
-                "offset": offset,
-            },
-            operation_name="list service types",
         )
 
     async def add(self, service_type: ServiceType) -> ServiceType:

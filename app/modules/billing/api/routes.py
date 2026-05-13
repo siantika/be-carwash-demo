@@ -13,6 +13,8 @@ from app.modules.billing.api.schemas import (
 )
 from app.modules.billing.application.dto.transaction_dto import (
     ProcessTransactionCmd,
+)
+from app.modules.billing.application.queries.models import (
     TransactionListFilterDto,
 )
 from app.modules.billing.application.use_cases.transaction_usecase import (

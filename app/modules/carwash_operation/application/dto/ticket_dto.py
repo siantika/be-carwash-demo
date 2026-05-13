@@ -2,19 +2,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 
-from app.modules.carwash_operation.domain.entities.ticket import TicketStatusEnum
+from app.modules.carwash_operation.application.queries.ticket_query_repository import (
+    TicketListFilterDto,
+)
 
 
 @dataclass(frozen=True)
 class CreateTicketCmd:
     service_type_id: int
-
-
-@dataclass(frozen=True)
-class TicketListFilterDto:
-    status: TicketStatusEnum | str | None = None
-    service_type_id: int | None = None
-    ticket_number: str | None = None
 
 
 @dataclass(frozen=True)

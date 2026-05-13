@@ -22,8 +22,10 @@ from app.modules.service_catalog.api.schemas import (
 )
 from app.modules.service_catalog.application.dto.service_type_dto import (
     CreateServiceTypeCmd,
-    ServiceTypeListFilterDto,
     UpdateServiceTypeCmd,
+)
+from app.modules.service_catalog.application.queries.models import (
+    ServiceTypeListFilterDto,
 )
 from app.modules.service_catalog.application.use_cases.service_type_usecase import (
     ActivateServiceTypeUseCase,
