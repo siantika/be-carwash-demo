@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
 from app.modules.billing.application.dto.transaction_dto import (
     ProcessTransactionCmd,
 )
+from app.modules.billing.application.services.i_request_hasher import IRequestHasher
+from app.modules.billing.domain.entities.idempotency_record import IdempotencyRecord
 from app.modules.billing.application.queries.models import (
     TransactionListFilterDto,
     TransactionRecord,
@@ -29,6 +32,7 @@ from app.modules.carwash_operation.domain.value_objects.service_snapshot import 
 from app.modules.carwash_operation.domain.value_objects.ticket_number import TicketNumber
 from app.shared.domain.entities.base import _utcnow
 from app.shared.domain.exceptions.exceptions import (
+    BusinessRuleViolation,
     TicketAlreadyPaidError,
     TicketNotPayableError,
 )
@@ -161,14 +165,90 @@ class FakeTransactionRepository:
         return transaction
 
 
+class FakeIdempotencyRepository:
+    def __init__(self):
+        self.records: dict[tuple[str, str], IdempotencyRecord] = {}
+        self.next_id = 1
+
+    async def find_by_scope_and_key(
+        self,
+        *,
+        scope: str,
+        idempotency_key: str,
+    ) -> IdempotencyRecord | None:
+        return self.records.get((scope, idempotency_key))
+
+    async def create_processing(
+        self,
+        *,
+        scope: str,
+        idempotency_key: str,
+        request_hash: str,
+        expires_at,
+    ) -> IdempotencyRecord:
+        key = (scope, idempotency_key)
+        if key in self.records:
+            from app.shared.domain.exceptions.exceptions import EntityAlreadyExists
+
+            raise EntityAlreadyExists("IdempotencyKey", idempotency_key)
+        now = _utcnow()
+        record = IdempotencyRecord(
+            id=self.next_id,
+            scope=scope,
+            idempotency_key=idempotency_key,
+            request_hash=request_hash,
+            status="PROCESSING",
+            response_payload=None,
+            http_status=None,
+            created_at=now,
+            updated_at=now,
+            expires_at=expires_at,
+        )
+        self.next_id += 1
+        self.records[key] = record
+        return record
+
+    async def mark_completed(
+        self,
+        *,
+        record_id: int,
+        response_payload: dict,
+        http_status: int,
+    ) -> IdempotencyRecord:
+        for key, record in self.records.items():
+            if record.id == record_id:
+                updated = IdempotencyRecord(
+                    id=record.id,
+                    scope=record.scope,
+                    idempotency_key=record.idempotency_key,
+                    request_hash=record.request_hash,
+                    status="COMPLETED",
+                    response_payload=response_payload,
+                    http_status=http_status,
+                    created_at=record.created_at,
+                    updated_at=_utcnow(),
+                    expires_at=record.expires_at,
+                )
+                self.records[key] = updated
+                return updated
+        raise AssertionError("record not found")
+
+
+class FixedRequestHasher(IRequestHasher):
+    def hash(self, payload: dict[str, Any]) -> str:
+        return str(payload)
+
+
 class FakeBillingUnitOfWork:
     def __init__(
         self,
         transaction_repo: FakeTransactionRepository,
+        idempotency_repo: FakeIdempotencyRepository,
         ticket_repo: FakeTicketRepository,
         account_repo: FakeAccountRepository,
     ):
         self.transaction = transaction_repo
+        self.idempotency = idempotency_repo
         self.ticket = ticket_repo
         self.account = account_repo
         self.committed = False
@@ -190,23 +270,27 @@ def make_uow() -> FakeBillingUnitOfWork:
     ticket_repo = FakeTicketRepository()
     account_repo = FakeAccountRepository()
     transaction_repo = FakeTransactionRepository()
+    idempotency_repo = FakeIdempotencyRepository()
     ticket_repo.tickets[1] = make_ticket()
     account_repo.accounts[1] = AccountStub(id=1, username=UsernameStub("cashier_01"))
-    return FakeBillingUnitOfWork(transaction_repo, ticket_repo, account_repo)
+    return FakeBillingUnitOfWork(
+        transaction_repo, idempotency_repo, ticket_repo, account_repo
+    )
 
 
 @pytest.mark.anyio
 async def test_process_transaction_creates_transaction_and_marks_ticket_paid() -> None:
     uow = make_uow()
 
-    result = await ProcessTransactionUseCase(uow).execute(
+    result = await ProcessTransactionUseCase(uow, FixedRequestHasher()).execute(
         ProcessTransactionCmd(
             ticket_id=1,
             cashier_id=1,
             plate_number="DK123LL",
             payment_method=PaymentMethodEnum.CASH,
             payment_metadata={},
-        )
+        ),
+        idempotency_key="tx-1-key-0001",
     )
 
     assert result.id == 1
@@ -224,14 +308,15 @@ async def test_process_transaction_rejects_non_payable_ticket() -> None:
     uow.ticket.tickets[1] = make_ticket(TicketStatusEnum.PAID)
 
     with pytest.raises(TicketNotPayableError):
-        await ProcessTransactionUseCase(uow).execute(
+        await ProcessTransactionUseCase(uow, FixedRequestHasher()).execute(
             ProcessTransactionCmd(
                 ticket_id=1,
                 cashier_id=1,
                 plate_number="DK123LL",
                 payment_method=PaymentMethodEnum.CASH,
                 payment_metadata={},
-            )
+            ),
+            idempotency_key="tx-1-key-0002",
         )
 
 
@@ -251,28 +336,31 @@ async def test_process_transaction_rejects_duplicate_ticket_payment() -> None:
     )
 
     with pytest.raises(TicketAlreadyPaidError):
-        await ProcessTransactionUseCase(uow).execute(
+        await ProcessTransactionUseCase(uow, FixedRequestHasher()).execute(
             ProcessTransactionCmd(
                 ticket_id=1,
                 cashier_id=1,
                 plate_number="DK123LL",
                 payment_method=PaymentMethodEnum.CASH,
                 payment_metadata={},
-            )
+            ),
+            idempotency_key="tx-1-key-0003",
         )
 
 
 @pytest.mark.anyio
 async def test_list_transactions_applies_filters() -> None:
     uow = make_uow()
-    await ProcessTransactionUseCase(uow).execute(
+    usecase = ProcessTransactionUseCase(uow, FixedRequestHasher())
+    await usecase.execute(
         ProcessTransactionCmd(
             ticket_id=1,
             cashier_id=1,
             plate_number="DK123LL",
             payment_method=PaymentMethodEnum.CASH,
             payment_metadata={},
-        )
+        ),
+        idempotency_key="tx-1-key-0004",
     )
 
     result = await ListTransactionsUseCase(uow.transaction).execute(
@@ -288,3 +376,51 @@ async def test_list_transactions_applies_filters() -> None:
     assert result.total == 1
     assert result.items[0].ticket_number == "4006381333931"
     assert result.items[0].cashier == "cashier_01"
+
+
+@pytest.mark.anyio
+async def test_process_transaction_replays_completed_response_for_same_idempotency_key() -> None:
+    uow = make_uow()
+    usecase = ProcessTransactionUseCase(uow, FixedRequestHasher())
+    cmd = ProcessTransactionCmd(
+        ticket_id=1,
+        cashier_id=1,
+        plate_number="DK123LL",
+        payment_method=PaymentMethodEnum.CASH,
+        payment_metadata={},
+    )
+
+    first = await usecase.execute(cmd, idempotency_key="tx-1-key-0005")
+    second = await usecase.execute(cmd, idempotency_key="tx-1-key-0005")
+
+    assert first.id == second.id
+    assert len(uow.transaction.transactions) == 1
+
+
+@pytest.mark.anyio
+async def test_process_transaction_rejects_same_idempotency_key_different_payload() -> None:
+    uow = make_uow()
+    usecase = ProcessTransactionUseCase(uow, FixedRequestHasher())
+
+    await usecase.execute(
+        ProcessTransactionCmd(
+            ticket_id=1,
+            cashier_id=1,
+            plate_number="DK123LL",
+            payment_method=PaymentMethodEnum.CASH,
+            payment_metadata={},
+        ),
+        idempotency_key="tx-1-key-0006",
+    )
+
+    with pytest.raises(BusinessRuleViolation):
+        await usecase.execute(
+            ProcessTransactionCmd(
+                ticket_id=1,
+                cashier_id=1,
+                plate_number="DK999ZZ",
+                payment_method=PaymentMethodEnum.CASH,
+                payment_metadata={},
+            ),
+            idempotency_key="tx-1-key-0006",
+        )

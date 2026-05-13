@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Header, Query, status
 
 from app.api.dependencies.shared import RoleChecker
 from app.modules.billing.api.dependencies import (
@@ -39,6 +39,7 @@ BILLING_READER_ROLES = [RoleCode.CASHIER, RoleCode.ADMIN, RoleCode.OWNER]
 )
 async def process_transaction(
     payload: ProcessTransactionRequest,
+    idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
     user=Depends(RoleChecker(PAYMENT_PROCESSOR_ROLES)),
     usecase: ProcessTransactionUseCase = Depends(get_process_transaction_usecase),
 ):
@@ -49,7 +50,8 @@ async def process_transaction(
             plate_number=payload.plate_number,
             payment_method=payload.payment_method,
             payment_metadata=payload.payment_metadata,
-        )
+        ),
+        idempotency_key=idempotency_key,
     )
     return BaseResponse(data=transaction)
 
