@@ -2,11 +2,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 
-from app.modules.service_catalog.application.queries.service_type_query_repository import (
-    ServiceTypeListFilterDto,
-)
-
-
 @dataclass(frozen=True)
 class CreateServiceTypeCmd:
     name: str

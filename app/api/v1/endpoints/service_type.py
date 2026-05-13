@@ -15,10 +15,13 @@ from app.api.schema.service_type_schema import CreateServiceTypeRequest, Service
 from app.modules.service_catalog.application.dto.service_type_dto import (
     CreateServiceTypeCmd,
 )
-from app.modules.service_catalog.application.use_cases.service_type_usecase import (
+from app.modules.service_catalog.application.commands.service_type_command import (
     ActivateServiceTypeUseCase,
     CreateServiceTypeUseCase,
     DeactivateServiceTypeUseCase,
+)
+from app.modules.service_catalog.application.queries.service_type_query import (
+    ListServiceTypesUseCase,
 )
 from app.modules.identity.domain.entities.account import RoleCode
 from app.shared.response import BaseResponse

@@ -5,9 +5,6 @@ import asyncpg
 from app.modules.service_catalog.application.queries.models import (
     ServiceTypeListFilterDto,
 )
-from app.modules.service_catalog.application.queries.service_type_query_repository import (
-    IServiceTypeQueryRepository,
-)
 from app.modules.service_catalog.infra.repositories.service_type_repo import (
     SELECT_ALL_COLUMNS,
     _mapper,
@@ -16,7 +13,7 @@ from app.shared.infra.database.error_handler import handle_db_error
 from app.shared.interfaces.i_logger import ILogger
 
 
-class PostgresServiceTypeQueryRepository(IServiceTypeQueryRepository):
+class PostgresServiceTypeQueryRepository:
     def __init__(self, db: asyncpg.Connection, logger: ILogger):
         self.db = db
         self.logger = logger

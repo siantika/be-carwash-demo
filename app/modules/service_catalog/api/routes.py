@@ -27,12 +27,14 @@ from app.modules.service_catalog.application.dto.service_type_dto import (
 from app.modules.service_catalog.application.queries.models import (
     ServiceTypeListFilterDto,
 )
-from app.modules.service_catalog.application.use_cases.service_type_usecase import (
+from app.modules.service_catalog.application.commands.service_type_command import (
     ActivateServiceTypeUseCase,
     ChangeServiceTypeDataUseCase,
     CreateServiceTypeUseCase,
     DeactivateServiceTypeUseCase,
     DeleteServiceTypeUseCase,
+)
+from app.modules.service_catalog.application.queries.service_type_query import (
     FindServiceTypeByIdUseCase,
     FindServiceTypeByNameUseCase,
     ListServiceTypesUseCase,
