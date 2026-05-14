@@ -3,7 +3,6 @@ from typing import List
 from fastapi import APIRouter, Depends, Query, Request, status
 
 from app.api.dependencies.shared import RoleChecker, get_current_user
-from app.modules.identity.application.dto.auth_context_dto import AuthContextDto
 from app.modules.identity.api.dependencies import (
     get_activate_account_usecase,
     get_deactivate_account_usecase,
@@ -24,7 +23,6 @@ from app.modules.identity.api.schemas import (
     RegisterAccountRequest,
     TokenResponse,
 )
-from app.modules.identity.application.dto.account_dto import RegisterAccountCmd
 from app.modules.identity.application.commands.account_command import (
     ActivateAccountUseCase,
     DeactivateAccountUseCase,
@@ -36,6 +34,8 @@ from app.modules.identity.application.commands.auth_command import (
     LogoutUseCase,
     RefreshSessionUseCase,
 )
+from app.modules.identity.application.dto.account_dto import RegisterAccountCmd
+from app.modules.identity.application.dto.auth_context_dto import AuthContextDto
 from app.modules.identity.application.queries.account_query import (
     GetAccountUseCase,
     ListAccountsUseCase,
@@ -54,6 +54,7 @@ ACCOUNT_MANAGER_ROLES = [RoleCode.ADMIN, RoleCode.OWNER]
     "",
     response_model=BaseResponse[AccountResponse],
     status_code=status.HTTP_201_CREATED,
+    
 )
 async def register_account(
     payload: RegisterAccountRequest,
