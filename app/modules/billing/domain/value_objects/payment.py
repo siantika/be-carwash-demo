@@ -36,9 +36,6 @@ class Payment:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
-        if isinstance(self.method, str):
-            object.__setattr__(self, "method", PaymentMethodEnum(self.method.strip().upper()))
-
         if not isinstance(self.method, PaymentMethodEnum):
             raise InvalidValueObject("Payment method must be a PaymentMethodEnum")
 

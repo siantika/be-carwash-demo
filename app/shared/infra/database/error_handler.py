@@ -1,5 +1,5 @@
-import asyncio
-from typing import Any, Callable, Dict
+from collections.abc import Awaitable, Callable, Mapping
+from typing import Any
 
 import asyncpg
 
@@ -8,11 +8,13 @@ from app.shared.interfaces.i_logger import ILogger
 
 
 async def handle_db_error(
-    operation: Callable[[], asyncio.Future[Any]],
+    operation: Callable[[], Awaitable[Any]],
     logger: ILogger,
-    context: Dict[str, Any] = {} ,
-    operation_name: str = "database operation"
+    context: Mapping[str, Any] | None = None,
+    operation_name: str = "database operation",
 ) -> Any:
+    log_context = dict(context or {})
+
     try:
         return await operation()
     except AppError:
@@ -26,22 +28,22 @@ async def handle_db_error(
                 error_message=str(error),
                 exc_info=True,
                 **error_details,
-                **context
+                **log_context,
             )
             raise RepositoryError(f"Failed to {operation_name}") from error
-        else:
-            logger.error(
-                f"Unexpected error in {operation_name}",
-                error_type=type(error).__name__,
-                exc_info=True,
-                **context
-            )
-            raise RepositoryError(f"Unexpected failure in {operation_name}") from error
+        logger.error(
+            f"Unexpected error in {operation_name}",
+            error_type=type(error).__name__,
+            exc_info=True,
+            **log_context,
+        )
+        raise RepositoryError(f"Unexpected failure in {operation_name}") from error
+
 
 def _is_infra_error(error: Exception) -> bool:
     """Correlated to specific database tech (asyncpg for this case)"""
     infra_modules = (
-        "asyncpg.exceptions"
+        "asyncpg.exceptions",
     )
     return any(type(error).__module__.startswith(m) for m in infra_modules)
 

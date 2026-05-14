@@ -41,21 +41,26 @@ oauth2_scheme = OAuth2PasswordBearer(
 )
 
 
-async def get_current_user(
+async def get_required_token(
     token: str | None = Depends(oauth2_scheme),
-    account_repo=Depends(get_account_repo),
-) -> AuthContextDto:
+) -> str:
     if token is None:
         raise NotAuthenticatedError("Not authenticated")
+    return token
 
+
+async def get_current_user(
+    token: str = Depends(get_required_token),
+    account_repo=Depends(get_account_repo),
+) -> AuthContextDto:
     try:
-        payload = decode_token(token).model_dump() # convert from pydanctic object to dict
+        payload = decode_token(token).model_dump()
     except (JWTError, ValidationError):
         raise InvalidTokenError("Invalid token")
 
     user_id = payload.get("user_id")
     role = payload.get("role")
-    
+
     if user_id is None or role is None:
         raise InvalidTokenError("Invalid token payload")
 
@@ -66,7 +71,7 @@ async def get_current_user(
     if not account.is_active:
         raise InactiveUserError("Account is inactive")
 
-    return AuthContextDto (
+    return AuthContextDto(
         account.id,
         account.username.value,
         account.role.value,
