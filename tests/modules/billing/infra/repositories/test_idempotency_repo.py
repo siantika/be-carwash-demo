@@ -53,7 +53,10 @@ class FakeDb:
             self.rows[row_key] = row
             return row
 
-        if "FROM billing.idempotency_keys WHERE scope = $1 AND idempotency_key = $2" in normalized:
+        if (
+            "FROM billing.idempotency_keys WHERE scope = $1 AND idempotency_key = $2"
+            in normalized
+        ):
             scope, key = args
             return self.rows.get((scope, key))
 
@@ -99,4 +102,3 @@ async def test_create_find_and_mark_completed_idempotency_record() -> None:
     assert completed.status == "COMPLETED"
     assert completed.response_payload is not None
     assert completed.response_payload["id"] == 99
-

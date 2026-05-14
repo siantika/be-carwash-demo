@@ -4,7 +4,9 @@ from app.modules.billing.application.commands.transaction_command import (
     ProcessTransactionUseCase,
 )
 from app.modules.billing.infra.services.request_hasher import Sha256RequestHasher
-from app.modules.billing.application.queries.transaction_query import ListTransactionsUseCase
+from app.modules.billing.application.queries.transaction_query import (
+    ListTransactionsUseCase,
+)
 from app.modules.billing.infra.repositories.transaction_repo import (
     AsyncPgTransactionRepository,
 )

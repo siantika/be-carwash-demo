@@ -19,7 +19,9 @@ from app.modules.identity.application.queries.account_query import (
 from app.modules.identity.infra.repositories.account_repo import (
     AsyncPgAccountRepository,
 )
-from app.modules.identity.infra.repositories.query.postgres_account_query_repository import PostgresAccountQueryRepository
+from app.modules.identity.infra.repositories.query.postgres_account_query_repository import (
+    PostgresAccountQueryRepository,
+)
 from app.modules.identity.infra.repositories.refresh_token_repo import (
     AsyncPgRefreshTokenRepository,
 )

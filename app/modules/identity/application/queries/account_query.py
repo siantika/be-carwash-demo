@@ -6,7 +6,10 @@ from app.modules.identity.application.dto.account_mapper import to_account_resul
 from app.modules.identity.application.queries.models import AccountListFilterDto
 from app.modules.identity.domain.entities.account import RoleCode
 from app.modules.identity.domain.repositories.i_account_repo import IAccountRepository
-from app.shared.domain.exceptions.exceptions import BusinessRuleViolation, EntityNotFound
+from app.shared.domain.exceptions.exceptions import (
+    BusinessRuleViolation,
+    EntityNotFound,
+)
 
 
 def _parse_role(role: RoleCode | str) -> RoleCode:
@@ -67,4 +70,3 @@ class ListAccountsUseCase:
             page=page,
             limit=limit,
         )
-

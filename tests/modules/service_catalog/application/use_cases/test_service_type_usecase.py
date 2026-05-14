@@ -97,7 +97,7 @@ class FakeServiceTypeRepository:
             ]
 
         service_types.sort(key=lambda service_type: service_type.id or 0, reverse=True)
-        return service_types[offset:offset + limit], len(service_types)
+        return service_types[offset : offset + limit], len(service_types)
 
     async def add(self, service_type: ServiceType) -> ServiceType:
         service_type.id = self.next_id
@@ -165,7 +165,10 @@ async def test_list_service_types_paginates_results() -> None:
 
     result = await ListServiceTypesUseCase(repo).execute(page=2, limit=2)
 
-    assert [service_type.name for service_type in result.items] == ["Service 2", "Service 1"]
+    assert [service_type.name for service_type in result.items] == [
+        "Service 2",
+        "Service 1",
+    ]
     assert result.total == 5
     assert result.page == 2
     assert result.limit == 2
@@ -412,7 +415,9 @@ async def test_delete_primary_service_is_rejected() -> None:
         )
     )
 
-    with pytest.raises(PrimaryServiceCannotBeDeleted, match="Primary service cannot be deleted"):
+    with pytest.raises(
+        PrimaryServiceCannotBeDeleted, match="Primary service cannot be deleted"
+    ):
         await DeleteServiceTypeUseCase(repo).execute(service_type.id)
 
     assert repo.service_types[service_type.id].deleted_at is None

@@ -18,7 +18,9 @@ from app.modules.billing.domain.value_objects.payment_state import (
     PaymentStatus,
 )
 from app.modules.billing.domain.value_objects.plate_number import PlateNumber
-from app.modules.billing.domain.value_objects.transaction_amount import TransactionAmount
+from app.modules.billing.domain.value_objects.transaction_amount import (
+    TransactionAmount,
+)
 from app.modules.carwash_operation.domain.entities.ticket import TicketStatusEnum
 from app.shared.domain.entities.base import _utcnow
 from app.shared.domain.exceptions.exceptions import (
@@ -84,7 +86,10 @@ class ProcessTransactionUseCase:
                     raise BusinessRuleViolation(
                         "Idempotency key already used with a different request payload"
                     )
-                if existing.status == "COMPLETED" and existing.response_payload is not None:
+                if (
+                    existing.status == "COMPLETED"
+                    and existing.response_payload is not None
+                ):
                     payload = existing.response_payload
                     return TransactionResultDto(
                         id=int(payload["id"]),
@@ -106,7 +111,9 @@ class ProcessTransactionUseCase:
                         created_at=datetime.fromisoformat(payload["created_at"]),
                         updated_at=datetime.fromisoformat(payload["updated_at"]),
                     )
-                raise BusinessRuleViolation("Idempotency key is currently being processed")
+                raise BusinessRuleViolation(
+                    "Idempotency key is currently being processed"
+                )
 
             try:
                 idempotency = await u.idempotency.create_processing(
@@ -116,7 +123,9 @@ class ProcessTransactionUseCase:
                     expires_at=_utcnow() + timedelta(hours=24),
                 )
             except EntityAlreadyExists:
-                raise BusinessRuleViolation("Idempotency key is currently being processed")
+                raise BusinessRuleViolation(
+                    "Idempotency key is currently being processed"
+                )
 
             ticket = await u.ticket.find_by_id(cmd.ticket_id)
             if ticket is None:
@@ -146,7 +155,9 @@ class ProcessTransactionUseCase:
                 ticket_id=cmd.ticket_id,
                 cashier_id=cmd.cashier_id,
                 payment=payment,
-                payment_status=PaymentState(status=PaymentStatus.PAID, paid_at=_utcnow()),
+                payment_status=PaymentState(
+                    status=PaymentStatus.PAID, paid_at=_utcnow()
+                ),
                 plate_number=PlateNumber(cmd.plate_number),
                 subtotal_amount=amount.subtotal,
                 total_amount=amount.total,

@@ -20,7 +20,9 @@ from app.modules.billing.application.queries.models import (
 from app.modules.billing.application.commands.transaction_command import (
     ProcessTransactionUseCase,
 )
-from app.modules.billing.application.queries.transaction_query import ListTransactionsUseCase
+from app.modules.billing.application.queries.transaction_query import (
+    ListTransactionsUseCase,
+)
 from app.modules.billing.domain.value_objects.payment import PaymentMethodEnum
 from app.modules.billing.domain.value_objects.payment_state import PaymentStatus
 from app.modules.identity.domain.entities.account import RoleCode
@@ -39,7 +41,9 @@ BILLING_READER_ROLES = [RoleCode.CASHIER, RoleCode.ADMIN, RoleCode.OWNER]
 )
 async def process_transaction(
     payload: ProcessTransactionRequest,
-    idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
+    idempotency_key: str = Header(
+        ..., alias="Idempotency-Key", min_length=8, max_length=128
+    ),
     user=Depends(RoleChecker(PAYMENT_PROCESSOR_ROLES)),
     usecase: ProcessTransactionUseCase = Depends(get_process_transaction_usecase),
 ):

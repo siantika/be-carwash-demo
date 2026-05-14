@@ -73,4 +73,3 @@ class AsyncPgDeviceRepository(IDeviceRepository):
             context={"device_id": device_id},
             operation_name="update device last_seen_at",
         )
-

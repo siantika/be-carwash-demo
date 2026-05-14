@@ -16,7 +16,9 @@ from app.modules.billing.application.queries.models import (
 from app.modules.billing.application.commands.transaction_command import (
     ProcessTransactionUseCase,
 )
-from app.modules.billing.application.queries.transaction_query import ListTransactionsUseCase
+from app.modules.billing.application.queries.transaction_query import (
+    ListTransactionsUseCase,
+)
 from app.modules.billing.domain.entities.payment_transaction import PaymentTransaction
 from app.modules.billing.domain.value_objects.payment import Payment, PaymentMethodEnum
 from app.modules.billing.domain.value_objects.payment_state import (
@@ -24,12 +26,17 @@ from app.modules.billing.domain.value_objects.payment_state import (
     PaymentStatus,
 )
 from app.modules.billing.domain.value_objects.plate_number import PlateNumber
-from app.modules.carwash_operation.domain.entities.ticket import Ticket, TicketStatusEnum
+from app.modules.carwash_operation.domain.entities.ticket import (
+    Ticket,
+    TicketStatusEnum,
+)
 from app.modules.carwash_operation.domain.value_objects.entry_time import EntryTime
 from app.modules.carwash_operation.domain.value_objects.service_snapshot import (
     ServiceSnapshot,
 )
-from app.modules.carwash_operation.domain.value_objects.ticket_number import TicketNumber
+from app.modules.carwash_operation.domain.value_objects.ticket_number import (
+    TicketNumber,
+)
 from app.shared.domain.entities.base import _utcnow
 from app.shared.domain.exceptions.exceptions import (
     BusinessRuleViolation,
@@ -154,7 +161,7 @@ class FakeTransactionRepository:
                 ticket_number="4006381333931",
                 cashier="cashier_01",
             )
-            for transaction in transactions[offset:offset + limit]
+            for transaction in transactions[offset : offset + limit]
         ]
         return records, len(transactions)
 
@@ -379,7 +386,9 @@ async def test_list_transactions_applies_filters() -> None:
 
 
 @pytest.mark.anyio
-async def test_process_transaction_replays_completed_response_for_same_idempotency_key() -> None:
+async def test_process_transaction_replays_completed_response_for_same_idempotency_key() -> (
+    None
+):
     uow = make_uow()
     usecase = ProcessTransactionUseCase(uow, FixedRequestHasher())
     cmd = ProcessTransactionCmd(
@@ -398,7 +407,9 @@ async def test_process_transaction_replays_completed_response_for_same_idempoten
 
 
 @pytest.mark.anyio
-async def test_process_transaction_rejects_same_idempotency_key_different_payload() -> None:
+async def test_process_transaction_rejects_same_idempotency_key_different_payload() -> (
+    None
+):
     uow = make_uow()
     usecase = ProcessTransactionUseCase(uow, FixedRequestHasher())
 

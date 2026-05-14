@@ -15,4 +15,3 @@ class IdempotencyRecord:
     created_at: datetime
     updated_at: datetime
     expires_at: datetime
-

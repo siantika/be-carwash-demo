@@ -30,4 +30,3 @@ class IIdempotencyRepository(Protocol):
         response_payload: dict,
         http_status: int,
     ) -> IdempotencyRecord: ...
-

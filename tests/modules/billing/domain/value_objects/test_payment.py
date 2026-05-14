@@ -8,10 +8,12 @@ def test_payment_accepts_enum_method():
     payment = Payment(method=PaymentMethodEnum.CASH, metadata={})
     assert payment.method == PaymentMethodEnum.CASH
 
+
 def test_payment_rejects_string_method():
     with pytest.raises(InvalidValueObject):
         Payment(method="CASH")
-        
+
+
 def test_validate_metadata_missing_required_key():
     with pytest.raises(InvalidValueObject):
         Payment(
@@ -20,7 +22,8 @@ def test_validate_metadata_missing_required_key():
                 "provider": "GOPAY",  # rrn is missing
             },
         )
-        
+
+
 def test_validate_metadata_wrong_type():
     with pytest.raises(InvalidValueObject):
         Payment(
@@ -31,12 +34,14 @@ def test_validate_metadata_wrong_type():
             },
         )
 
+
 def test_cash_payment_should_not_have_metadata():
     with pytest.raises(InvalidValueObject):
         Payment(
             method=PaymentMethodEnum.CASH,
             metadata={"anything": "not allowed"},
         )
+
 
 def test_validate_metadata():
     payment = Payment(

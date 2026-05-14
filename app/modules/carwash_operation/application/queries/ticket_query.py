@@ -7,7 +7,9 @@ from app.modules.carwash_operation.domain.entities.ticket import TicketStatusEnu
 from app.shared.domain.exceptions.exceptions import BusinessRuleViolation
 
 
-def _parse_ticket_status(status: TicketStatusEnum | str | None) -> TicketStatusEnum | None:
+def _parse_ticket_status(
+    status: TicketStatusEnum | str | None,
+) -> TicketStatusEnum | None:
     if status is None:
         return None
 
@@ -43,7 +45,9 @@ class ListTicketsUseCase:
             ticket_number = None
 
         if filters.service_type_id is not None and filters.service_type_id < 1:
-            raise BusinessRuleViolation("Service type id must be greater than or equal to 1")
+            raise BusinessRuleViolation(
+                "Service type id must be greater than or equal to 1"
+            )
 
         offset = (page - 1) * limit
         tickets, total = await self.ticket_query.list(
@@ -62,4 +66,3 @@ class ListTicketsUseCase:
             page=page,
             limit=limit,
         )
-

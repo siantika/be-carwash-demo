@@ -59,7 +59,9 @@ def get_activate_service_type_usecase(service_type_repo=Depends(get_service_type
     return ActivateServiceTypeUseCase(service_type_repo)
 
 
-def get_deactivate_service_type_usecase(service_type_repo=Depends(get_service_type_repo)):
+def get_deactivate_service_type_usecase(
+    service_type_repo=Depends(get_service_type_repo),
+):
     return DeactivateServiceTypeUseCase(service_type_repo)
 
 

@@ -62,7 +62,9 @@ class ListTransactionsUseCase:
         if filters.cashier_id is not None and filters.cashier_id < 1:
             raise BusinessRuleViolation("Cashier id must be greater than or equal to 1")
 
-        plate_number = filters.plate_number.strip().upper() if filters.plate_number else None
+        plate_number = (
+            filters.plate_number.strip().upper() if filters.plate_number else None
+        )
         if plate_number == "":
             plate_number = None
 
@@ -92,4 +94,3 @@ class ListTransactionsUseCase:
             page=page,
             limit=limit,
         )
-

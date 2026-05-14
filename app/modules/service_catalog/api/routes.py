@@ -164,7 +164,9 @@ async def activate_service_type(
 async def deactivate_service_type(
     service_type_id: Annotated[int, Path(ge=1)],
     user=Depends(RoleChecker(SERVICE_CATALOG_MANAGER_ROLES)),
-    usecase: DeactivateServiceTypeUseCase = Depends(get_deactivate_service_type_usecase),
+    usecase: DeactivateServiceTypeUseCase = Depends(
+        get_deactivate_service_type_usecase
+    ),
 ):
     service_type = await usecase.execute(service_type_id)
     return BaseResponse(data=service_type)

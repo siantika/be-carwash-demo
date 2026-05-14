@@ -18,9 +18,9 @@ from app.shared.domain.exceptions.exceptions import (
     NotAuthenticatedError,
     PermissionDeniedError,
 )
-from app.shared.infra.database.db import get_db, get_db_pool
+from app.shared.infra.database.db import get_db
 from app.shared.interfaces.i_logger import ILogger
-from app.shared.middleware.logger import StructlogLogger, setup_logger
+from app.shared.middleware.logger import StructlogLogger
 
 
 def get_logger() -> ILogger:
@@ -33,6 +33,7 @@ def get_account_repo(db=Depends(get_db), logger=Depends(get_logger)):
 
 def get_device_repo(db=Depends(get_db), logger=Depends(get_logger)):
     return AsyncPgDeviceRepository(db, logger)
+
 
 # should be same as login path
 oauth2_scheme = OAuth2PasswordBearer(
@@ -79,10 +80,11 @@ async def get_current_user(
 
 
 def RoleChecker(required_roles: List[str]):
-    async def verify(user: AuthContextDto = Depends(get_current_user)) -> AuthContextDto:
+    async def verify(
+        user: AuthContextDto = Depends(get_current_user),
+    ) -> AuthContextDto:
         allowed_roles = {
-            role.value if hasattr(role, "value") else role
-            for role in required_roles
+            role.value if hasattr(role, "value") else role for role in required_roles
         }
         if user.role not in allowed_roles:
             raise PermissionDeniedError("You don't have permission")

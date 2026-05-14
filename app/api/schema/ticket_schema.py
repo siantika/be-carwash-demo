@@ -7,11 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class CreateTicketRequest(BaseModel):
     """Schema for creating a new ticket."""
 
-    service_type_id: int = Field(
-        ...,
-        ge=1,
-        description="Service type ID"
-    )
+    service_type_id: int = Field(..., ge=1, description="Service type ID")
 
     class Config:
         extra = "forbid"

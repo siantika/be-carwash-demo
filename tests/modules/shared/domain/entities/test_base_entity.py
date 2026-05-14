@@ -24,7 +24,9 @@ def test_created_at_must_be_timezone_aware():
     created = datetime(2026, 1, 1, 10, 0, 0)  # naive
     updated = aware(datetime(2026, 1, 1, 10, 0, 1))
 
-    with pytest.raises(BusinessRuleViolation, match="created_at must be timezone-aware"):
+    with pytest.raises(
+        BusinessRuleViolation, match="created_at must be timezone-aware"
+    ):
         BaseEntity(created_at=created, updated_at=updated)
 
 
@@ -32,7 +34,9 @@ def test_updated_at_must_be_timezone_aware():
     created = aware(datetime(2026, 1, 1, 10, 0, 0))
     updated = datetime(2026, 1, 1, 10, 0, 1)  # naive
 
-    with pytest.raises(BusinessRuleViolation, match="updated_at must be timezone-aware"):
+    with pytest.raises(
+        BusinessRuleViolation, match="updated_at must be timezone-aware"
+    ):
         BaseEntity(created_at=created, updated_at=updated)
 
 

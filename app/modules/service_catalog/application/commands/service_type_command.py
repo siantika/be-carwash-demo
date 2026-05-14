@@ -59,7 +59,9 @@ class ChangeServiceTypeDataUseCase:
                 cmd.is_primary,
             )
         ):
-            raise BusinessRuleViolation("At least one service type field must be provided")
+            raise BusinessRuleViolation(
+                "At least one service type field must be provided"
+            )
 
         service_type = await self.service_type_repo.find_by_id(service_type_id)
         if service_type is None:

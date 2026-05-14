@@ -21,4 +21,3 @@ class Device(BaseEntity):
             raise BusinessRuleViolation("Device name must not be empty")
         if self.last_seen_at is not None:
             self.ensure_timezone_aware(self.last_seen_at, "last_seen_at")
-

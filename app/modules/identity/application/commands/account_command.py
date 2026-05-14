@@ -98,4 +98,3 @@ class DeleteAccountUseCase:
         deleted_account_id = await self.account_repo.delete(account_id)
         if deleted_account_id != account_id:
             raise DeletedAccountMismatchError("Deleted account id mismatch")
-

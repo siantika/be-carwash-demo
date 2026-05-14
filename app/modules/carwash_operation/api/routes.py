@@ -39,10 +39,14 @@ router = APIRouter()
 CARWASH_OPERATION_ROLES = [RoleCode.ADMIN, RoleCode.OWNER, RoleCode.CASHIER]
 
 
-@router.post("", response_model=BaseResponse[TicketResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", response_model=BaseResponse[TicketResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_ticket(
     payload: CreateTicketRequest,
-    idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=8, max_length=128),
+    idempotency_key: str = Header(
+        ..., alias="Idempotency-Key", min_length=8, max_length=128
+    ),
     device=Depends(DeviceChecker()),
     usecase: CreateTicketUseCase = Depends(get_create_ticket_usecase),
 ):

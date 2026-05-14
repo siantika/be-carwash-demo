@@ -9,7 +9,11 @@ class Money:
     amount: Decimal
 
     def __post_init__(self) -> None:
-        amt = self.amount if isinstance(self.amount, Decimal) else Decimal(str(self.amount))
+        amt = (
+            self.amount
+            if isinstance(self.amount, Decimal)
+            else Decimal(str(self.amount))
+        )
         if amt < 0:
             raise ValueError("Amount cannot be negative")
         object.__setattr__(self, "amount", amt)
@@ -33,10 +37,17 @@ class Money:
         return self if self.amount <= other.amount else other
 
     # operators (agar <=, -, max/min bisa jalan)
-    def __lt__(self, other: "Money") -> bool: return self.amount < other.amount
-    def __le__(self, other: "Money") -> bool: return self.amount <= other.amount
-    def __gt__(self, other: "Money") -> bool: return self.amount > other.amount
-    def __ge__(self, other: "Money") -> bool: return self.amount >= other.amount
+    def __lt__(self, other: "Money") -> bool:
+        return self.amount < other.amount
+
+    def __le__(self, other: "Money") -> bool:
+        return self.amount <= other.amount
+
+    def __gt__(self, other: "Money") -> bool:
+        return self.amount > other.amount
+
+    def __ge__(self, other: "Money") -> bool:
+        return self.amount >= other.amount
 
     def __sub__(self, other: "Money") -> "Money":
         return self.subtract(other)

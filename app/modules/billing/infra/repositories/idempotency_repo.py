@@ -5,7 +5,9 @@ from typing import Any, Mapping
 import asyncpg
 
 from app.modules.billing.domain.entities.idempotency_record import IdempotencyRecord
-from app.modules.billing.domain.repositories.i_idempotency_repo import IIdempotencyRepository
+from app.modules.billing.domain.repositories.i_idempotency_repo import (
+    IIdempotencyRepository,
+)
 from app.shared.domain.exceptions.exceptions import EntityAlreadyExists, RepositoryError
 from app.shared.infra.database.error_handler import handle_db_error
 from app.shared.interfaces.i_logger import ILogger

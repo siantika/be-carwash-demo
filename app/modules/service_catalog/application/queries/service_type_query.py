@@ -11,7 +11,10 @@ from app.modules.service_catalog.application.queries.models import (
 from app.modules.service_catalog.domain.repositories.i_service_type_repo import (
     IServiceTypeRepository,
 )
-from app.shared.domain.exceptions.exceptions import BusinessRuleViolation, EntityNotFound
+from app.shared.domain.exceptions.exceptions import (
+    BusinessRuleViolation,
+    EntityNotFound,
+)
 
 
 class ListServiceTypesUseCase:
@@ -36,10 +39,14 @@ class ListServiceTypesUseCase:
             q = None
 
         if filters.min_price is not None and filters.min_price < 0:
-            raise BusinessRuleViolation("Minimum price must be greater than or equal to 0")
+            raise BusinessRuleViolation(
+                "Minimum price must be greater than or equal to 0"
+            )
 
         if filters.max_price is not None and filters.max_price < 0:
-            raise BusinessRuleViolation("Maximum price must be greater than or equal to 0")
+            raise BusinessRuleViolation(
+                "Maximum price must be greater than or equal to 0"
+            )
 
         if (
             filters.min_price is not None
@@ -63,7 +70,9 @@ class ListServiceTypesUseCase:
             offset=offset,
         )
         return ServiceTypeListResultDto(
-            items=[to_service_type_result(service_type) for service_type in service_types],
+            items=[
+                to_service_type_result(service_type) for service_type in service_types
+            ],
             total=total,
             page=page,
             limit=limit,

@@ -1,6 +1,8 @@
 from typing import Protocol
 
-from app.modules.carwash_operation.domain.repositories.i_ticket_repo import ITicketRepository
+from app.modules.carwash_operation.domain.repositories.i_ticket_repo import (
+    ITicketRepository,
+)
 from app.modules.carwash_operation.domain.repositories.i_ticket_void_repo import (
     ITicketVoidRepository,
 )

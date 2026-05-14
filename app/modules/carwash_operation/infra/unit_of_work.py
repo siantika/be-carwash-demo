@@ -9,7 +9,9 @@ from app.modules.carwash_operation.infra.repositories.ticket_repo import (
 from app.modules.carwash_operation.infra.repositories.ticket_void_repo import (
     AsyncPgTicketVoidRepository,
 )
-from app.modules.identity.infra.repositories.account_repo import AsyncPgAccountRepository
+from app.modules.identity.infra.repositories.account_repo import (
+    AsyncPgAccountRepository,
+)
 from app.shared.interfaces.i_logger import ILogger
 
 
