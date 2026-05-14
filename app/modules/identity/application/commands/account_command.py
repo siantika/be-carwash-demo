@@ -3,7 +3,7 @@ from app.modules.identity.application.dto.account_dto import (
     RegisterAccountCmd,
 )
 from app.modules.identity.application.dto.account_mapper import to_account_result
-from app.modules.identity.application.services.i_password_hasher import IPasswordHasher
+from app.modules.identity.application.ports.i_password_hasher import IPasswordHasher
 from app.modules.identity.domain.entities.account import Account, RoleCode
 from app.modules.identity.domain.repositories.i_account_repo import IAccountRepository
 from app.modules.identity.domain.value_objects.email import Email
