@@ -2,8 +2,8 @@ from datetime import timedelta
 
 from app.modules.identity.application.config.auth_config import AuthConfig
 from app.modules.identity.application.dto.login_dto import TokenPairDto
-from app.modules.identity.application.services.i_password_hasher import IPasswordHasher
-from app.modules.identity.application.services.i_token_service import ITokenService
+from app.modules.identity.application.ports.i_password_hasher import IPasswordHasher
+from app.modules.identity.application.ports.i_token_service import ITokenService
 from app.modules.identity.domain.entities.refresh_token import RefreshToken
 from app.modules.identity.domain.repositories.i_account_repo import IAccountRepository
 from app.modules.identity.domain.repositories.i_refresh_token_repo import (
