@@ -72,7 +72,8 @@ class LoginUseCase:
             RefreshToken(
                 account_id=account.id,
                 token_hash=self.token_service.hash_refresh_token(refresh_token),
-                expires_at=now + timedelta(days=self.auth_config.refresh_token_expire_days),
+                expires_at=now
+                + timedelta(days=self.auth_config.refresh_token_expire_days),
             )
         )
 
@@ -128,7 +129,8 @@ class RefreshSessionUseCase:
             RefreshToken(
                 account_id=account.id,
                 token_hash=self.token_service.hash_refresh_token(new_refresh_token),
-                expires_at=now + timedelta(days=self.auth_config.refresh_token_expire_days),
+                expires_at=now
+                + timedelta(days=self.auth_config.refresh_token_expire_days),
             )
         )
 
@@ -171,4 +173,3 @@ class LogoutUseCase:
         revoked_token_id = await self.refresh_token_repo.revoke(stored_token.id, now)
         if revoked_token_id != stored_token.id:
             raise RevokedRefreshTokenMismatchError("Revoked refresh token id mismatch")
-

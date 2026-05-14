@@ -12,4 +12,3 @@ def to_account_result(account: Account) -> AccountResultDto:
         created_at=account.created_at,
         updated_at=account.updated_at,
     )
-

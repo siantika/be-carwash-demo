@@ -155,4 +155,3 @@ class AsyncPgTicketIdempotencyRepository(IIdempotencyRepository):
             context={"record_id": record_id},
             operation_name="mark ticket idempotency completed",
         )
-

@@ -20,7 +20,9 @@ async def test_me_returns_current_user_context() -> None:
 
     try:
         transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://test"
+        ) as client:
             response = await client.get("/api/v1/auth/me")
     finally:
         app.dependency_overrides.pop(get_current_user, None)

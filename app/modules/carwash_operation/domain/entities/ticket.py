@@ -5,7 +5,9 @@ from app.modules.carwash_operation.domain.value_objects.entry_time import EntryT
 from app.modules.carwash_operation.domain.value_objects.service_snapshot import (
     ServiceSnapshot,
 )
-from app.modules.carwash_operation.domain.value_objects.ticket_number import TicketNumber
+from app.modules.carwash_operation.domain.value_objects.ticket_number import (
+    TicketNumber,
+)
 from app.shared.domain.entities.base import BaseEntity
 from app.shared.domain.exceptions.exceptions import (
     BusinessRuleViolation,
@@ -44,7 +46,9 @@ class Ticket(BaseEntity):
             )
 
         if new_status not in TicketStatusEnum:
-            raise InvalidTargetTicketStateError(f"Invalid target status '{new_status}'.")
+            raise InvalidTargetTicketStateError(
+                f"Invalid target status '{new_status}'."
+            )
 
         self.status = new_status
 

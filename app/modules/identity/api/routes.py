@@ -151,12 +151,9 @@ async def login(
     payload: LoginRequest,
     usecase: LoginUseCase = Depends(get_login_usecase),
 ):
-
     auth = await usecase.execute(payload.username, payload.password)
-    
-    return BaseResponse(
-        data=auth
-    )
+
+    return BaseResponse(data=auth)
 
 
 @auth_router.get("/me", response_model=BaseResponse[CurrentUserResponse])
@@ -179,9 +176,7 @@ async def refresh_session(
 ):
     token_pair = await usecase.execute(payload.refresh_token)
 
-    return BaseResponse(
-        data=token_pair
-    )
+    return BaseResponse(data=token_pair)
 
 
 @auth_router.post("/logout", response_model=BaseResponse[None])
@@ -193,6 +188,4 @@ async def logout(
 ):
     await usecase.execute(payload.refresh_token)
 
-    return BaseResponse(
-        data=None
-    )
+    return BaseResponse(data=None)

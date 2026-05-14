@@ -61,6 +61,7 @@ typer==0.20.0
 rich-toolkit==0.15.1
 pytest==9.0.3
 asgi-lifespan==2.1.0
+ruff==0.14.8
 
 
 # =========================

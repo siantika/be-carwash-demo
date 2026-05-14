@@ -10,7 +10,9 @@ from app.modules.billing.infra.repositories.idempotency_repo import (
 from app.modules.carwash_operation.infra.repositories.ticket_repo import (
     AsyncPgTicketRepository,
 )
-from app.modules.identity.infra.repositories.account_repo import AsyncPgAccountRepository
+from app.modules.identity.infra.repositories.account_repo import (
+    AsyncPgAccountRepository,
+)
 from app.shared.interfaces.i_logger import ILogger
 
 

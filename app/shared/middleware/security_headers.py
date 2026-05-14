@@ -10,7 +10,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Fix ZAP: MIME sniffing
         resp.headers.setdefault("X-Content-Type-Options", "nosniff")
 
-        # Fix ZAP: Spectre/site-isolation 
+        # Fix ZAP: Spectre/site-isolation
         resp.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
 
         return resp

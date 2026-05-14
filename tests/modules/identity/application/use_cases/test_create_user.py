@@ -1,7 +1,7 @@
 # import pytest
 
 # from domain.dto.ticket_dto import CreateTicketDTO
-# from domain.value_object.money import Money 
+# from domain.value_object.money import Money
 
 
 # def _create_valid_user():
@@ -10,7 +10,7 @@
 #         service_name_snapshot="BASIC WASH",
 #         service_desc_snapshot="ini layanan Basic Wash",
 #         service_base_price_snapshot=Money(55000),
-        
+
 #     )
 
 

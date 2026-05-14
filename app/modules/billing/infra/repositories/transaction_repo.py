@@ -4,7 +4,9 @@ from typing import Any, Mapping, cast
 import asyncpg
 
 from app.modules.billing.domain.entities.payment_transaction import PaymentTransaction
-from app.modules.billing.domain.repositories.i_transaction_repo import ITransactionRepository
+from app.modules.billing.domain.repositories.i_transaction_repo import (
+    ITransactionRepository,
+)
 from app.modules.billing.domain.value_objects.payment import Payment, PaymentMethodEnum
 from app.modules.billing.domain.value_objects.payment_state import (
     PaymentState,
@@ -158,7 +160,9 @@ class AsyncPgTransactionRepository(ITransactionRepository):
                     transaction.payment_status.paid_at,
                 )
             except asyncpg.UniqueViolationError as exc:
-                raise EntityAlreadyExists("PaymentTransaction", transaction.ticket_id) from exc
+                raise EntityAlreadyExists(
+                    "PaymentTransaction", transaction.ticket_id
+                ) from exc
 
             return _mapper(row)
 

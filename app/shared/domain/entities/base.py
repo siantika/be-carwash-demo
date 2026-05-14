@@ -8,12 +8,15 @@ from app.shared.domain.exceptions.exceptions import BusinessRuleViolation
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
-@dataclass(kw_only=True) # `kw` mode abandons the args queue. No error for 'follow default args'
+
+@dataclass(
+    kw_only=True
+)  # `kw` mode abandons the args queue. No error for 'follow default args'
 class BaseEntity:
     created_at: datetime = field(default_factory=_utcnow)
     updated_at: datetime = field(default_factory=_utcnow)
-    deleted_at : datetime = None 
-    id: Optional[int] = None  
+    deleted_at: datetime = None
+    id: Optional[int] = None
 
     def __post_init__(self):
         self.ensure_timezone_aware(self.created_at, "created_at")
@@ -23,7 +26,7 @@ class BaseEntity:
             raise BusinessRuleViolation(
                 "updated_at time cannot be earlier than created_at time"
             )
-    
+
     @staticmethod
     def ensure_timezone_aware(dt: datetime, field_name: str):
         if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:

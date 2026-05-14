@@ -47,18 +47,16 @@ class FakeAccountRepository:
         accounts.sort(key=lambda account: account.id or 0, reverse=True)
 
         if filters.role is not None:
-            accounts = [
-                account for account in accounts
-                if account.role == filters.role
-            ]
+            accounts = [account for account in accounts if account.role == filters.role]
 
         if filters.is_active is not None:
             accounts = [
-                account for account in accounts
+                account
+                for account in accounts
                 if account.is_active is filters.is_active
             ]
 
-        return accounts[offset:offset + limit], len(accounts)
+        return accounts[offset : offset + limit], len(accounts)
 
     async def create(self, account: Account) -> Account:
         account.id = self.next_id

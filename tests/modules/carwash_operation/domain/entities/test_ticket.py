@@ -1,8 +1,10 @@
 import pytest
 
-from app.modules.carwash_operation.domain.entities.ticket import Ticket, TicketStatusEnum
+from app.modules.carwash_operation.domain.entities.ticket import (
+    Ticket,
+    TicketStatusEnum,
+)
 from app.shared.domain.exceptions.exceptions import (
-    BusinessRuleViolation,
     TerminalTicketStateError,
 )
 
@@ -10,8 +12,10 @@ from app.shared.domain.exceptions.exceptions import (
 class DummyEntryTime:
     pass
 
+
 class DummyServiceSnapshot:
     pass
+
 
 class DummyTicketNumber:
     pass
@@ -28,7 +32,7 @@ def make_ticket(status: TicketStatusEnum = TicketStatusEnum.IN_PROGRESS) -> Tick
 
 
 def test_ticket_default_status_is_in_progress():
-    t = make_ticket()  
+    t = make_ticket()
     assert t.status == TicketStatusEnum.IN_PROGRESS
 
 

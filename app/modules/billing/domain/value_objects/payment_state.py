@@ -18,13 +18,20 @@ class PaymentState:
 
     def __post_init__(self):
         if isinstance(self.status, str):
-            object.__setattr__(self, "status", PaymentStatus(self.status.strip().upper()))
+            object.__setattr__(
+                self, "status", PaymentStatus(self.status.strip().upper())
+            )
 
         if self.status == PaymentStatus.PAID:
             if self.paid_at is None:
-                raise BusinessRuleViolation("paid_at must be set when payment status is PAID")
+                raise BusinessRuleViolation(
+                    "paid_at must be set when payment status is PAID"
+                )
 
-            if self.paid_at.tzinfo is None or self.paid_at.tzinfo.utcoffset(self.paid_at) is None:
+            if (
+                self.paid_at.tzinfo is None
+                or self.paid_at.tzinfo.utcoffset(self.paid_at) is None
+            ):
                 raise BusinessRuleViolation("paid_at must be timezone-aware")
         elif self.paid_at is not None:
             raise BusinessRuleViolation(

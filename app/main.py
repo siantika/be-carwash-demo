@@ -29,9 +29,9 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins= settings.CORS_ORIGINS,
-    allow_methods=settings.CORS_ALLOW_METHODS, 
-    allow_headers= settings.CORS_ALLOW_HEADERS,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_methods=settings.CORS_ALLOW_METHODS,
+    allow_headers=settings.CORS_ALLOW_HEADERS,
 )
 app.add_middleware(SecurityHeadersMiddleware)
 app.include_router(api_router, prefix=settings.API_VERSION)
@@ -44,9 +44,4 @@ async def home():
 
 
 if __name__ == "__main__":
-    uvicorn.run(
-        "app.main:app",
-        host=settings.HOST,
-        port=settings.PORT,
-        reload=True
-    )
+    uvicorn.run("app.main:app", host=settings.HOST, port=settings.PORT, reload=True)

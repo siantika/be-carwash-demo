@@ -5,7 +5,9 @@ from app.modules.carwash_operation.application.commands.ticket_command import (
     GenerateEan13TimeBased,
     VoidTicketUseCase,
 )
-from app.modules.carwash_operation.application.queries.ticket_query import ListTicketsUseCase
+from app.modules.carwash_operation.application.queries.ticket_query import (
+    ListTicketsUseCase,
+)
 from app.modules.carwash_operation.infra.repositories.idempotency_repo import (
     AsyncPgTicketIdempotencyRepository,
 )
@@ -18,7 +20,9 @@ from app.modules.carwash_operation.infra.repositories.query.postgres_ticket_quer
 from app.modules.carwash_operation.infra.unit_of_work import (
     AsyncPgCarwashOperationUnitOfWork,
 )
-from app.modules.carwash_operation.infra.services.request_hasher import Sha256RequestHasher
+from app.modules.carwash_operation.infra.services.request_hasher import (
+    Sha256RequestHasher,
+)
 from app.modules.service_catalog.api.dependencies import get_service_type_repo
 from app.shared.infra.database.db import get_db, get_db_pool
 from app.shared.middleware.logger import StructlogLogger

@@ -14,8 +14,16 @@ def _mask_sensitive_fields(_, __, event_dict):
     Tambahkan key lain sesuai kebutuhan bisnismu.
     """
     sensitive_keys = {
-        "password", "password_hash", "token", "secret", "api_key",
-        "email", "phone", "card_number", "cvv", "pin"
+        "password",
+        "password_hash",
+        "token",
+        "secret",
+        "api_key",
+        "email",
+        "phone",
+        "card_number",
+        "cvv",
+        "pin",
     }
     for key in sensitive_keys:
         if key in event_dict:
@@ -36,7 +44,7 @@ def setup_logger(json_format: bool = True, log_level: str = "INFO") -> None:
     valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
     if log_level.upper() not in valid_levels:
         raise ValueError(f"Invalid log level: {log_level}. Use one of {valid_levels}")
-    
+
     level = getattr(logging, log_level.upper())
 
     # Setup root logger

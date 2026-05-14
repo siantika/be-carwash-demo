@@ -12,7 +12,9 @@ class TicketNumber:
             raise InvalidTicketNumber("Ticket number must not be empty")
 
         if not isinstance(self.value, str):
-            raise InvalidTicketNumber(f"Ticket number should be string. Got: {type(self.value)}")
+            raise InvalidTicketNumber(
+                f"Ticket number should be string. Got: {type(self.value)}"
+            )
 
         if not self._is_valid_ean13(self.value):
             raise InvalidTicketNumber("Ticket number must be a valid EAN-13")

@@ -7,7 +7,9 @@ import pytest
 from app.modules.carwash_operation.application.dto.ticket_dto import (
     CreateTicketCmd,
 )
-from app.modules.carwash_operation.application.services.i_request_hasher import IRequestHasher
+from app.modules.carwash_operation.application.services.i_request_hasher import (
+    IRequestHasher,
+)
 from app.modules.carwash_operation.application.queries.models import (
     TicketListFilterDto,
 )
@@ -18,11 +20,16 @@ from app.modules.carwash_operation.application.commands.ticket_command import (
     CreateTicketUseCase,
     VoidTicketUseCase,
 )
-from app.modules.carwash_operation.application.queries.ticket_query import ListTicketsUseCase
+from app.modules.carwash_operation.application.queries.ticket_query import (
+    ListTicketsUseCase,
+)
 from app.modules.carwash_operation.domain.entities.idempotency_record import (
     IdempotencyRecord,
 )
-from app.modules.carwash_operation.domain.entities.ticket import Ticket, TicketStatusEnum
+from app.modules.carwash_operation.domain.entities.ticket import (
+    Ticket,
+    TicketStatusEnum,
+)
 from app.modules.carwash_operation.domain.entities.ticket_void import TicketVoid
 from app.modules.service_catalog.domain.entities.service_type import ServiceType
 from app.shared.domain.entities.base import _utcnow
@@ -81,7 +88,7 @@ class FakeTicketRepository:
             ]
 
         tickets.sort(key=lambda ticket: ticket.id or 0, reverse=True)
-        return tickets[offset:offset + limit], len(tickets)
+        return tickets[offset : offset + limit], len(tickets)
 
     async def add(self, ticket: Ticket) -> Ticket:
         ticket.id = self.next_id
@@ -349,7 +356,9 @@ async def test_void_ticket_marks_ticket_and_creates_void_record() -> None:
 
 
 @pytest.mark.anyio
-async def test_create_ticket_replays_completed_response_for_same_idempotency_key() -> None:
+async def test_create_ticket_replays_completed_response_for_same_idempotency_key() -> (
+    None
+):
     ticket_repo = FakeTicketRepository()
     service_type_repo = FakeServiceTypeRepository()
     service_type_repo.service_types[1] = ServiceType(
@@ -404,7 +413,9 @@ async def test_create_ticket_rejects_same_idempotency_key_different_payload() ->
         FixedRequestHasher(),
     )
 
-    await usecase.execute(CreateTicketCmd(service_type_id=1), idempotency_key="ticket-key-0006")
+    await usecase.execute(
+        CreateTicketCmd(service_type_id=1), idempotency_key="ticket-key-0006"
+    )
     with pytest.raises(BusinessRuleViolation):
         await usecase.execute(
             CreateTicketCmd(service_type_id=2),

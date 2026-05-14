@@ -19,7 +19,9 @@ from app.modules.carwash_operation.application.dto.ticket_void_dto import (
 from app.modules.carwash_operation.application.services.i_barcode_generator import (
     IBarcodeGenerator,
 )
-from app.modules.carwash_operation.application.services.i_request_hasher import IRequestHasher
+from app.modules.carwash_operation.application.services.i_request_hasher import (
+    IRequestHasher,
+)
 from app.modules.carwash_operation.domain.entities.ticket import Ticket
 from app.modules.carwash_operation.domain.entities.ticket_void import TicketVoid
 from app.modules.carwash_operation.domain.repositories.i_idempotency_repo import (
@@ -28,11 +30,15 @@ from app.modules.carwash_operation.domain.repositories.i_idempotency_repo import
 from app.modules.carwash_operation.domain.repositories.i_carwash_operation_uow import (
     ICarwashOperationUnitOfWork,
 )
-from app.modules.carwash_operation.domain.repositories.i_ticket_repo import ITicketRepository
+from app.modules.carwash_operation.domain.repositories.i_ticket_repo import (
+    ITicketRepository,
+)
 from app.modules.carwash_operation.domain.value_objects.service_snapshot import (
     ServiceSnapshot,
 )
-from app.modules.carwash_operation.domain.value_objects.ticket_number import TicketNumber
+from app.modules.carwash_operation.domain.value_objects.ticket_number import (
+    TicketNumber,
+)
 from app.modules.service_catalog.domain.repositories.i_service_type_repo import (
     IServiceTypeRepository,
 )

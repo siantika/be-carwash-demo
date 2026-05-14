@@ -42,9 +42,7 @@ async def handle_db_error(
 
 def _is_infra_error(error: Exception) -> bool:
     """Correlated to specific database tech (asyncpg for this case)"""
-    infra_modules = (
-        "asyncpg.exceptions",
-    )
+    infra_modules = ("asyncpg.exceptions",)
     return any(type(error).__module__.startswith(m) for m in infra_modules)
 
 
