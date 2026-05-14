@@ -1,4 +1,4 @@
-from typing import List
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, Query, Request, status
 
@@ -54,12 +54,13 @@ ACCOUNT_MANAGER_ROLES = [RoleCode.ADMIN, RoleCode.OWNER]
     "",
     response_model=BaseResponse[AccountResponse],
     status_code=status.HTTP_201_CREATED,
+    dependencies=[]
     
 )
 async def register_account(
     payload: RegisterAccountRequest,
+    usecase: Annotated[RegisterAccountUseCase, Depends(get_register_account_usecase)],
     user=Depends(RoleChecker(ACCOUNT_MANAGER_ROLES)),
-    usecase: RegisterAccountUseCase = Depends(get_register_account_usecase),
 ):
     created_account = await usecase.execute(
         RegisterAccountCmd(
@@ -73,15 +74,17 @@ async def register_account(
 
     return BaseResponse(data=created_account)
 
-
 @account_router.get("", response_model=BaseResponse[List[AccountResponse]])
 async def list_accounts(
-    role: RoleCode | None = Query(default=None),
-    is_active: bool | None = Query(default=None),
-    page: int = Query(default=1, ge=1),
-    limit: int = Query(default=20, ge=1, le=100),
-    user=Depends(RoleChecker(ACCOUNT_MANAGER_ROLES)),
-    usecase: ListAccountsUseCase = Depends(get_list_accounts_usecase),
+    role: Annotated[RoleCode | None, Query()] = None,
+    is_active: Annotated[bool | None, Query()] = None,
+    page: Annotated[int, Query(ge=1)] = 1,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    user: Annotated[AuthContextDto, Depends(RoleChecker(ACCOUNT_MANAGER_ROLES))] = None,
+    usecase: Annotated[
+        ListAccountsUseCase,
+        Depends(get_list_accounts_usecase),
+    ] = None,
 ):
     result = await usecase.execute(
         role=role,
@@ -89,6 +92,7 @@ async def list_accounts(
         page=page,
         limit=limit,
     )
+
     return BaseResponse(
         data=result.items,
         metadata=Metadata(
@@ -102,10 +106,14 @@ async def list_accounts(
 @account_router.get("/{account_id}", response_model=BaseResponse[AccountResponse])
 async def get_account(
     account_id: int,
-    user=Depends(RoleChecker(ACCOUNT_MANAGER_ROLES)),
-    usecase: GetAccountUseCase = Depends(get_get_account_usecase),
+    user: Annotated[AuthContextDto, Depends(RoleChecker(ACCOUNT_MANAGER_ROLES))] = None,
+    usecase: Annotated[
+        GetAccountUseCase,
+        Depends(get_get_account_usecase),
+    ] = None,
 ):
     account = await usecase.execute(account_id)
+
     return BaseResponse(data=account)
 
 
@@ -115,10 +123,14 @@ async def get_account(
 )
 async def activate_account(
     account_id: int,
-    user=Depends(RoleChecker(ACCOUNT_MANAGER_ROLES)),
-    usecase: ActivateAccountUseCase = Depends(get_activate_account_usecase),
+    user: Annotated[AuthContextDto, Depends(RoleChecker(ACCOUNT_MANAGER_ROLES))] = None,
+    usecase: Annotated[
+        ActivateAccountUseCase,
+        Depends(get_activate_account_usecase),
+    ] = None,
 ):
     account = await usecase.execute(account_id)
+
     return BaseResponse(data=account)
 
 
@@ -128,20 +140,28 @@ async def activate_account(
 )
 async def deactivate_account(
     account_id: int,
-    user=Depends(RoleChecker(ACCOUNT_MANAGER_ROLES)),
-    usecase: DeactivateAccountUseCase = Depends(get_deactivate_account_usecase),
+    user: Annotated[AuthContextDto, Depends(RoleChecker(ACCOUNT_MANAGER_ROLES))] = None,
+    usecase: Annotated[
+        DeactivateAccountUseCase,
+        Depends(get_deactivate_account_usecase),
+    ] = None,
 ):
     account = await usecase.execute(account_id)
+
     return BaseResponse(data=account)
 
 
 @account_router.delete("/{account_id}", response_model=BaseResponse[None])
 async def delete_account(
     account_id: int,
-    user=Depends(RoleChecker(ACCOUNT_MANAGER_ROLES)),
-    usecase: DeleteAccountUseCase = Depends(get_delete_account_usecase),
+    user: Annotated[AuthContextDto, Depends(RoleChecker(ACCOUNT_MANAGER_ROLES))] = None,
+    usecase: Annotated[
+        DeleteAccountUseCase,
+        Depends(get_delete_account_usecase),
+    ] = None,
 ):
     await usecase.execute(account_id)
+
     return BaseResponse(data=None)
 
 
@@ -150,7 +170,10 @@ async def delete_account(
 async def login(
     request: Request,
     payload: LoginRequest,
-    usecase: LoginUseCase = Depends(get_login_usecase),
+    usecase: Annotated[
+        LoginUseCase,
+        Depends(get_login_usecase),
+    ] = None,
 ):
     auth = await usecase.execute(payload.username, payload.password)
 
@@ -158,7 +181,9 @@ async def login(
 
 
 @auth_router.get("/me", response_model=BaseResponse[CurrentUserResponse])
-async def me(user: AuthContextDto = Depends(get_current_user)):
+async def me(
+    user: Annotated[AuthContextDto, Depends(get_current_user)],
+):
     return BaseResponse(
         data=CurrentUserResponse(
             user_id=user.user_id,
@@ -173,7 +198,10 @@ async def me(user: AuthContextDto = Depends(get_current_user)):
 async def refresh_session(
     request: Request,
     payload: RefreshTokenRequest,
-    usecase: RefreshSessionUseCase = Depends(get_refresh_session_usecase),
+    usecase: Annotated[
+        RefreshSessionUseCase,
+        Depends(get_refresh_session_usecase),
+    ] = None,
 ):
     token_pair = await usecase.execute(payload.refresh_token)
 
@@ -185,7 +213,10 @@ async def refresh_session(
 async def logout(
     request: Request,
     payload: RefreshTokenRequest,
-    usecase: LogoutUseCase = Depends(get_logout_usecase),
+    usecase: Annotated[
+        LogoutUseCase,
+        Depends(get_logout_usecase),
+    ] = None,
 ):
     await usecase.execute(payload.refresh_token)
 
