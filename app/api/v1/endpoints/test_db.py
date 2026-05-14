@@ -5,17 +5,18 @@ from app.shared.middleware.limiter import limiter
 
 router = APIRouter(tags=["test-db"])
 
+
 @router.get("/test-db")
 @limiter.limit("10/minute")
-async def test_connection(request:Request,db=Depends(get_db)):
+async def test_connection(request: Request, db=Depends(get_db)):
     try:
-        result = await db.fetchrow("SELECT 1 AS ok;")  # async query
+        result = await db.fetchrow("SELECT 1 AS ok;")
         return {
             "status": "success",
-            "result": dict(result)  # convert ke dict agar JSON-friendly
+            "result": dict(result),
         }
-    except Exception as e:
+    except Exception as error:
         return {
             "status": "failed",
-            "error": str(e)
+            "error": str(error),
         }
