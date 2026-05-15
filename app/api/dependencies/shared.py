@@ -22,11 +22,9 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from pydantic import ValidationError
 
-_logger = StructlogLogger("api")
-
 
 def get_logger() -> ILogger:
-    return _logger
+    return StructlogLogger("api")
 
 
 def get_account_repo(
