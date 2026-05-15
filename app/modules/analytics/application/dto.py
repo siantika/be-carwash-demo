@@ -14,7 +14,7 @@ class DashboardSummaryDTO:
 
 @dataclass(frozen=True)
 class DailyRevenueDTO:
-    selected_date:date
+    date_at: date
     revenue: Decimal 
     transaction_count: int  
 

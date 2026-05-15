@@ -6,6 +6,9 @@ from fastapi import Depends
 from app.modules.analytics.application.ports.i_analytics_query_repo import (
     IAnalyticsQueryRepository,
 )
+from app.modules.analytics.application.use_cases.get_daily_revenue import (
+    GetDailyRevenueUseCase,
+)
 from app.modules.analytics.application.use_cases.get_dashboard_summary import (
     GetDashboardSummaryUseCase,
 )
@@ -29,6 +32,9 @@ def get_dashboard_summary_use_case(repo:Annotated[IAnalyticsQueryRepository,
                                                   Depends(get_analytics_query_repository) ]) -> GetDashboardSummaryUseCase:
     return GetDashboardSummaryUseCase(repo)
 
+def get_daily_revenue_use_case(repo:Annotated[IAnalyticsQueryRepository, 
+                                              Depends(get_analytics_query_repository)]) -> GetDailyRevenueUseCase:
+    return GetDailyRevenueUseCase(repo)
 
 
 
