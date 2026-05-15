@@ -3,7 +3,11 @@ from decimal import Decimal
 
 import asyncpg
 
-from app.modules.analytics.application.dto import DailyRevenueDTO, DashboardSummaryDTO
+from app.modules.analytics.application.dto import (
+    DailyRevenueDTO,
+    DashboardSummaryDTO,
+    TopServiceDTO,
+)
 from app.shared.infra.database.error_handler import handle_db_error
 from app.shared.interfaces.i_logger import ILogger
 
@@ -12,6 +16,47 @@ class AsyncPgAnalyticsQueryRepository:
     def __init__(self, db: asyncpg.Connection, logger: ILogger):
         self.db = db
         self.logger = logger
+    
+    async def get_top_service(self, start_date: date, end_date: date, limit:int) -> list[TopServiceDTO]:
+        async def _fetch():
+            start_timestamp  = datetime.combine(start_date, time.min)
+            end_timestamp = datetime.combine(end_date, time.min) + timedelta(days=1)
+            
+            rows = await self.db.fetch(
+                """
+                SELECT 
+                    service_name_snapshot as service_name,
+                    COUNT(*) AS total_sold,
+                    SUM(service_base_price_snapshot) AS total_revenue  
+                FROM
+                    carwash_operation.tickets
+                WHERE status = 'PAID'
+                AND updated_at >= $1
+                AND updated_at < $2
+                GROUP BY service_name
+                ORDER BY total_sold DESC
+                LIMIT $3;
+                
+                """,
+                start_timestamp,
+                end_timestamp,
+                limit
+            )
+            
+            return [
+                TopServiceDTO(
+                    service_name=row['service_name'],
+                    total_sold = row['total_sold'],
+                    total_revenue=row['total_revenue']
+                ) for row in rows
+            ]
+        return await handle_db_error(
+            operation=_fetch,
+            logger=self.logger,
+            operation_name="get top services"
+        )
+            
+    
     
     async def get_daily_revenue(self, start_date: date, end_date: date) -> list[DailyRevenueDTO]:
         async def _fetch():

@@ -23,7 +23,7 @@ class IAnalyticsQueryRepository(Protocol):
     ) -> list[DailyRevenueDTO]:
         ...
 
-    async def get_top_services(
+    async def get_top_service(
         self,
         start_date: date,
         end_date: date,

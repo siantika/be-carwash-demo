@@ -12,6 +12,9 @@ from app.modules.analytics.application.use_cases.get_daily_revenue import (
 from app.modules.analytics.application.use_cases.get_dashboard_summary import (
     GetDashboardSummaryUseCase,
 )
+from app.modules.analytics.application.use_cases.get_top_services import (
+    GetTopServicesUseCase,
+)
 from app.modules.analytics.infra.repositories.async_pg_analytics_query_repository import (
     AsyncPgAnalyticsQueryRepository,
 )
@@ -37,5 +40,6 @@ def get_daily_revenue_use_case(repo:Annotated[IAnalyticsQueryRepository,
     return GetDailyRevenueUseCase(repo)
 
 
-
-
+def get_top_services_use_casce(repo:Annotated[IAnalyticsQueryRepository, 
+                                              Depends(get_analytics_query_repository)]) -> GetTopServicesUseCase:
+    return GetTopServicesUseCase(repo)
