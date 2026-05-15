@@ -2,7 +2,7 @@ from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, Header, Path, Query, status
 
-from app.api.dependencies.shared import DeviceChecker, RoleChecker
+from app.api.dependencies.shared import RoleChecker, get_current_device
 from app.modules.carwash_operation.api.dependencies import (
     get_create_ticket_usecase,
     get_list_tickets_usecase,
@@ -47,7 +47,7 @@ async def create_ticket(
     idempotency_key: str = Header(
         ..., alias="Idempotency-Key", min_length=8, max_length=128
     ),
-    device=Depends(DeviceChecker()),
+    device=Depends(get_current_device),
     usecase: CreateTicketUseCase = Depends(get_create_ticket_usecase),
 ):
     ticket = await usecase.execute(

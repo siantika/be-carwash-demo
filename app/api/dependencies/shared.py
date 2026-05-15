@@ -1,9 +1,4 @@
-from typing import List
-
-from fastapi import Depends, Header
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError
-from pydantic import ValidationError
+from typing import Annotated
 
 from app.modules.identity.application.dto.auth_context_dto import AuthContextDto
 from app.modules.identity.domain.entities.device import Device
@@ -21,21 +16,33 @@ from app.shared.domain.exceptions.exceptions import (
 from app.shared.infra.database.db import get_db
 from app.shared.interfaces.i_logger import ILogger
 from app.shared.middleware.logger import StructlogLogger
+from asyncpg import Pool
+from fastapi import Depends, Header
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError
+from pydantic import ValidationError
+
+_logger = StructlogLogger("api")
 
 
 def get_logger() -> ILogger:
-    return StructlogLogger("api")
+    return _logger
 
 
-def get_account_repo(db=Depends(get_db), logger=Depends(get_logger)):
+def get_account_repo(
+    db: Annotated[Pool, Depends(get_db)],
+    logger: Annotated[ILogger, Depends(get_logger)],
+) -> AsyncPgAccountRepository:
     return AsyncPgAccountRepository(db, logger)
 
 
-def get_device_repo(db=Depends(get_db), logger=Depends(get_logger)):
+def get_device_repo(
+    db: Annotated[Pool, Depends(get_db)],
+    logger: Annotated[ILogger, Depends(get_logger)],
+) -> AsyncPgDeviceRepository:
     return AsyncPgDeviceRepository(db, logger)
 
 
-# should be same as login path
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/api/v1/auth/login",
     auto_error=False,
@@ -43,24 +50,28 @@ oauth2_scheme = OAuth2PasswordBearer(
 
 
 async def get_required_token(
-    token: str | None = Depends(oauth2_scheme),
+    token: Annotated[str | None, Depends(oauth2_scheme)],
 ) -> str:
     if token is None:
         raise NotAuthenticatedError("Not authenticated")
+
     return token
 
 
 async def get_current_user(
-    token: str = Depends(get_required_token),
-    account_repo=Depends(get_account_repo),
+    token: Annotated[str, Depends(get_required_token)],
+    account_repo: Annotated[
+        AsyncPgAccountRepository,
+        Depends(get_account_repo),
+    ],
 ) -> AuthContextDto:
     try:
-        payload = decode_token(token).model_dump()
+        payload = decode_token(token)
     except (JWTError, ValidationError):
         raise InvalidTokenError("Invalid token")
 
-    user_id = payload.get("user_id")
-    role = payload.get("role")
+    user_id = payload.user_id
+    role = payload.role
 
     if user_id is None or role is None:
         raise InvalidTokenError("Invalid token payload")
@@ -79,39 +90,38 @@ async def get_current_user(
     )
 
 
-def RoleChecker(required_roles: List[str]):
+def RoleChecker(required_roles: list[str]):
     async def verify(
-        user: AuthContextDto = Depends(get_current_user),
+        user: Annotated[AuthContextDto, Depends(get_current_user)],
     ) -> AuthContextDto:
-        allowed_roles = {
-            role.value if hasattr(role, "value") else role for role in required_roles
-        }
+        allowed_roles = set(required_roles)
+
         if user.role not in allowed_roles:
             raise PermissionDeniedError("You don't have permission")
+
         return user
 
     return verify
 
 
 async def get_current_device(
-    device_code: str | None = Header(default=None, alias="X-Device-Code"),
-    device_repo=Depends(get_device_repo),
+    device_repo: Annotated[
+        AsyncPgDeviceRepository,
+        Depends(get_device_repo),
+    ],
+    device_code:str = Header(default=None, alias="X-Device-Code"),
 ) -> Device:
     if device_code is None or device_code.strip() == "":
         raise PermissionDeniedError("Device code is required")
 
     device = await device_repo.find_by_code(device_code.strip())
+
     if device is None:
         raise PermissionDeniedError("Device is not registered")
+
     if not device.is_active:
         raise PermissionDeniedError("Device is inactive")
 
     await device_repo.touch_last_seen(device.id)
+
     return device
-
-
-def DeviceChecker():
-    async def verify(device: Device = Depends(get_current_device)) -> Device:
-        return device
-
-    return verify
