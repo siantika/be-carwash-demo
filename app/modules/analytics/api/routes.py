@@ -47,7 +47,7 @@ async def get_dashboard_summary(
             description="Target date for dashboard summary",
             example="2026-05-15",
         ),
-],
+    ],
     usecase: Annotated[
         GetDashboardSummaryUseCase,
         Depends(get_dashboard_summary_use_case),
@@ -57,7 +57,6 @@ async def get_dashboard_summary(
     summary = await usecase.execute(target_date)
 
     return BaseResponse(data=summary)
-
 
 
 @router.get(
@@ -71,15 +70,15 @@ async def get_daily_revenue(
             description="Target date for daily revenue",
             example="2026-05-15",
         ),
-],
-        end_date: Annotated[
+    ],
+    end_date: Annotated[
         date,
         Query(
             description="Target date for daily revenue",
             example="2026-05-15",
         ),
     ],
-        usecase: Annotated[
+    usecase: Annotated[
         GetDailyRevenueUseCase,
         Depends(get_daily_revenue_use_case),
     ],
@@ -90,13 +89,11 @@ async def get_daily_revenue(
     return BaseResponse(data=daily_revenue)
 
 
-
 @router.get(
     "/top-services",
     response_model=BaseResponse[list[TopServiceResponse]],
 )
 async def get_top_service(
-
     start_date: Annotated[
         date,
         Query(
@@ -104,30 +101,25 @@ async def get_top_service(
             example="2026-05-15",
         ),
     ],
-        end_date: Annotated[
+    end_date: Annotated[
         date,
         Query(
             description="Target date for top service",
             example="2026-05-15",
         ),
     ],
-        
-        usecase: Annotated[
+    usecase: Annotated[
         GetTopServicesUseCase,
         Depends(get_top_services_use_casce),
     ],
     user=Depends(RoleChecker(ANALYTICS_ROLES)),
-    limit:int = Query(
-            description="Maximum services to be displayed each date",
-            example=1,
-            default=1
-        ),
+    limit: int = Query(
+        description="Maximum services to be displayed each date", example=1, default=1
+    ),
 ):
     top_services = await usecase.execute(start_date, end_date, limit)
 
     return BaseResponse(data=top_services)
-
-
 
 
 @router.get(
@@ -135,7 +127,6 @@ async def get_top_service(
     response_model=BaseResponse[list[PaymentMethodSummaryResponse]],
 )
 async def get_payment_method_summary(
-
     start_date: Annotated[
         date,
         Query(
@@ -143,19 +134,18 @@ async def get_payment_method_summary(
             example="2026-05-15",
         ),
     ],
-        end_date: Annotated[
+    end_date: Annotated[
         date,
         Query(
             description="Target date for payment method summary",
             example="2026-05-15",
         ),
     ],
-        
-        usecase: Annotated[
+    usecase: Annotated[
         GetPaymentMethodSummaryUseCase,
         Depends(get_payment_method_use_case),
     ],
-    user=Depends(RoleChecker(ANALYTICS_ROLES))
+    user=Depends(RoleChecker(ANALYTICS_ROLES)),
 ):
     payment_method_summary = await usecase.execute(start_date, end_date)
 

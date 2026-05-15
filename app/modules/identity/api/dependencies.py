@@ -84,7 +84,9 @@ def get_auth_config() -> AuthConfig:
 
 def get_login_usecase(
     account_repo: Annotated[IAccountRepository, Depends(get_account_repo)],
-    refresh_token_repo: Annotated[IRefreshTokenRepository, Depends(get_refresh_token_repo)],
+    refresh_token_repo: Annotated[
+        IRefreshTokenRepository, Depends(get_refresh_token_repo)
+    ],
     password_hasher: Annotated[PasswordHasher, Depends(get_password_hasher)],
     token_service: Annotated[TokenService, Depends(get_token_service)],
     auth_config: Annotated[AuthConfig, Depends(get_auth_config)],
@@ -100,7 +102,9 @@ def get_login_usecase(
 
 def get_refresh_session_usecase(
     account_repo: Annotated[IAccountRepository, Depends(get_account_repo)],
-    refresh_token_repo: Annotated[IRefreshTokenRepository, Depends(get_refresh_token_repo)],
+    refresh_token_repo: Annotated[
+        IRefreshTokenRepository, Depends(get_refresh_token_repo)
+    ],
     token_service: Annotated[TokenService, Depends(get_token_service)],
     auth_config: Annotated[AuthConfig, Depends(get_auth_config)],
 ) -> RefreshSessionUseCase:
@@ -113,7 +117,9 @@ def get_refresh_session_usecase(
 
 
 def get_logout_usecase(
-    refresh_token_repo: Annotated[IRefreshTokenRepository, Depends(get_refresh_token_repo)],
+    refresh_token_repo: Annotated[
+        IRefreshTokenRepository, Depends(get_refresh_token_repo)
+    ],
     token_service: Annotated[TokenService, Depends(get_token_service)],
 ) -> LogoutUseCase:
     return LogoutUseCase(refresh_token_repo, token_service)

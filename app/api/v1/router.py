@@ -29,8 +29,4 @@ api_router.include_router(
     tags=["billing"],
 )
 
-api_router.include_router(
-    analytics_router,
-    prefix="/analytics",
-    tags=["analytics"]
-)
+api_router.include_router(analytics_router, prefix="/analytics", tags=["analytics"])

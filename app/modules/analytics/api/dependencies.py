@@ -29,26 +29,33 @@ from app.shared.middleware.logger import StructlogLogger
 def get_logger() -> ILogger:
     return StructlogLogger("analytics")
 
-def get_analytics_query_repository(db:Annotated[Pool, Depends(get_db)],
-                                   logger: Annotated[ILogger, Depends(get_logger)]
-                                   )-> IAnalyticsQueryRepository:
+
+def get_analytics_query_repository(
+    db: Annotated[Pool, Depends(get_db)],
+    logger: Annotated[ILogger, Depends(get_logger)],
+) -> IAnalyticsQueryRepository:
     return AsyncPgAnalyticsQueryRepository(db, logger)
 
-def get_dashboard_summary_use_case(repo:Annotated[IAnalyticsQueryRepository,
-                                                  Depends(get_analytics_query_repository) ]) -> GetDashboardSummaryUseCase:
+
+def get_dashboard_summary_use_case(
+    repo: Annotated[IAnalyticsQueryRepository, Depends(get_analytics_query_repository)],
+) -> GetDashboardSummaryUseCase:
     return GetDashboardSummaryUseCase(repo)
 
-def get_daily_revenue_use_case(repo:Annotated[IAnalyticsQueryRepository, 
-                                              Depends(get_analytics_query_repository)]) -> GetDailyRevenueUseCase:
+
+def get_daily_revenue_use_case(
+    repo: Annotated[IAnalyticsQueryRepository, Depends(get_analytics_query_repository)],
+) -> GetDailyRevenueUseCase:
     return GetDailyRevenueUseCase(repo)
 
 
-def get_top_services_use_casce(repo:Annotated[IAnalyticsQueryRepository, 
-                                              Depends(get_analytics_query_repository)]) -> GetTopServicesUseCase:
+def get_top_services_use_casce(
+    repo: Annotated[IAnalyticsQueryRepository, Depends(get_analytics_query_repository)],
+) -> GetTopServicesUseCase:
     return GetTopServicesUseCase(repo)
 
 
-def get_payment_method_use_case(repo:Annotated[IAnalyticsQueryRepository,
-                                               Depends(get_analytics_query_repository)]) -> GetPaymentMethodSummaryUseCase:
-    
-    return GetPaymentMethodSummaryUseCase(repo) 
+def get_payment_method_use_case(
+    repo: Annotated[IAnalyticsQueryRepository, Depends(get_analytics_query_repository)],
+) -> GetPaymentMethodSummaryUseCase:
+    return GetPaymentMethodSummaryUseCase(repo)
