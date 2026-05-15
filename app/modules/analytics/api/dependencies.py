@@ -12,6 +12,9 @@ from app.modules.analytics.application.use_cases.get_daily_revenue import (
 from app.modules.analytics.application.use_cases.get_dashboard_summary import (
     GetDashboardSummaryUseCase,
 )
+from app.modules.analytics.application.use_cases.get_payment_method_summary import (
+    GetPaymentMethodSummaryUseCase,
+)
 from app.modules.analytics.application.use_cases.get_top_services import (
     GetTopServicesUseCase,
 )
@@ -43,3 +46,9 @@ def get_daily_revenue_use_case(repo:Annotated[IAnalyticsQueryRepository,
 def get_top_services_use_casce(repo:Annotated[IAnalyticsQueryRepository, 
                                               Depends(get_analytics_query_repository)]) -> GetTopServicesUseCase:
     return GetTopServicesUseCase(repo)
+
+
+def get_payment_method_use_case(repo:Annotated[IAnalyticsQueryRepository,
+                                               Depends(get_analytics_query_repository)]) -> GetPaymentMethodSummaryUseCase:
+    
+    return GetPaymentMethodSummaryUseCase(repo) 
