@@ -1,4 +1,3 @@
-from logging import Logger
 from typing import Annotated
 
 from asyncpg import Pool
