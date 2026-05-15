@@ -11,6 +11,6 @@ class GetTopServicesUseCase:
         self.repo = analytics_query_repo
     
     async def execute(self, start_date:date, end_date:date, limit: int) -> TopServiceDTO:
-        return await self.repo.get_top_services(
+        return await self.repo.get_top_service(
             start_date, end_date, limit
         )
