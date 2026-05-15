@@ -13,7 +13,7 @@ class DashboardSummaryResponse(BaseModel):
 
 
 class DailyRevenueResponse(BaseModel):
-    date: date
+    date_at: date
     revenue: Decimal
     transaction_count: int
 

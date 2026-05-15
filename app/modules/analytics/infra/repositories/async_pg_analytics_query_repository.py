@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import asyncpg
 
-from app.modules.analytics.application.dto import DashboardSummaryDTO
+from app.modules.analytics.application.dto import DailyRevenueDTO, DashboardSummaryDTO
 from app.shared.infra.database.error_handler import handle_db_error
 from app.shared.interfaces.i_logger import ILogger
 
@@ -12,13 +12,49 @@ class AsyncPgAnalyticsQueryRepository:
     def __init__(self, db: asyncpg.Connection, logger: ILogger):
         self.db = db
         self.logger = logger
-
+    
+    async def get_daily_revenue(self, start_date: date, end_date: date) -> list[DailyRevenueDTO]:
+        async def _fetch():
+            start_timestamp  = datetime.combine(start_date, time.min)
+            end_timestamp = datetime.combine(end_date, time.min) + timedelta(days=1)
+            
+            rows = await self.db.fetch(
+                """
+                SELECT
+                    d.date_at::date AS date_at,
+                    COALESCE(SUM(p.total_amount), 0) AS revenue,
+                    COUNT(p.id) AS transaction_count
+                FROM generate_series(
+                    $1::date,
+                    $2::date,
+                    interval '1 day'
+                ) AS d(date_at)
+                LEFT JOIN billing.payments p
+                    ON p.paid_at::date = d.date_at::date
+                    AND p.payment_status = 'PAID'
+                GROUP BY d.date_at
+                ORDER BY d.date_at;
+                """,
+                start_timestamp,
+                end_timestamp,
+            ) 
+            return [DailyRevenueDTO(
+                date_at= row['date_at'],
+                revenue= row['revenue'],
+                transaction_count= row['transaction_count']
+            ) for row in rows] 
+        
+        return await handle_db_error(
+            operation= _fetch,
+            logger= self.logger,
+            operation_name= "Get daily revenue from start date till end date"
+        )
+    
     async def get_dashboard_summary(self, target_date: date) -> DashboardSummaryDTO:
         async def _fetch():
             start_date = datetime.combine(target_date, time.min)
             end_date = start_date + timedelta(days=1)
-            row: asyncpg.Rows
-
+          
             row = await self.db.fetchrow(
                 """
                 WITH paid_today AS (
