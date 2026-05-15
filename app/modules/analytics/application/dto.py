@@ -9,25 +9,25 @@ class DashboardSummaryDTO:
     today_transactions: Decimal
     active_tickets: int
     completed_tickets: int
-    voided_transactions: int 
-    
+    voided_transactions: int
+
 
 @dataclass(frozen=True)
 class DailyRevenueDTO:
     date_at: date
-    revenue: Decimal 
-    transaction_count: int  
+    revenue: Decimal
+    transaction_count: int
 
 
 @dataclass(frozen=True)
 class TopServiceDTO:
-    service_name: str 
-    total_sold: int 
+    service_name: str
+    total_sold: int
     total_revenue: Decimal
-    
+
 
 @dataclass(frozen=True)
 class PaymentMethodSummaryDTO:
-    payment_method: str 
-    transaction_count: int 
+    payment_method: str
+    transaction_count: int
     total_amount: Decimal

@@ -54,8 +54,7 @@ ACCOUNT_MANAGER_ROLES = [RoleCode.ADMIN, RoleCode.OWNER]
     "",
     response_model=BaseResponse[AccountResponse],
     status_code=status.HTTP_201_CREATED,
-    dependencies=[]
-    
+    dependencies=[],
 )
 async def register_account(
     payload: RegisterAccountRequest,
@@ -73,6 +72,7 @@ async def register_account(
     )
 
     return BaseResponse(data=created_account)
+
 
 @account_router.get("", response_model=BaseResponse[List[AccountResponse]])
 async def list_accounts(

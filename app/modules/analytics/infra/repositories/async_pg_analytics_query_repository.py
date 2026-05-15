@@ -17,13 +17,14 @@ class AsyncPgAnalyticsQueryRepository:
     def __init__(self, db: asyncpg.Connection, logger: ILogger):
         self.db = db
         self.logger = logger
-        
-    
-    async def get_payment_method_summary(self, start_date: date, end_date:date)-> list[PaymentMethodSummaryDTO]:
+
+    async def get_payment_method_summary(
+        self, start_date: date, end_date: date
+    ) -> list[PaymentMethodSummaryDTO]:
         async def _fetch():
-            start_timestamp  = datetime.combine(start_date, time.min)
+            start_timestamp = datetime.combine(start_date, time.min)
             end_timestamp = datetime.combine(end_date, time.min) + timedelta(days=1)
-            
+
             rows = await self.db.fetch(
                 """
                 SELECT
@@ -38,29 +39,29 @@ class AsyncPgAnalyticsQueryRepository:
                 ORDER BY total_amount;                
                 """,
                 start_timestamp,
-                end_timestamp                
+                end_timestamp,
             )
-            
+
             return [
                 PaymentMethodSummaryDTO(
-                    payment_method=row['payment_method'],
-                    transaction_count= row['transaction_count'],
-                    total_amount=row['total_amount']
-                ) for row in rows
+                    payment_method=row["payment_method"],
+                    transaction_count=row["transaction_count"],
+                    total_amount=row["total_amount"],
+                )
+                for row in rows
             ]
-            
+
         return await handle_db_error(
-            operation=_fetch,
-            logger=self.logger,
-            operation_name="get payment method"
+            operation=_fetch, logger=self.logger, operation_name="get payment method"
         )
-        
-    
-    async def get_top_service(self, start_date: date, end_date: date, limit:int) -> list[TopServiceDTO]:
+
+    async def get_top_service(
+        self, start_date: date, end_date: date, limit: int
+    ) -> list[TopServiceDTO]:
         async def _fetch():
-            start_timestamp  = datetime.combine(start_date, time.min)
+            start_timestamp = datetime.combine(start_date, time.min)
             end_timestamp = datetime.combine(end_date, time.min) + timedelta(days=1)
-            
+
             rows = await self.db.fetch(
                 """
                 SELECT 
@@ -79,27 +80,29 @@ class AsyncPgAnalyticsQueryRepository:
                 """,
                 start_timestamp,
                 end_timestamp,
-                limit
+                limit,
             )
-            
+
             return [
                 TopServiceDTO(
-                    service_name=row['service_name'],
-                    total_sold = row['total_sold'],
-                    total_revenue=row['total_revenue']
-                ) for row in rows
+                    service_name=row["service_name"],
+                    total_sold=row["total_sold"],
+                    total_revenue=row["total_revenue"],
+                )
+                for row in rows
             ]
+
         return await handle_db_error(
-            operation=_fetch,
-            logger=self.logger,
-            operation_name="get top services"
+            operation=_fetch, logger=self.logger, operation_name="get top services"
         )
-    
-    async def get_daily_revenue(self, start_date: date, end_date: date) -> list[DailyRevenueDTO]:
+
+    async def get_daily_revenue(
+        self, start_date: date, end_date: date
+    ) -> list[DailyRevenueDTO]:
         async def _fetch():
-            start_timestamp  = datetime.combine(start_date, time.min)
+            start_timestamp = datetime.combine(start_date, time.min)
             end_timestamp = datetime.combine(end_date, time.min) + timedelta(days=1)
-            
+
             rows = await self.db.fetch(
                 """
                 SELECT
@@ -119,24 +122,27 @@ class AsyncPgAnalyticsQueryRepository:
                 """,
                 start_timestamp,
                 end_timestamp,
-            ) 
-            return [DailyRevenueDTO(
-                date_at= row['date_at'],
-                revenue= row['revenue'],
-                transaction_count= row['transaction_count']
-            ) for row in rows] 
-        
+            )
+            return [
+                DailyRevenueDTO(
+                    date_at=row["date_at"],
+                    revenue=row["revenue"],
+                    transaction_count=row["transaction_count"],
+                )
+                for row in rows
+            ]
+
         return await handle_db_error(
-            operation= _fetch,
-            logger= self.logger,
-            operation_name= "Get daily revenue from start date till end date"
+            operation=_fetch,
+            logger=self.logger,
+            operation_name="Get daily revenue from start date till end date",
         )
-    
+
     async def get_dashboard_summary(self, target_date: date) -> DashboardSummaryDTO:
         async def _fetch():
             start_date = datetime.combine(target_date, time.min)
             end_date = start_date + timedelta(days=1)
-          
+
             row = await self.db.fetchrow(
                 """
                 WITH paid_today AS (
@@ -185,19 +191,17 @@ class AsyncPgAnalyticsQueryRepository:
                 end_date,
             )
 
-            return  DashboardSummaryDTO(
+            return DashboardSummaryDTO(
                 today_revenue=row["today_revenue"] or Decimal("0"),
                 today_transactions=row["today_transactions"],
                 active_tickets=row["active_tickets"],
                 completed_tickets=row["completed_tickets"],
                 voided_transactions=row["voided_transactions"],
             )
-       
+
         return await handle_db_error(
-           operation=_fetch,
-           logger=self.logger,
-           context={
-               
-           },
-           operation_name="Get dashboard summary based on date"
+            operation=_fetch,
+            logger=self.logger,
+            context={},
+            operation_name="Get dashboard summary based on date",
         )

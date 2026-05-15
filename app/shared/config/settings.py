@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_HOURS: int = 8
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    ALEMBIC_DATABASE_URL: str 
+    ALEMBIC_DATABASE_URL: str
 
     DB_NAME: str
     DB_USER: str

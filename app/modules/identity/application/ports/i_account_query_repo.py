@@ -12,4 +12,4 @@ class IAccountQueryRepository(Protocol):
         page: int = 1,
         limit: int = 20,
     ) -> AccountListResultDto:
-        pass 
+        pass
