@@ -10,7 +10,7 @@ from app.modules.service_catalog.api.routes import router as service_catalog_rou
 
 api_router = APIRouter()
 api_router.include_router(health_router, tags=["health"])
-api_router.include_router(test_db_router)
+api_router.include_router(test_db_router, tags=["test-db"])
 api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
 api_router.include_router(account_router, prefix="/accounts", tags=["accounts"])
 api_router.include_router(
