@@ -7,11 +7,13 @@ from app.api.dependencies.shared import RoleChecker
 from app.modules.analytics.api.dependencies import (
     get_daily_revenue_use_case,
     get_dashboard_summary_use_case,
+    get_payment_method_use_case,
     get_top_services_use_casce,
 )
 from app.modules.analytics.api.schemas import (
     DailyRevenueResponse,
     DashboardSummaryResponse,
+    PaymentMethodSummaryResponse,
     TopServiceResponse,
 )
 from app.modules.analytics.application.use_cases.get_daily_revenue import (
@@ -19,6 +21,9 @@ from app.modules.analytics.application.use_cases.get_daily_revenue import (
 )
 from app.modules.analytics.application.use_cases.get_dashboard_summary import (
     GetDashboardSummaryUseCase,
+)
+from app.modules.analytics.application.use_cases.get_payment_method_summary import (
+    GetPaymentMethodSummaryUseCase,
 )
 from app.modules.analytics.application.use_cases.get_top_services import (
     GetTopServicesUseCase,
@@ -85,6 +90,7 @@ async def get_daily_revenue(
     return BaseResponse(data=daily_revenue)
 
 
+
 @router.get(
     "/top-services",
     response_model=BaseResponse[list[TopServiceResponse]],
@@ -120,3 +126,37 @@ async def get_top_service(
     top_services = await usecase.execute(start_date, end_date, limit)
 
     return BaseResponse(data=top_services)
+
+
+
+
+@router.get(
+    "/payment-method-summary",
+    response_model=BaseResponse[list[PaymentMethodSummaryResponse]],
+)
+async def get_payment_method_summary(
+
+    start_date: Annotated[
+        date,
+        Query(
+            description="Target date for payment method summary",
+            example="2026-05-15",
+        ),
+    ],
+        end_date: Annotated[
+        date,
+        Query(
+            description="Target date for payment method summary",
+            example="2026-05-15",
+        ),
+    ],
+        
+        usecase: Annotated[
+        GetPaymentMethodSummaryUseCase,
+        Depends(get_payment_method_use_case),
+    ],
+    user=Depends(RoleChecker(ANALYTICS_ROLES))
+):
+    payment_method_summary = await usecase.execute(start_date, end_date)
+
+    return BaseResponse(data=payment_method_summary)
