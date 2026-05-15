@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints.health import router as health_router
 from app.api.v1.endpoints.test_db import router as test_db_router
+from app.modules.analytics.api.routes import router as analytics_router
 from app.modules.billing.api.routes import router as billing_router
 from app.modules.carwash_operation.api.routes import router as carwash_operation_router
 from app.modules.identity.api.routes import account_router, auth_router
@@ -26,4 +27,10 @@ api_router.include_router(
     billing_router,
     prefix="/transactions",
     tags=["billing"],
+)
+
+api_router.include_router(
+    analytics_router,
+    prefix="/analytics",
+    tags=["analytics"]
 )
