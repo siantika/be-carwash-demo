@@ -1,61 +1,201 @@
 # Demo Carwash Backend API
 
-FastAPI backend for carwash operations with modular architecture, role-based access control, async PostgreSQL access, idempotent command handling, and rate-limited critical endpoints.
+![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.121-009688?logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)
 
-## What This Project Covers
+FastAPI backend for carwash operations, built with a modular clean architecture, JWT authentication, idempotency keys for critical endpoints, and request rate limiting.
 
-- Auth and session endpoints (`/api/v1/auth/*`)
-- Account management (`/api/v1/accounts/*`)
-- Service type management (`/api/v1/service-types/*`)
-- Ticket operations (`/api/v1/tickets/*`)
-- Billing transactions (`/api/v1/transactions/*`)
-- Analytics reporting (`/api/v1/analytics/*`)
+## Feature Scope
+
+- Auth and session: `/api/v1/auth/*`
+- Account management: `/api/v1/accounts/*`
+- Service type management: `/api/v1/service-types/*`
+- Ticket operations: `/api/v1/tickets/*`
+- Billing transactions: `/api/v1/transactions/*`
+- Analytics: `/api/v1/analytics/*`
 - Health and DB smoke-check endpoints
-
-## Recent Updates
-
-- Migrated dependency injection style to `Annotated[..., Depends(...)]` across route and dependency layers.
-- Added targeted API limiter rules on important write endpoints.
-- Refined billing unit-of-work transaction lifecycle handling (`commit`/`rollback` completion state and cleanup).
-- Moved billing request hasher interface from `application/services` to `application/ports`.
 
 ## Tech Stack
 
 - Python 3.12
 - FastAPI
 - PostgreSQL 16
-- SQLAlchemy + asyncpg
+- SQLAlchemy (async) + asyncpg
 - Pydantic v2
-- slowapi (rate limiting)
+- Alembic
+- slowapi (rate limiter)
 - pytest + ruff
-- Docker / Docker Compose
+- Docker + Docker Compose
 
 ## Architecture
 
-The codebase follows a modular, clean-architecture style under `app/modules/*`:
+The project uses a modular clean architecture under `app/modules/*`.
 
-- `api`: HTTP routes, request/response schema mapping, dependency wiring
-- `application`: use cases, DTOs, query models, ports
-- `domain`: entities, value objects, repository contracts
-- `infra`: DB repositories, adapters, unit of work, concrete implementations
+- `api`: routes, schemas, dependencies
+- `application`: use cases, DTOs, ports, query models
+- `domain`: entities, value objects, repository interfaces
+- `infra`: repository implementations, unit of work, adapters
 
-Shared infrastructure lives in `app/shared/*` (settings, middleware, DB lifespan, error handlers, interfaces).
+Shared concerns are in `app/shared/*` (config, middleware, error handling, DB lifecycle).
 
-## API Base Path
+## Base URL and API Docs
 
-All API endpoints are mounted under:
+- API base path: `/api/v1` (from `app.main -> include_router(..., prefix=settings.API_VERSION)`)
+- Swagger UI: `http://localhost:8000/docs`
 
-- `/api/v1`
+## Roles
 
-Main route registration is in `app/api/v1/router.py`.
+Current roles used in the system:
 
-## Current Rate Limits
+- `ADMIN`
+- `OWNER`
+- `CASHIER`
 
-Global limiter integration is configured in `app/main.py`. Endpoint-level limits currently include:
+Current role enforcement examples:
+
+- Account management: `ADMIN`, `OWNER`
+- Service catalog management: `ADMIN`, `OWNER`
+- Ticket list/void operations: `ADMIN`, `OWNER`, `CASHIER`
+- Payment processing: `CASHIER`
+- Analytics: `OWNER`
+
+Important note for ticket creation:
+
+- `POST /api/v1/tickets` is enforced using `get_current_device` (device context), not `RoleChecker`.
+- This endpoint requires a valid authenticated device/session context and an `Idempotency-Key` header.
+
+## Auth Flow
+
+1. `POST /api/v1/auth/login` returns `access_token` + `refresh_token`
+2. Use `Authorization: Bearer <access_token>` for protected requests
+3. `POST /api/v1/auth/refresh` returns a new token pair
+4. `POST /api/v1/auth/logout` revokes the refresh token
+5. `GET /api/v1/auth/me` returns the currently authenticated user context
+
+Default token settings in config:
+
+- `ALGORITHM=HS256`
+- `ACCESS_TOKEN_EXPIRE_HOURS=8`
+- `REFRESH_TOKEN_EXPIRE_DAYS=7`
+
+## Endpoint Summary
+
+- Health:
+  - `GET /api/v1/health`
+  - `GET /api/v1/test-db`
+- Auth:
+  - `POST /api/v1/auth/login`
+  - `POST /api/v1/auth/refresh`
+  - `POST /api/v1/auth/logout`
+  - `GET /api/v1/auth/me`
+- Accounts:
+  - `POST /api/v1/accounts`
+  - `GET /api/v1/accounts`
+  - `GET /api/v1/accounts/{account_id}`
+  - `PATCH /api/v1/accounts/{account_id}/activate`
+  - `PATCH /api/v1/accounts/{account_id}/deactivate`
+  - `DELETE /api/v1/accounts/{account_id}`
+- Service Types:
+  - `POST /api/v1/service-types`
+  - `GET /api/v1/service-types`
+  - `GET /api/v1/service-types/name/{service_name}`
+  - `GET /api/v1/service-types/{service_type_id}`
+  - `PATCH /api/v1/service-types/{service_type_id}`
+  - `PATCH /api/v1/service-types/{service_type_id}/activate`
+  - `PATCH /api/v1/service-types/{service_type_id}/deactivate`
+  - `DELETE /api/v1/service-types/{service_type_id}`
+- Tickets:
+  - `POST /api/v1/tickets`
+  - `GET /api/v1/tickets`
+  - `PATCH /api/v1/tickets/{ticket_id}/void`
+- Transactions:
+  - `POST /api/v1/transactions`
+  - `GET /api/v1/transactions`
+- Analytics:
+  - `GET /api/v1/analytics/dashboard-summary`
+  - `GET /api/v1/analytics/daily-revenue`
+  - `GET /api/v1/analytics/top-services`
+  - `GET /api/v1/analytics/payment-method-summary`
+
+## Example Requests
+
+### Login
+
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "cashier_01",
+    "password": "secret123"
+  }'
+```
+
+### Create Ticket (Idempotent)
+
+```bash
+curl -X POST http://localhost:8000/api/v1/tickets \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: ticket-20260516-001" \
+  -d '{
+    "service_type_id": 1
+  }'
+```
+
+### Process Transaction (Idempotent)
+
+```bash
+curl -X POST http://localhost:8000/api/v1/transactions \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: txn-20260516-001" \
+  -d '{
+    "ticket_id": 1,
+    "plate_number": "B 1234 XYZ",
+    "payment_method": "cash",
+    "payment_metadata": {}
+  }'
+```
+
+### Analytics Dashboard Summary
+
+```bash
+curl "http://localhost:8000/api/v1/analytics/dashboard-summary?target_date=2026-05-16" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+## Environment Variables
+
+Start from `.env.local.example`, then adjust values in `.env`.
+
+Required/common runtime variables:
+
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_HOST`
+- `DB_PORT`
+- `ALEMBIC_DATABASE_URL`
+- `SECRET_KEY`
+- `PORT`
+- `HOST`
+- `API_VERSION` (example: `/api/v1`)
+
+Optional variables (defaults are defined in `settings.py`):
+
+- `ALGORITHM` (default `HS256`)
+- `ACCESS_TOKEN_EXPIRE_HOURS` (default `8`)
+- `REFRESH_TOKEN_EXPIRE_DAYS` (default `7`)
+- `CORS_ORIGINS` (default `[*]`)
+- `CORS_ALLOW_METHODS` (default `GET,POST,PUT,PATCH,OPTIONS`)
+- `CORS_ALLOW_HEADERS` (default `Authorization,Content-Type,Accept`)
+
+## Active Rate Limits
 
 - `GET /api/v1/health` -> `5/minute`
 - `GET /api/v1/test-db` -> `10/minute`
-- `POST /api/v1/auth/login` -> `10/second`
+- `POST /api/v1/auth/login` -> `10/minute`
 - `POST /api/v1/auth/refresh` -> `10/second`
 - `POST /api/v1/auth/logout` -> `10/second`
 - `POST /api/v1/accounts` -> `10/minute`
@@ -65,31 +205,6 @@ Global limiter integration is configured in `app/main.py`. Endpoint-level limits
 - `POST /api/v1/tickets` -> `30/minute`
 - `PATCH /api/v1/tickets/{ticket_id}/void` -> `20/minute`
 - `POST /api/v1/transactions` -> `20/minute`
-
-## Project Structure
-
-```text
-app/
-  api/
-    dependencies/
-    v1/
-  modules/
-    analytics/
-    billing/
-    carwash_operation/
-    identity/
-    service_catalog/
-  shared/
-    config/
-    error_handling/
-    infra/
-    interfaces/
-    middleware/
-
-tests/
-migrations/
-docker/
-```
 
 ## Local Development
 
@@ -104,43 +219,39 @@ docker/
 docker compose up --build
 ```
 
-API docs:
-
-- `http://localhost:8000/docs`
-
 ### Run without Docker
-
-1. Create virtual env and install dependencies:
 
 ```bash
 python3 -m venv .venv
-. .venv/bin/activate
+source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-2. Set environment variables (copy from `.env.local.example` if needed).
-
-3. Start API:
-
-```bash
+cp .env.local.example .env
 python3 -m app.main
 ```
 
-## Quality and Tests
-
-Use `Makefile` targets:
+## Quality Commands
 
 ```bash
-make lint
 make format
+make format-check
+make lint
 make test
 ```
 
-Equivalent direct commands use `.venv/bin/python` with `ruff` and `pytest`.
+## Directory Structure
 
-## Notes for Contributors
+```text
+app/
+  api/
+  modules/
+    analytics/
+    billing/
+    carwash_operation/
+    identity/
+    service_catalog/
+  shared/
 
-- Prefer `Annotated` dependency signatures instead of `param=Depends(...)`.
-- Keep write endpoints idempotent where required (`Idempotency-Key`).
-- Apply limiter rules to high-risk or high-cost mutation endpoints.
-- Keep module boundaries clear (`application` ports/contracts vs `infra` implementations).
+tests/
+migrations/
+docker/
+```
