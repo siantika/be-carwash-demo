@@ -1,221 +1,146 @@
-# 🚗 Demo Carwash Backend API
+# Demo Carwash Backend API
 
-A production-style backend service that simulates and manages the core operations of a carwash business.
+FastAPI backend for carwash operations with modular architecture, role-based access control, async PostgreSQL access, idempotent command handling, and rate-limited critical endpoints.
 
-This project is designed as a backend engineering showcase, focusing on clean architecture, structured domain modeling, and scalable API design.
+## What This Project Covers
 
----
+- Auth and session endpoints (`/api/v1/auth/*`)
+- Account management (`/api/v1/accounts/*`)
+- Service type management (`/api/v1/service-types/*`)
+- Ticket operations (`/api/v1/tickets/*`)
+- Billing transactions (`/api/v1/transactions/*`)
+- Analytics reporting (`/api/v1/analytics/*`)
+- Health and DB smoke-check endpoints
 
-## 🎯 Project Purpose
+## Recent Updates
 
-This repository demonstrates how to design and implement a real-world operational backend system with:
+- Migrated dependency injection style to `Annotated[..., Depends(...)]` across route and dependency layers.
+- Added targeted API limiter rules on important write endpoints.
+- Refined billing unit-of-work transaction lifecycle handling (`commit`/`rollback` completion state and cleanup).
+- Moved billing request hasher interface from `application/services` to `application/ports`.
 
-- Clear separation of concerns
-- Use-case driven application flow
-- Role-based access control
-- Transactional data integrity
-- Dockerized development environment
-
-The focus is on backend architecture quality rather than feature quantity.
-
----
-
-## 🚀 Key Capabilities
-
-- Versioned REST API (`/api/v1`)
-- Authentication & role-based access control (Admin / Cashier)
-- Ticket lifecycle management (create, list, void)
-- Transaction processing & listing
-- User management (register, activate, deactivate)
-- Service type management
-- Async PostgreSQL integration (SQLAlchemy + asyncpg)
-- Rate limiting & security middleware
-- Docker-based local environment setup
-
----
-
-## 🏗 Architecture Overview
-
-### Core Services
-
-- `api` → FastAPI HTTP service
-- `db` → PostgreSQL database
-
----
-
-### Request Flow
-
-1. Client sends request to `/api/v1/*`
-2. API validates payload and authorization
-3. Application use case executes business logic
-4. Repository layer handles database interaction
-5. Structured JSON response is returned
-
----
-
-### High-Level Architecture
-
-```mermaid
-flowchart LR
-    C[Client Application] -->|HTTP /api/v1/*| A[FastAPI API Server]
-    A --> |JSON Response|C
-    A --> P[Postgres SQL]
-    P --> A
-
-```
-
----
-
-## 🧱 Architectural Principles
-
-The project follows a Clean Architecture-inspired structure:
-
-- `domain`  
-  Contains entities, value objects, and business rules.
-
-- `application`  
-  Contains use cases and DTO contracts.
-
-- `api`  
-  Handles HTTP layer, request validation, and response mapping.
-
-- `infrastructure`  
-  Contains database configuration, repository implementations, and external integrations.
-
-Key principles:
-
-- Use-case driven application services
-- DTO-based request/response contracts
-- Explicit domain entities & value objects
-- Repository abstraction for persistence isolation
-- Clear transaction boundaries
-
----
-
-## 🛠 Tech Stack
+## Tech Stack
 
 - Python 3.12
 - FastAPI
-- PostgreSQL
-- SQLAlchemy (Async)
-- asyncpg
+- PostgreSQL 16
+- SQLAlchemy + asyncpg
 - Pydantic v2
-- slowapi (Rate limiting)
-- pytest
-- Docker & Docker Compose
+- slowapi (rate limiting)
+- pytest + ruff
+- Docker / Docker Compose
 
----
+## Architecture
 
-## 🔐 Engineering Highlights
+The codebase follows a modular, clean-architecture style under `app/modules/*`:
 
-- Role-protected endpoints (Admin vs Cashier)
-- Structured API response wrapper
-- Input validation via Pydantic
-- Security middleware:
-  - CORS
-  - Rate limiting
-  - Basic security headers
-- Atomic transaction handling
-- Database health check in Docker Compose
+- `api`: HTTP routes, request/response schema mapping, dependency wiring
+- `application`: use cases, DTOs, query models, ports
+- `domain`: entities, value objects, repository contracts
+- `infra`: DB repositories, adapters, unit of work, concrete implementations
 
----
+Shared infrastructure lives in `app/shared/*` (settings, middleware, DB lifespan, error handlers, interfaces).
 
-## 📂 Project Structure
+## API Base Path
 
-```
-api/
-├── dependencies/
-├── schema/
-└── v1/
-application/
-├── dto/
-└── use_cases/
+All API endpoints are mounted under:
+
+- `/api/v1`
+
+Main route registration is in `app/api/v1/router.py`.
+
+## Current Rate Limits
+
+Global limiter integration is configured in `app/main.py`. Endpoint-level limits currently include:
+
+- `GET /api/v1/health` -> `5/minute`
+- `GET /api/v1/test-db` -> `10/minute`
+- `POST /api/v1/auth/login` -> `10/second`
+- `POST /api/v1/auth/refresh` -> `10/second`
+- `POST /api/v1/auth/logout` -> `10/second`
+- `POST /api/v1/accounts` -> `10/minute`
+- `POST /api/v1/service-types` -> `10/minute`
+- `PATCH /api/v1/service-types/{service_type_id}` -> `20/minute`
+- `DELETE /api/v1/service-types/{service_type_id}` -> `10/minute`
+- `POST /api/v1/tickets` -> `30/minute`
+- `PATCH /api/v1/tickets/{ticket_id}/void` -> `20/minute`
+- `POST /api/v1/transactions` -> `20/minute`
+
+## Project Structure
+
+```text
 app/
-├── modules/
-│   └── identity/
-│       ├── api/
-│       ├── application/
-│       ├── domain/
-│       └── infra/
-└── shared/
-    ├── config/
-    ├── error_handling/
-    ├── interfaces/
-    └── middleware/
-domain/
-├── entities/
-├── repositories/
-└── value_object/
-infra/
-├── db.py
-└── repositories/
-main.py
+  api/
+    dependencies/
+    v1/
+  modules/
+    analytics/
+    billing/
+    carwash_operation/
+    identity/
+    service_catalog/
+  shared/
+    config/
+    error_handling/
+    infra/
+    interfaces/
+    middleware/
+
 tests/
+migrations/
+docker/
 ```
 
----
+## Local Development
 
-## 🧪 How to Run Locally
+### Prerequisites
 
-### 1️⃣ Clone Repository
+- Python 3.12+
+- Docker + Docker Compose
 
-```
-git clone https://github.com/siantika/be-carwash-demo.git
-cd be-carwash-demo
-```
+### Run with Docker
 
-### 2️⃣ Run with Docker
-
-```
+```bash
 docker compose up --build
 ```
 
-### 3️⃣ Access API
+API docs:
 
-Swagger UI:
+- `http://localhost:8000/docs`
+
+### Run without Docker
+
+1. Create virtual env and install dependencies:
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
 ```
-http://localhost:8000/docs
+
+2. Set environment variables (copy from `.env.local.example` if needed).
+
+3. Start API:
+
+```bash
+python3 -m app.main
 ```
 
----
+## Quality and Tests
 
-## ✅ Feature Readiness Snapshot
+Use `Makefile` targets:
 
-- [x] Dockerized service setup
-- [x] Database health check
-- [x] Authentication & role enforcement
-- [x] API rate limiting
-- [x] Transactional integrity
+```bash
+make lint
+make format
+make test
+```
 
----
+Equivalent direct commands use `.venv/bin/python` with `ruff` and `pytest`.
 
-## 🚫 Not Covered in This Demo
+## Notes for Contributors
 
-This repository intentionally excludes:
-
-- IoT dispenser integration
-- Loyalty & membership system
-- Payment gateway integration
-- Multi-tenant architecture
-- Observability stack (Prometheus / Loki / Grafana)
-
-These are part of the full production ecosystem but not included in this demo scope.
-
----
-
-## 💡 What This Repository Demonstrates
-
-- Practical domain modeling
-- Clean backend layering strategy
-- Controlled business workflows (ticket → transaction)
-- Secure API design with role constraints
-- Production-minded backend structuring
-
----
-
-## 📌 Ideal For
-
-- Backend engineering portfolio
-- Architecture discussion during interviews
-- Demonstrating Clean Architecture understanding
-- Showcasing real-world transactional API workflows
+- Prefer `Annotated` dependency signatures instead of `param=Depends(...)`.
+- Keep write endpoints idempotent where required (`Idempotency-Key`).
+- Apply limiter rules to high-risk or high-cost mutation endpoints.
+- Keep module boundaries clear (`application` ports/contracts vs `infra` implementations).
