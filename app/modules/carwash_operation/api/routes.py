@@ -1,6 +1,6 @@
 from typing import Annotated, List
 
-from fastapi import APIRouter, Depends, Header, Path, Query, status
+from fastapi import APIRouter, Depends, Header, Path, Query, Request, status
 
 from app.api.dependencies.shared import RoleChecker, get_current_device
 from app.modules.carwash_operation.api.dependencies import (
@@ -34,6 +34,7 @@ from app.modules.carwash_operation.domain.entities.ticket import TicketStatusEnu
 from app.modules.identity.application.dto.auth_context_dto import AuthContextDto
 from app.modules.identity.domain.entities.device import Device
 from app.modules.identity.domain.entities.account import RoleCode
+from app.shared.middleware.limiter import limiter
 from app.shared.response import BaseResponse, Metadata
 
 router = APIRouter()
@@ -44,7 +45,9 @@ CARWASH_OPERATION_ROLES = [RoleCode.ADMIN, RoleCode.OWNER, RoleCode.CASHIER]
 @router.post(
     "", response_model=BaseResponse[TicketResponse], status_code=status.HTTP_201_CREATED
 )
+@limiter.limit("30/minute")
 async def create_ticket(
+    request: Request,
     payload: CreateTicketRequest,
     idempotency_key: str = Header(
         ..., alias="Idempotency-Key", min_length=8, max_length=128
@@ -85,7 +88,9 @@ async def list_tickets(
 
 
 @router.patch("/{ticket_id}/void", response_model=BaseResponse[TicketVoidResponse])
+@limiter.limit("20/minute")
 async def void_ticket(
+    request: Request,
     ticket_id: Annotated[int, Path(ge=1)],
     payload: TicketVoidRequest,
     user: Annotated[AuthContextDto, Depends(RoleChecker(CARWASH_OPERATION_ROLES))] = None,

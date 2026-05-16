@@ -56,7 +56,9 @@ ACCOUNT_MANAGER_ROLES = [RoleCode.ADMIN, RoleCode.OWNER]
     status_code=status.HTTP_201_CREATED,
     dependencies=[],
 )
+@limiter.limit("10/minute")
 async def register_account(
+    request: Request,
     payload: RegisterAccountRequest,
     usecase: Annotated[RegisterAccountUseCase, Depends(get_register_account_usecase)],
     user: Annotated[AuthContextDto, Depends(RoleChecker(ACCOUNT_MANAGER_ROLES))],

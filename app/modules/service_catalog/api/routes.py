@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Annotated, List
 
-from fastapi import APIRouter, Depends, Path, Query, status
+from fastapi import APIRouter, Depends, Path, Query, Request, status
 
 from app.api.dependencies.shared import RoleChecker
 from app.modules.identity.domain.entities.account import RoleCode
@@ -40,6 +40,7 @@ from app.modules.service_catalog.application.queries.service_type_query import (
     ListServiceTypesUseCase,
 )
 from app.modules.identity.application.dto.auth_context_dto import AuthContextDto
+from app.shared.middleware.limiter import limiter
 from app.shared.response import BaseResponse, Metadata
 
 router = APIRouter()
@@ -111,7 +112,9 @@ async def find_service_type_by_id(
     response_model=BaseResponse[ServiceTypeResponse],
     status_code=status.HTTP_201_CREATED,
 )
+@limiter.limit("10/minute")
 async def create_service_type(
+    request: Request,
     payload: CreateServiceTypeRequest,
     user: Annotated[AuthContextDto, Depends(RoleChecker(SERVICE_CATALOG_MANAGER_ROLES))] = None,
     usecase: Annotated[
@@ -134,7 +137,9 @@ async def create_service_type(
     "/{service_type_id}",
     response_model=BaseResponse[ServiceTypeResponse],
 )
+@limiter.limit("20/minute")
 async def update_service_type(
+    request: Request,
     service_type_id: Annotated[int, Path(ge=1)],
     payload: UpdateServiceTypeRequest,
     user: Annotated[AuthContextDto, Depends(RoleChecker(SERVICE_CATALOG_MANAGER_ROLES))] = None,
@@ -187,7 +192,9 @@ async def deactivate_service_type(
 
 
 @router.delete("/{service_type_id}", response_model=BaseResponse[None])
+@limiter.limit("10/minute")
 async def delete_service_type(
+    request: Request,
     service_type_id: Annotated[int, Path(ge=1)],
     user: Annotated[AuthContextDto, Depends(RoleChecker(SERVICE_CATALOG_MANAGER_ROLES))] = None,
     usecase: Annotated[
