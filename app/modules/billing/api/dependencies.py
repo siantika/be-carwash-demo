@@ -1,3 +1,6 @@
+from typing import Annotated
+
+import asyncpg
 from fastapi import Depends
 
 from app.modules.billing.application.commands.transaction_command import (
@@ -23,15 +26,24 @@ def get_logger() -> ILogger:
     return StructlogLogger("billing")
 
 
-def get_transaction_repo(db=Depends(get_db), logger=Depends(get_logger)):
+def get_transaction_repo(
+    db: Annotated[asyncpg.Connection, Depends(get_db)],
+    logger: Annotated[ILogger, Depends(get_logger)],
+):
     return AsyncPgTransactionRepository(db, logger)
 
 
-def get_transaction_query(db=Depends(get_db), logger=Depends(get_logger)):
+def get_transaction_query(
+    db: Annotated[asyncpg.Connection, Depends(get_db)],
+    logger: Annotated[ILogger, Depends(get_logger)],
+):
     return PostgresPaymentTransactionQueryRepository(db, logger)
 
 
-def get_billing_uow(pool=Depends(get_db_pool), logger=Depends(get_logger)):
+def get_billing_uow(
+    pool: Annotated[asyncpg.Pool, Depends(get_db_pool)],
+    logger: Annotated[ILogger, Depends(get_logger)],
+):
     return AsyncPgBillingUnitOfWork(pool, logger)
 
 
@@ -40,11 +52,15 @@ def get_request_hasher():
 
 
 def get_process_transaction_usecase(
-    uow=Depends(get_billing_uow),
-    request_hasher=Depends(get_request_hasher),
+    uow: Annotated[AsyncPgBillingUnitOfWork, Depends(get_billing_uow)],
+    request_hasher: Annotated[Sha256RequestHasher, Depends(get_request_hasher)],
 ):
     return ProcessTransactionUseCase(uow, request_hasher)
 
 
-def get_list_transactions_usecase(query=Depends(get_transaction_query)):
+def get_list_transactions_usecase(
+    query: Annotated[
+        PostgresPaymentTransactionQueryRepository, Depends(get_transaction_query)
+    ],
+):
     return ListTransactionsUseCase(query)

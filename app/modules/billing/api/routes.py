@@ -1,4 +1,4 @@
-from typing import List
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, Header, Query, status
 
@@ -25,6 +25,7 @@ from app.modules.billing.application.queries.transaction_query import (
 )
 from app.modules.billing.domain.value_objects.payment import PaymentMethodEnum
 from app.modules.billing.domain.value_objects.payment_state import PaymentStatus
+from app.modules.identity.application.dto.auth_context_dto import AuthContextDto
 from app.modules.identity.domain.entities.account import RoleCode
 from app.shared.response import BaseResponse, Metadata
 
@@ -44,8 +45,10 @@ async def process_transaction(
     idempotency_key: str = Header(
         ..., alias="Idempotency-Key", min_length=8, max_length=128
     ),
-    user=Depends(RoleChecker(PAYMENT_PROCESSOR_ROLES)),
-    usecase: ProcessTransactionUseCase = Depends(get_process_transaction_usecase),
+    user: Annotated[AuthContextDto, Depends(RoleChecker(PAYMENT_PROCESSOR_ROLES))] = None,
+    usecase: Annotated[
+        ProcessTransactionUseCase, Depends(get_process_transaction_usecase)
+    ] = None,
 ):
     transaction = await usecase.execute(
         ProcessTransactionCmd(
@@ -69,8 +72,10 @@ async def list_transactions(
     plate_number: str | None = Query(default=None, min_length=3, max_length=12),
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
-    user=Depends(RoleChecker(BILLING_READER_ROLES)),
-    usecase: ListTransactionsUseCase = Depends(get_list_transactions_usecase),
+    user: Annotated[AuthContextDto, Depends(RoleChecker(BILLING_READER_ROLES))] = None,
+    usecase: Annotated[
+        ListTransactionsUseCase, Depends(get_list_transactions_usecase)
+    ] = None,
 ):
     result = await usecase.execute(
         filters=TransactionListFilterDto(

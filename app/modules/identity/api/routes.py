@@ -59,7 +59,7 @@ ACCOUNT_MANAGER_ROLES = [RoleCode.ADMIN, RoleCode.OWNER]
 async def register_account(
     payload: RegisterAccountRequest,
     usecase: Annotated[RegisterAccountUseCase, Depends(get_register_account_usecase)],
-    user=Depends(RoleChecker(ACCOUNT_MANAGER_ROLES)),
+    user: Annotated[AuthContextDto, Depends(RoleChecker(ACCOUNT_MANAGER_ROLES))],
 ):
     created_account = await usecase.execute(
         RegisterAccountCmd(

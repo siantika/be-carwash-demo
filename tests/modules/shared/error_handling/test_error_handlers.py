@@ -1,5 +1,6 @@
 import httpx
 import pytest
+from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, status
 
 from app.api.dependencies.shared import get_current_user
@@ -37,7 +38,7 @@ async def test_auth_dependency_exception_uses_base_error_response():
     register_exception_handlers(app)
 
     @app.get("/me")
-    async def me(user=Depends(get_current_user)):
+    async def me(user: Annotated[object, Depends(get_current_user)]):
         return user
 
     transport = httpx.ASGITransport(app=app)

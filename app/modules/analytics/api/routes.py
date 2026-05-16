@@ -28,6 +28,7 @@ from app.modules.analytics.application.use_cases.get_payment_method_summary impo
 from app.modules.analytics.application.use_cases.get_top_services import (
     GetTopServicesUseCase,
 )
+from app.modules.identity.application.dto.auth_context_dto import AuthContextDto
 from app.modules.identity.domain.entities.account import RoleCode
 from app.shared.response import BaseResponse
 
@@ -52,7 +53,7 @@ async def get_dashboard_summary(
         GetDashboardSummaryUseCase,
         Depends(get_dashboard_summary_use_case),
     ],
-    user=Depends(RoleChecker(ANALYTICS_ROLES)),
+    user: Annotated[AuthContextDto, Depends(RoleChecker(ANALYTICS_ROLES))],
 ):
     summary = await usecase.execute(target_date)
 
@@ -82,7 +83,7 @@ async def get_daily_revenue(
         GetDailyRevenueUseCase,
         Depends(get_daily_revenue_use_case),
     ],
-    user=Depends(RoleChecker(ANALYTICS_ROLES)),
+    user: Annotated[AuthContextDto, Depends(RoleChecker(ANALYTICS_ROLES))],
 ):
     daily_revenue = await usecase.execute(start_date, end_date)
 
@@ -112,7 +113,7 @@ async def get_top_service(
         GetTopServicesUseCase,
         Depends(get_top_services_use_casce),
     ],
-    user=Depends(RoleChecker(ANALYTICS_ROLES)),
+    user: Annotated[AuthContextDto, Depends(RoleChecker(ANALYTICS_ROLES))],
     limit: int = Query(
         description="Maximum services to be displayed each date", example=1, default=1
     ),
@@ -145,7 +146,7 @@ async def get_payment_method_summary(
         GetPaymentMethodSummaryUseCase,
         Depends(get_payment_method_use_case),
     ],
-    user=Depends(RoleChecker(ANALYTICS_ROLES)),
+    user: Annotated[AuthContextDto, Depends(RoleChecker(ANALYTICS_ROLES))],
 ):
     payment_method_summary = await usecase.execute(start_date, end_date)
 
