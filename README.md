@@ -296,7 +296,7 @@ Optional variables (default in `settings.py`):
 
 Follow this sequence from a fresh setup until the API is working.
 
-Note: Docker DB no longer restores from `docker/db`. Schema/data bootstrap is handled by Alembic + seed.
+Note: Docker bootstrap uses `docker/schema.sql` for DB schema and `app/scripts/seed.py` for demo data.
 
 1. Clone project and enter directory.
 
@@ -389,6 +389,12 @@ curl -X POST http://localhost:8000/api/v1/tickets \
 ```bash
 docker compose up --build
 ```
+
+Docker flow:
+- `db`: PostgreSQL
+- `migrate`: initialize/update schema from `docker/schema.sql` (idempotent guard)
+- `seed`: insert/update demo accounts, devices, and service types
+- `api`: starts after schema + seed completed
 
 ### Run without Docker
 
