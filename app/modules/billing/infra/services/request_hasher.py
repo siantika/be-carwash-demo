@@ -2,7 +2,7 @@ import hashlib
 import json
 from typing import Any
 
-from app.modules.billing.application.services.i_request_hasher import IRequestHasher
+from app.modules.billing.application.ports.i_request_hasher import IRequestHasher
 
 
 class Sha256RequestHasher(IRequestHasher):
