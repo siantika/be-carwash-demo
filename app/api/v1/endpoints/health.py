@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Annotated
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Request
@@ -16,7 +17,7 @@ WITA = ZoneInfo("Asia/Makassar")
 @limiter.limit("5/minute")
 async def health_check(
     request: Request,
-    logger: ILogger = Depends(get_logger),
+    logger: Annotated[ILogger, Depends(get_logger)],
 ):
     logger.info("Health check invoked")
     return JSONResponse(

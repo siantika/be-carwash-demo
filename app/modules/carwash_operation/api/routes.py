@@ -31,6 +31,8 @@ from app.modules.carwash_operation.application.queries.ticket_query import (
     ListTicketsUseCase,
 )
 from app.modules.carwash_operation.domain.entities.ticket import TicketStatusEnum
+from app.modules.identity.application.dto.auth_context_dto import AuthContextDto
+from app.modules.identity.domain.entities.device import Device
 from app.modules.identity.domain.entities.account import RoleCode
 from app.shared.response import BaseResponse, Metadata
 
@@ -47,8 +49,8 @@ async def create_ticket(
     idempotency_key: str = Header(
         ..., alias="Idempotency-Key", min_length=8, max_length=128
     ),
-    device=Depends(get_current_device),
-    usecase: CreateTicketUseCase = Depends(get_create_ticket_usecase),
+    device: Annotated[Device, Depends(get_current_device)] = None,
+    usecase: Annotated[CreateTicketUseCase, Depends(get_create_ticket_usecase)] = None,
 ):
     ticket = await usecase.execute(
         CreateTicketCmd(service_type_id=payload.service_type_id),
@@ -64,8 +66,8 @@ async def list_tickets(
     ticket_number: str | None = Query(default=None, min_length=1, max_length=32),
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
-    user=Depends(RoleChecker(CARWASH_OPERATION_ROLES)),
-    usecase: ListTicketsUseCase = Depends(get_list_tickets_usecase),
+    user: Annotated[AuthContextDto, Depends(RoleChecker(CARWASH_OPERATION_ROLES))] = None,
+    usecase: Annotated[ListTicketsUseCase, Depends(get_list_tickets_usecase)] = None,
 ):
     result = await usecase.execute(
         filters=TicketListFilterDto(
@@ -86,8 +88,8 @@ async def list_tickets(
 async def void_ticket(
     ticket_id: Annotated[int, Path(ge=1)],
     payload: TicketVoidRequest,
-    user=Depends(RoleChecker(CARWASH_OPERATION_ROLES)),
-    usecase: VoidTicketUseCase = Depends(get_void_ticket_usecase),
+    user: Annotated[AuthContextDto, Depends(RoleChecker(CARWASH_OPERATION_ROLES))] = None,
+    usecase: Annotated[VoidTicketUseCase, Depends(get_void_ticket_usecase)] = None,
 ):
     voided_ticket = await usecase.execute(
         CreateTicketVoidCmd(
