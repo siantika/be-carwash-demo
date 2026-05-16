@@ -37,8 +37,10 @@ venv/
 # Environment Variables
 .env
 .env.*
+.env.docker
 !.env.local.example
 !.env.example
+!.env.docker.example
 
 # Python tooling
 pip-log.txt
