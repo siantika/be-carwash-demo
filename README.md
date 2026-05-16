@@ -55,6 +55,25 @@ Shared concerns are in `app/shared/*`:
 - exception handling
 - logging
 
+## Directory Structure
+
+```text
+app/
+  api/
+  modules/
+    analytics/
+    billing/
+    carwash_operation/
+    identity/
+    service_catalog/
+  shared/
+
+tests/
+migrations/
+docker/
+```
+
+
 ## API Docs
 
 - Swagger UI: `http://localhost:8000/docs`
@@ -78,8 +97,8 @@ Authorization examples:
 
 Important note:
 
-- `POST /api/v1/tickets` uses `get_current_device` (device/session context), not `RoleChecker`.
-- It also requires `Idempotency-Key` header.
+- `POST /api/v1/tickets` uses `get_current_device` (barrier gate device/session context), not `RoleChecker`.
+- It requires both `X-Device-Code` and `Idempotency-Key` headers.
 
 ## Authentication Flow
 
@@ -160,6 +179,30 @@ Example header:
 Idempotency-Key: txn-20260516-001
 ```
 
+## Create Ticket with Barrier Gate Context
+
+`POST /api/v1/tickets` is validated by barrier gate device context.
+
+Required headers:
+
+- `Authorization: Bearer <access_token>`
+- `X-Device-Code: <registered_barrier_gate_code>`
+- `Idempotency-Key: <unique_key_per_request>`
+
+Request body:
+
+```json
+{
+  "service_type_id": 1
+}
+```
+
+Common barrier-gate validation errors:
+
+- Missing `X-Device-Code` -> `"Device code is required"`
+- Unknown device code -> `"Device is not registered"`
+- Inactive device -> `"Device is inactive"`
+
 ## Example Requests
 
 ### Login
@@ -178,6 +221,7 @@ curl -X POST http://localhost:8000/api/v1/auth/login \
 ```bash
 curl -X POST http://localhost:8000/api/v1/tickets \
   -H "Authorization: Bearer <access_token>" \
+  -H "X-Device-Code: BARRIER-GATE-001" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: ticket-20260516-001" \
   -d '{
@@ -248,6 +292,96 @@ Optional variables (default in `settings.py`):
 - Python 3.12+
 - Docker + Docker Compose
 
+## Quickstart (Local Deployment)
+
+Follow this sequence from a fresh setup until the API is working.
+
+1. Clone project and enter directory.
+
+```bash
+git clone <your-repo-url>
+cd demo-carwash-api
+```
+
+2. Create virtual environment and install dependencies.
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+3. Create local environment file.
+
+```bash
+cp .env.local.example .env
+```
+
+4. Edit `.env` with your local values (minimum required):
+
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_HOST`
+- `DB_PORT`
+- `ALEMBIC_DATABASE_URL`
+- `SECRET_KEY`
+- `HOST`
+- `PORT`
+- `API_VERSION=/api/v1`
+
+5. Start PostgreSQL (recommended via Docker).
+
+```bash
+docker compose up -d db
+```
+
+6. Run database migrations.
+
+```bash
+alembic upgrade head
+```
+
+7. Seed demo data (accounts, barrier gates, service types).
+
+```bash
+make seed
+```
+
+8. Start API server.
+
+```bash
+python3 -m app.main
+```
+
+9. Verify service.
+
+- Open: `http://localhost:8000/docs`
+- Health check:
+
+```bash
+curl http://localhost:8000/api/v1/health
+```
+
+10. Login using seeded cashier account.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"cashier_demo","password":"Cashier123!"}'
+```
+
+11. Create ticket with barrier gate context.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/tickets \
+  -H "Authorization: Bearer <access_token>" \
+  -H "X-Device-Code: BARRIER-GATE-001" \
+  -H "Idempotency-Key: ticket-local-001" \
+  -H "Content-Type: application/json" \
+  -d '{"service_type_id":1}'
+```
+
 ### Run with Docker
 
 ```bash
@@ -262,6 +396,12 @@ source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.local.example .env
 python3 -m app.main
+```
+
+Seed demo data (accounts, barrier gates, service types):
+
+```bash
+make seed
 ```
 
 ## Database Migration (Alembic)
@@ -304,22 +444,4 @@ make test
 ## Notes
 
 - Alembic migrations are the source of truth for schema changes.
-- There is currently no built-in seed command in this repository.
-
-## Directory Structure
-
-```text
-app/
-  api/
-  modules/
-    analytics/
-    billing/
-    carwash_operation/
-    identity/
-    service_catalog/
-  shared/
-
-tests/
-migrations/
-docker/
-```
+- Built-in seed command is available via `make seed`.
