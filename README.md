@@ -229,6 +229,34 @@ cp .env.local.example .env
 python3 -m app.main
 ```
 
+## Database Migration (Alembic)
+
+Make sure `ALEMBIC_DATABASE_URL` is set in `.env`.
+
+Apply all migrations:
+
+```bash
+alembic upgrade head
+```
+
+Create a new migration:
+
+```bash
+alembic revision -m "your_migration_message"
+```
+
+Rollback one migration:
+
+```bash
+alembic downgrade -1
+```
+
+Check current migration version:
+
+```bash
+alembic current
+```
+
 ## Quality Commands
 
 ```bash
