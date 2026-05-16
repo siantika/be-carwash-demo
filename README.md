@@ -296,6 +296,8 @@ Optional variables (default in `settings.py`):
 
 Follow this sequence from a fresh setup until the API is working.
 
+Note: Docker DB no longer restores from `docker/db`. Schema/data bootstrap is handled by Alembic + seed.
+
 1. Clone project and enter directory.
 
 ```bash
