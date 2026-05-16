@@ -168,7 +168,7 @@ async def delete_account(
 
 
 @auth_router.post("/login", response_model=BaseResponse[LoginResponse])
-@limiter.limit("10/second")
+@limiter.limit("10/minute")
 async def login(
     request: Request,
     payload: LoginRequest,
