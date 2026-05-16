@@ -1,4 +1,4 @@
-.PHONY: quality format format-check lint test
+.PHONY: quality format format-check lint test seed
 
 quality: lint
 
@@ -14,3 +14,6 @@ lint:
 
 test:
 	.venv/bin/python -m pytest
+
+seed:
+	.venv/bin/python -m app.scripts.seed
