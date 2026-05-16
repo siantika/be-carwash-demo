@@ -9,7 +9,7 @@ from app.modules.billing.application.dto.transaction_mapper import (
     to_transaction_result,
     transaction_result_to_dict,
 )
-from app.modules.billing.application.services.i_request_hasher import IRequestHasher
+from app.modules.billing.application.ports.i_request_hasher import IRequestHasher
 from app.modules.billing.domain.entities.payment_transaction import PaymentTransaction
 from app.modules.billing.domain.repositories.i_billing_uow import IBillingUnitOfWork
 from app.modules.billing.domain.value_objects.payment import Payment, PaymentMethodEnum
