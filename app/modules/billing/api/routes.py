@@ -1,6 +1,6 @@
 from typing import Annotated, List
 
-from fastapi import APIRouter, Depends, Header, Query, status
+from fastapi import APIRouter, Depends, Header, Query, Request, status
 
 from app.api.dependencies.shared import RoleChecker
 from app.modules.billing.api.dependencies import (
@@ -27,6 +27,7 @@ from app.modules.billing.domain.value_objects.payment import PaymentMethodEnum
 from app.modules.billing.domain.value_objects.payment_state import PaymentStatus
 from app.modules.identity.application.dto.auth_context_dto import AuthContextDto
 from app.modules.identity.domain.entities.account import RoleCode
+from app.shared.middleware.limiter import limiter
 from app.shared.response import BaseResponse, Metadata
 
 router = APIRouter()
@@ -40,7 +41,9 @@ BILLING_READER_ROLES = [RoleCode.CASHIER, RoleCode.ADMIN, RoleCode.OWNER]
     response_model=BaseResponse[TransactionResponse],
     status_code=status.HTTP_201_CREATED,
 )
+@limiter.limit("20/minute")
 async def process_transaction(
+    request: Request,
     payload: ProcessTransactionRequest,
     idempotency_key: str = Header(
         ..., alias="Idempotency-Key", min_length=8, max_length=128
