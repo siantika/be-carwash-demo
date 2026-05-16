@@ -12,14 +12,12 @@ RUN useradd -m -u 10001 appuser
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app code
-COPY . .
+# Copy app code while giving it ownership
+COPY  --chown=appuser:appuser . .
 
 # Fix ownership then drop privileges
-RUN chown -R appuser:appuser /app
 USER appuser
 
-ENV PORT=8000
 
 HEALTHCHECK CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
 
