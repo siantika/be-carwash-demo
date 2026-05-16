@@ -196,7 +196,7 @@ async def me(
 
 
 @auth_router.post("/refresh", response_model=BaseResponse[TokenResponse])
-@limiter.limit("10/second")
+@limiter.limit("20/minute")
 async def refresh_session(
     request: Request,
     payload: RefreshTokenRequest,
@@ -211,7 +211,7 @@ async def refresh_session(
 
 
 @auth_router.post("/logout", response_model=BaseResponse[None])
-@limiter.limit("10/second")
+@limiter.limit("20/minute")
 async def logout(
     request: Request,
     payload: RefreshTokenRequest,
