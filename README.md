@@ -196,8 +196,8 @@ Optional variables (defaults are defined in `settings.py`):
 - `GET /api/v1/health` -> `5/minute`
 - `GET /api/v1/test-db` -> `10/minute`
 - `POST /api/v1/auth/login` -> `10/minute`
-- `POST /api/v1/auth/refresh` -> `10/second`
-- `POST /api/v1/auth/logout` -> `10/second`
+- `POST /api/v1/auth/refresh` -> `20/minute`
+- `POST /api/v1/auth/logout` -> `20/minute`
 - `POST /api/v1/accounts` -> `10/minute`
 - `POST /api/v1/service-types` -> `10/minute`
 - `PATCH /api/v1/service-types/{service_type_id}` -> `20/minute`
