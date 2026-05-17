@@ -2,19 +2,45 @@ services:
   db:
     image: postgres:16
     container_name: carwash-db
+    env_file:
+      - .env.docker
     environment:
-      POSTGRES_DB: demo_carwash
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: apppass
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./docker/db:/docker-entrypoint-initdb.d:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app -d demo_carwash"]
       interval: 5s
       timeout: 3s
       retries: 10
+
+  migrate:
+    image: postgres:16
+    container_name: carwash-migrate
+    env_file:
+      - .env.docker
+    volumes:
+      - ./docker/init-db.sh:/docker/init-db.sh:ro
+      - ./docker/schema.sql:/schema.sql:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "/docker/init-db.sh"]
+    restart: "no"
+
+  seed:
+    build: .
+    container_name: carwash-seed
+    env_file:
+      - .env.docker
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: ["python", "-m", "app.scripts.seed"]
+    restart: "no"
 
   api:
     build: .
@@ -24,9 +50,94 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      db:
-        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+      otel-collector:
+        condition: service_started
+    restart: unless-stopped
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.138.0
+    container_name: carwash-otel-collector
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./docker/otel/collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "9464:9464"
+    depends_on:
+      - tempo
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.7.3
+    container_name: carwash-prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - otel-collector
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:3.5.8
+    container_name: carwash-loki
+    command: ["-config.file=/etc/loki/loki-config.yaml"]
+    volumes:
+      - ./docker/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:3.5.8
+    container_name: carwash-promtail
+    command: ["-config.file=/etc/promtail/promtail-config.yaml"]
+    volumes:
+      - ./docker/promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+  tempo:
+    image: grafana/tempo:2.8.2
+    container_name: carwash-tempo
+    user: "0:0"
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./docker/tempo/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo-data:/tmp/tempo
+    ports:
+      - "3200:3200"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:12.2.0
+    container_name: carwash-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./docker/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
     restart: unless-stopped
 
 volumes:
   pgdata:
+  loki-data:
+  tempo-data:
+  grafana-data:

@@ -27,6 +27,7 @@ SQLAlchemy==2.0.44
 asyncpg==0.31.0
 psycopg2-binary==2.9.11
 greenlet==3.2.4
+alembic==1.18.4
 
 # =========================
 # Serialization / Validation
@@ -59,6 +60,9 @@ PyYAML==6.0.3
 # =========================
 typer==0.20.0
 rich-toolkit==0.15.1
+pytest==9.0.3
+asgi-lifespan==2.1.0
+ruff==0.14.8
 
 
 # =========================
@@ -72,3 +76,12 @@ slowapi==0.1.9
 python-multipart==0.0.22
 orjson==3.11.5
 urllib3==2.6.3
+
+# =========================
+# Observability (OpenTelemetry)
+# =========================
+opentelemetry-api==1.38.0
+opentelemetry-sdk==1.38.0
+opentelemetry-exporter-otlp-proto-http==1.38.0
+opentelemetry-instrumentation-fastapi==0.59b0
+opentelemetry-instrumentation-logging==0.59b0
