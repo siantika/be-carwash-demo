@@ -2,8 +2,6 @@ import httpx
 import pytest
 from asgi_lifespan import LifespanManager
 
-from main import app
-
 
 # run only asyncio for backend test
 @pytest.fixture(scope="session")
@@ -13,6 +11,8 @@ def anyio_backend():
 
 @pytest.fixture(scope="function")
 async def client():
+    from app.main import app
+
     async with LifespanManager(app):
         transport = httpx.ASGITransport(app=app)
         async with httpx.AsyncClient(

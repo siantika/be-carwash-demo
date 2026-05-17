@@ -1,14 +1,26 @@
-# === OS & Editor ===
+# =========================================================
+# AI Agent / Local Tooling
+# =========================================================
+.agents/
+.codex/
+
+# =========================================================
+# OS & Editor
+# =========================================================
 .DS_Store
 Thumbs.db
 *.swp
 *~
 .vscode/
 .idea/
+
+# Sublime
 *.sublime-workspace
 *.sublime-project
 
-# === Python ===
+# =========================================================
+# Python
+# =========================================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -16,33 +28,58 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
+
+# Virtual Environment
 env/
-.env
 venv/
 .venv/
+
+# Environment Variables
+.env
+.env.*
+.env.docker
+!.env.local.example
+!.env.example
+!.env.docker.example
+
+# Python tooling
 pip-log.txt
 pip-delete-this-directory.txt
 .tox/
+
+# Coverage
 .coverage
 .coverage.*
-.cache
-nosetests.xml
 coverage.xml
+htmlcov/
 *.cover
-*.log
+
+# Cache
+.cache/
 .mypy_cache/
 .pytest_cache/
+.ruff_cache/
 .hypothesis/
 
-# === Logs ===
-logs/
+# Logs
 *.log
+logs/
 
-# === Dependency directories ===
-vendor/
-bower_components/
+# =========================================================
+# Database
+# =========================================================
+*.sqlite3
+*.db
 
-# === Build outputs ===
+# =========================================================
+# Build / Distribution
+# =========================================================
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Binary outputs
 out/
 target/
 *.exe
@@ -50,11 +87,25 @@ target/
 *.so
 *.dylib
 
-# === Database ===
-*.sqlite3
-*.db
+# =========================================================
+# Dependency directories
+# =========================================================
+vendor/
+bower_components/
 
-# === IDE / Tools ===
+# =========================================================
+# Alembic
+# =========================================================
+migrations/__pycache__/
+
+# =========================================================
+# Docker
+# =========================================================
+docker-compose.override.yml
+
+# =========================================================
+# IDE / Misc Tools
+# =========================================================
 *.iml
 .classpath
 .project
@@ -62,9 +113,16 @@ target/
 *.tmproj
 *.esproj
 
-# === Misc ===
+# =========================================================
+# Temporary files
+# =========================================================
 *.bak
 *.tmp
 *.temp
 .temp/
 tmp/
+
+# =========================================================
+# Tests
+# =========================================================
+test/

@@ -1,0 +1,16 @@
+from typing import Protocol
+
+from app.modules.identity.domain.entities.account import Account
+from app.modules.identity.domain.value_objects.username import Username
+
+
+class IAccountRepository(Protocol):
+    async def find_by_id(self, account_id: int) -> Account | None: ...
+
+    async def find_by_username(self, username: Username) -> Account | None: ...
+
+    async def create(self, account: Account) -> Account: ...
+
+    async def save(self, account: Account) -> Account: ...
+
+    async def delete(self, account_id: int) -> int: ...
