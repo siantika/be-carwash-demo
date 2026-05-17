@@ -1,28 +1,4 @@
-# Demo Carwash Backend API
-
-FastAPI backend for carwash operations, built with modular clean architecture, JWT authentication, idempotency protection, and rate limiting.
-
-## System Overview
-
-Carwash operations are often handled manually across ticketing, cashier flow, and reporting. This API centralizes those workflows into a structured backend service.
-
-High-level architecture:
-
-![High-Level Architecture](docs/images/higher-architecture-overview.png)
-
-## Feature Scope
-
-| Feature | Endpoint Scope | Business Value |
-|---|---|---|
-| Auth and session | `/api/v1/auth/*` | Secures access, supports login/refresh/logout lifecycle, and keeps cashier/operator sessions controlled. |
-| Account management | `/api/v1/accounts/*` | Lets management onboard staff, assign roles, and control active/inactive users for operational governance. |
-| Service type management | `/api/v1/service-types/*` | Keeps service catalog and pricing configurable so branch operations can adapt offerings without code changes. |
-| Ticket operations | `/api/v1/tickets/*` | Standardizes car intake and queue flow, and supports controlled ticket voiding for auditability. |
-| Billing transactions | `/api/v1/transactions/*` | Records payments reliably with idempotency protection to prevent duplicate charges during retries or network issues. |
-| Analytics reporting | `/api/v1/analytics/*` | Provides daily operational and revenue insights for owner-level decision making. |
-| Health and DB smoke-check | health + DB utility routes | Enables fast operational checks for uptime and database connectivity during deployment and monitoring. |
-
-## Tech Stack
+# Carwash Operations Backend API
 
 <p align="left">
   <img src="https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white" alt="Python 3.12" />
@@ -36,9 +12,69 @@ High-level architecture:
   <img src="https://img.shields.io/badge/pytest-Testing-0A9EDC?logo=pytest&logoColor=white" alt="pytest" />
   <img src="https://img.shields.io/badge/Ruff-Linting-black" alt="Ruff" />
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" alt="Docker Compose" />
+    <img src="https://img.shields.io/badge/Telemetry-OpenTelemetry%20%2B%20LGTM-green?logo=opentelemetry&logoColor=white" alt="Open Telemetry" />
 </p>
 
+## System Overview
+
+A FastAPI backend for managing carwash operations, including ticketing, cashier workflows, and daily reporting.
+
+The system is built with modular clean architecture and includes JWT authentication, idempotency protection, and rate limiting to support reliable and maintainable operations.
+
+Below is the High-level of the architecture:
+
+![High-Level Architecture](docs/images/higher-architecture-overview.png)
+
+Based on the architecture above, the system consists of three main subsystems: Entry Gate, Local Server, and Cashier.
+
+The **Entry Gate** creates a ticket when a customer arrives to wash their car. The ticket data is then sent to the **Local Server**, which is located in the admin room and acts as the central backend service for connected clients such as the entry gate and cashier application.
+
+The **Cashier** subsystem handles customer payments, ticket validation, and ticket void operations.
+
+
+## Feature Scope
+
+| Feature | Endpoint Scope | Business Value |
+|---|---|---|
+| Auth and session | `/api/v1/auth/*` | Secures access, supports login/refresh/logout lifecycle, and keeps cashier/operator sessions controlled. |
+| Account management | `/api/v1/accounts/*` | Lets management onboard staff, assign roles, and control active/inactive users for operational governance. |
+| Service type management | `/api/v1/service-types/*` | Keeps service catalog and pricing configurable so branch operations can adapt offerings without code changes. |
+| Ticket operations | `/api/v1/tickets/*` | Standardizes car intake and queue flow, and supports controlled ticket voiding for auditability. |
+| Billing transactions | `/api/v1/transactions/*` | Records payments reliably with idempotency protection to prevent duplicate charges during retries or network issues. |
+| Analytics reporting | `/api/v1/analytics/*` | Provides daily operational and revenue insights for owner-level decision making. |
+| Health and DB smoke-check | health + DB utility routes | Enables fast operational checks for uptime and database connectivity during deployment and monitoring. |
+
 ## Architecture
+
+```mermaid
+flowchart LR
+    Client[Client Applications<br/>Cashier / Admin / Entry Gate]
+
+    FastAPI[FastAPI Server]
+
+    DB[(PostgreSQL)]
+
+    subgraph Observability[Observability Stack]
+        OTel[OpenTelemetry]
+        Loki[Loki - Logs]
+        Tempo[Tempo - Traces]
+        Prometheus[Prometheus - Metrics]
+        Grafana[Grafana - Dashboards]
+    end
+
+    Client --> FastAPI
+    FastAPI --> DB
+
+    FastAPI --> OTel
+
+    OTel --> Loki
+    OTel --> Tempo
+    OTel --> Prometheus
+
+    Loki --> Grafana
+    Tempo --> Grafana
+    Prometheus --> Grafana
+```
 
 Project layout follows modular clean architecture under `app/modules/*`.
 
@@ -73,11 +109,15 @@ migrations/
 docker/
 ```
 
-
 ## API Docs
 
 - Swagger UI: `http://localhost:8000/docs`
 - Base API path: `/api/v1`
+
+Here is the Swagger UI screenshoot:
+
+![Swagger UI](docs/images/swagger-api.png)
+
 
 ## Roles and Access
 
@@ -95,80 +135,32 @@ Authorization examples:
 - Payment processing: `CASHIER`
 - Analytics: `OWNER`
 
-Important note:
+## Technical Highlights
 
-- `POST /api/v1/tickets` uses `get_current_device` (barrier gate device/session context), not `RoleChecker`.
-- It requires both `X-Device-Code` and `Idempotency-Key` headers.
+This project includes several backend engineering concerns commonly required in production systems:
 
-## Authentication Flow
+### Device-Based Access Context
 
-1. `POST /api/v1/auth/login` -> returns `access_token` + `refresh_token`
-2. Use `Authorization: Bearer <access_token>` for protected routes
-3. `POST /api/v1/auth/refresh` -> rotates token pair
-4. `POST /api/v1/auth/logout` -> revokes refresh token
-5. `GET /api/v1/auth/me` -> returns active user context
+`POST /api/v1/tickets` is designed for barrier gate usage and does not use a regular role-based user context.
 
-Default token settings:
+Instead, it uses `get_current_device` to validate the registered barrier gate device/session context.
 
-- `ALGORITHM=HS256`
-- `ACCESS_TOKEN_EXPIRE_HOURS=8`
-- `REFRESH_TOKEN_EXPIRE_DAYS=7`
+Required headers:
 
-## Endpoint Summary
+- `X-Device-Code: <registered_barrier_gate_code>`
+- `Idempotency-Key: <unique_key_per_request>`
 
-### Health
+Common device validation errors:
 
-- `GET /api/v1/health`
-- `GET /api/v1/test-db`
+- Missing `X-Device-Code` -> `"Device code is required"`
+- Unknown device code -> `"Device is not registered"`
+- Inactive device -> `"Device is inactive"`
 
-### Auth
+### Idempotency Protection
 
-- `POST /api/v1/auth/login`
-- `POST /api/v1/auth/refresh`
-- `POST /api/v1/auth/logout`
-- `GET /api/v1/auth/me`
+Critical write endpoints require an `Idempotency-Key` to prevent duplicate processing caused by retries, network issues, or repeated client requests.
 
-### Accounts
-
-- `POST /api/v1/accounts`
-- `GET /api/v1/accounts`
-- `GET /api/v1/accounts/{account_id}`
-- `PATCH /api/v1/accounts/{account_id}/activate`
-- `PATCH /api/v1/accounts/{account_id}/deactivate`
-- `DELETE /api/v1/accounts/{account_id}`
-
-### Service Types
-
-- `POST /api/v1/service-types`
-- `GET /api/v1/service-types`
-- `GET /api/v1/service-types/name/{service_name}`
-- `GET /api/v1/service-types/{service_type_id}`
-- `PATCH /api/v1/service-types/{service_type_id}`
-- `PATCH /api/v1/service-types/{service_type_id}/activate`
-- `PATCH /api/v1/service-types/{service_type_id}/deactivate`
-- `DELETE /api/v1/service-types/{service_type_id}`
-
-### Tickets
-
-- `POST /api/v1/tickets`
-- `GET /api/v1/tickets`
-- `PATCH /api/v1/tickets/{ticket_id}/void`
-
-### Transactions
-
-- `POST /api/v1/transactions`
-- `GET /api/v1/transactions`
-
-### Analytics
-
-- `GET /api/v1/analytics/dashboard-summary`
-- `GET /api/v1/analytics/daily-revenue`
-- `GET /api/v1/analytics/top-services`
-- `GET /api/v1/analytics/payment-method-summary`
-
-## Idempotency
-
-Critical write endpoints require `Idempotency-Key`:
+Protected endpoints:
 
 - `POST /api/v1/tickets`
 - `POST /api/v1/transactions`
@@ -179,31 +171,32 @@ Example header:
 Idempotency-Key: txn-20260516-001
 ```
 
-## Create Ticket with Barrier Gate Context
+### Example: Create Ticket from Barrier Gate
 
-`POST /api/v1/tickets` is validated by barrier gate device context.
-
-Required headers:
-
-- `Authorization: Bearer <access_token>`
-- `X-Device-Code: <registered_barrier_gate_code>`
-- `Idempotency-Key: <unique_key_per_request>`
-
-Request body:
-
-```json
-{
-  "service_type_id": 1
-}
+```bash
+curl -X POST http://localhost:8000/api/v1/tickets \
+  -H "X-Device-Code: BARRIER-GATE-001" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: ticket-20260516-001" \
+  -d '{
+    "service_type_id": 1
+  }'
 ```
 
-Common barrier-gate validation errors:
+### Example: Process Transaction
 
-- Missing `X-Device-Code` -> `"Device code is required"`
-- Unknown device code -> `"Device is not registered"`
-- Inactive device -> `"Device is inactive"`
-
-## Example Requests
+```bash
+curl -X POST http://localhost:8000/api/v1/transactions \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: txn-20260516-001" \
+  -d '{
+    "ticket_id": 1,
+    "plate_number": "B 1234 XYZ",
+    "payment_method": "cash",
+    "payment_metadata": {}
+  }'
+```
 
 ### Login
 
@@ -220,7 +213,6 @@ curl -X POST http://localhost:8000/api/v1/auth/login \
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/tickets \
-  -H "Authorization: Bearer <access_token>" \
   -H "X-Device-Code: BARRIER-GATE-001" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: ticket-20260516-001" \
@@ -244,47 +236,6 @@ curl -X POST http://localhost:8000/api/v1/transactions \
   }'
 ```
 
-## Environment Variables
-
-Start from `.env.local.example`, then configure `.env`.
-
-Required/common runtime variables:
-
-- `DB_NAME`
-- `DB_USER`
-- `DB_PASSWORD`
-- `DB_HOST`
-- `DB_PORT`
-- `ALEMBIC_DATABASE_URL`
-- `SECRET_KEY`
-- `HOST`
-- `PORT`
-- `API_VERSION` (example: `/api/v1`)
-
-Optional variables (default in `settings.py`):
-
-- `ALGORITHM` (default `HS256`)
-- `ACCESS_TOKEN_EXPIRE_HOURS` (default `8`)
-- `REFRESH_TOKEN_EXPIRE_DAYS` (default `7`)
-- `CORS_ORIGINS` (default `[*]`)
-- `CORS_ALLOW_METHODS` (default `GET,POST,PUT,PATCH,OPTIONS`)
-- `CORS_ALLOW_HEADERS` (default `Authorization,Content-Type,Accept`)
-- `OTEL_ENABLED` (default `false`)
-- `OTEL_SERVICE_NAME` (default `demo-carwash-api`)
-- `OTEL_EXPORTER_OTLP_ENDPOINT` (default `http://localhost:4318`)
-- `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` (optional override; if empty uses `${OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`)
-- `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` (optional override; if empty uses `${OTEL_EXPORTER_OTLP_ENDPOINT}/v1/metrics`)
-- `OTEL_EXPORTER_OTLP_HEADERS` (optional, format `k1=v1,k2=v2`)
-
-### OpenTelemetry Quick Enable
-
-Set these variables in `.env`:
-
-```env
-OTEL_ENABLED=true
-OTEL_SERVICE_NAME=demo-carwash-api
-OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
-```
 
 ## Active Rate Limits
 
@@ -301,6 +252,13 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
 - `PATCH /api/v1/tickets/{ticket_id}/void` -> `20/minute`
 - `POST /api/v1/transactions` -> `20/minute`
 
+## Getting the Code
+
+```bash
+git clone https://github.com/siantika/be-carwash-demo.git
+cd demo-carwash-api
+```
+
 ## Local Development
 
 ### Prerequisites
@@ -308,102 +266,23 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
 - Python 3.12+
 - Docker + Docker Compose
 
-## Quickstart (Local Deployment)
+### Option A: Full Docker (recommended)
 
-Follow this sequence from a fresh setup until the API is working.
-
-Note: Docker bootstrap uses `docker/schema.sql` for DB schema and `app/scripts/seed.py` for demo data.
-
-1. Clone project and enter directory.
+1. Prepare Docker env file.
 
 ```bash
-git clone <your-repo-url>
-cd demo-carwash-api
+cp .env.docker.example .env.docker
 ```
 
-2. Create virtual environment and install dependencies.
+2. Set your DB password in `.env.docker`:
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-3. Create local environment file.
-
-```bash
-cp .env.local.example .env
-```
-
-4. Edit `.env` with your local values (minimum required):
-
-- `DB_NAME`
-- `DB_USER`
 - `DB_PASSWORD`
-- `DB_HOST`
-- `DB_PORT`
-- `ALEMBIC_DATABASE_URL`
-- `SECRET_KEY`
-- `HOST`
-- `PORT`
-- `API_VERSION=/api/v1`
+- `ALEMBIC_DATABASE_URL` (must use the same password)
 
-5. Start PostgreSQL (recommended via Docker).
+3. Start all services.
 
 ```bash
-docker compose up -d db
-```
-
-6. Run database migrations.
-
-```bash
-alembic upgrade head
-```
-
-7. Seed demo data (accounts, barrier gates, service types).
-
-```bash
-make seed
-```
-
-8. Start API server.
-
-```bash
-python3 -m app.main
-```
-
-9. Verify service.
-
-- Open: `http://localhost:8000/docs`
-- Health check:
-
-```bash
-curl http://localhost:8000/api/v1/health
-```
-
-10. Login using seeded cashier account.
-
-```bash
-curl -X POST http://localhost:8000/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"cashier_demo","password":"Cashier123!"}'
-```
-
-11. Create ticket with barrier gate context.
-
-```bash
-curl -X POST http://localhost:8000/api/v1/tickets \
-  -H "Authorization: Bearer <access_token>" \
-  -H "X-Device-Code: BARRIER-GATE-001" \
-  -H "Idempotency-Key: ticket-local-001" \
-  -H "Content-Type: application/json" \
-  -d '{"service_type_id":1}'
-```
-
-### Run with Docker
-
-```bash
-docker compose up --build
+docker compose up --build -d
 ```
 
 Docker flow:
@@ -411,6 +290,11 @@ Docker flow:
 - `migrate`: initialize/update schema from `docker/schema.sql` (idempotent guard)
 - `seed`: insert/update demo accounts, devices, and service types
 - `api`: starts after schema + seed completed
+
+4. Verify:
+
+- Swagger UI: `http://localhost:8000/docs`
+- Health: `curl http://localhost:8000/api/v1/health`
 
 Observability endpoints:
 - Grafana: `http://localhost:3000` (user/pass: `admin` / `admin`)
@@ -423,28 +307,52 @@ Pre-provisioned Grafana dashboard:
 - Folder: `Carwash`
 - Dashboard: `Carwash API Observability`
 
-Generate sample traffic/logs:
+Here is the screenshoot of the Grafana Dashboard
 
+![Grafana Dashboard](docs/images/grafana_dashboard.png)
+
+
+Generate sample traffic/logs:
 ```bash
 curl http://localhost:8000/api/v1/health
 curl http://localhost:8000/api/v1/test-db
 ```
 
-### Run without Docker
+### Option B: Hybrid Local (API local + DB in Docker)
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.local.example .env
+```
+
+Update `.env` with required values:
+
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_HOST`
+- `DB_PORT`
+- `ALEMBIC_DATABASE_URL`
+- `SECRET_KEY`
+- `HOST`
+- `PORT`
+- `API_VERSION=/api/v1`
+
+Start DB, migrate, seed, then run API:
+
+```bash
+docker compose up -d db
+alembic upgrade head
+make seed
 python3 -m app.main
 ```
 
-Seed demo data (accounts, barrier gates, service types):
+Verify:
 
-```bash
-make seed
-```
+- Swagger UI: `http://localhost:8000/docs`
+- Health: `curl http://localhost:8000/api/v1/health`
 
 ## Database Migration (Alembic)
 
