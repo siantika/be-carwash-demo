@@ -27,6 +27,13 @@ class Settings(BaseSettings):
         "Accept",
     ]
 
+    OTEL_ENABLED: bool = False
+    OTEL_SERVICE_NAME: str = "demo-carwash-api"
+    OTEL_EXPORTER_OTLP_ENDPOINT: str = "http://localhost:4318"
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: str | None = None
+    OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: str | None = None
+    OTEL_EXPORTER_OTLP_HEADERS: str | None = None
+
     class Config:
         env_file = ".env"
 

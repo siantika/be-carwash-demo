@@ -269,6 +269,22 @@ Optional variables (default in `settings.py`):
 - `CORS_ORIGINS` (default `[*]`)
 - `CORS_ALLOW_METHODS` (default `GET,POST,PUT,PATCH,OPTIONS`)
 - `CORS_ALLOW_HEADERS` (default `Authorization,Content-Type,Accept`)
+- `OTEL_ENABLED` (default `false`)
+- `OTEL_SERVICE_NAME` (default `demo-carwash-api`)
+- `OTEL_EXPORTER_OTLP_ENDPOINT` (default `http://localhost:4318`)
+- `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` (optional override; if empty uses `${OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`)
+- `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` (optional override; if empty uses `${OTEL_EXPORTER_OTLP_ENDPOINT}/v1/metrics`)
+- `OTEL_EXPORTER_OTLP_HEADERS` (optional, format `k1=v1,k2=v2`)
+
+### OpenTelemetry Quick Enable
+
+Set these variables in `.env`:
+
+```env
+OTEL_ENABLED=true
+OTEL_SERVICE_NAME=demo-carwash-api
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+```
 
 ## Active Rate Limits
 
@@ -395,6 +411,24 @@ Docker flow:
 - `migrate`: initialize/update schema from `docker/schema.sql` (idempotent guard)
 - `seed`: insert/update demo accounts, devices, and service types
 - `api`: starts after schema + seed completed
+
+Observability endpoints:
+- Grafana: `http://localhost:3000` (user/pass: `admin` / `admin`)
+- Prometheus: `http://localhost:9090`
+- Loki: `http://localhost:3100`
+- Tempo: `http://localhost:3200`
+- OTEL Collector OTLP HTTP: `http://localhost:4318`
+
+Pre-provisioned Grafana dashboard:
+- Folder: `Carwash`
+- Dashboard: `Carwash API Observability`
+
+Generate sample traffic/logs:
+
+```bash
+curl http://localhost:8000/api/v1/health
+curl http://localhost:8000/api/v1/test-db
+```
 
 ### Run without Docker
 

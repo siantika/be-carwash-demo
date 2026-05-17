@@ -11,8 +11,10 @@ from app.shared.infra.database.db import lifespan
 from app.shared.middleware.limiter import limiter
 from app.shared.middleware.logger import setup_logger
 from app.shared.middleware.security_headers import SecurityHeadersMiddleware
+from app.shared.observability import init_otel, instrument_fastapi
 
-setup_logger(json_format=False)  # set true for prod
+setup_logger(json_format=True)  # set true for prod
+init_otel()
 
 
 app = FastAPI(
@@ -36,6 +38,7 @@ app.add_middleware(
 app.add_middleware(SecurityHeadersMiddleware)
 app.include_router(api_router, prefix=settings.API_VERSION)
 register_exception_handlers(app)
+instrument_fastapi(app)
 
 
 @app.get("/")
