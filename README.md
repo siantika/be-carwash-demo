@@ -1,4 +1,5 @@
 # Carwash Operations Backend API
+A FastAPI backend for managing carwash operations, including ticketing, cashier workflows, and daily reporting.
 
 <p align="left">
   <img src="https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white" alt="Python 3.12" />
@@ -16,8 +17,6 @@
 </p>
 
 ## System Overview
-
-A FastAPI backend for managing carwash operations, including ticketing, cashier workflows, and daily reporting.
 
 The system is built with modular clean architecture and includes JWT authentication, idempotency protection, and rate limiting to support reliable and maintainable operations.
 
