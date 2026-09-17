@@ -135,8 +135,6 @@ jobs:
 
     env:
       VPS_HOST: ${{ secrets.VPS_HOST }}
-      VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-      VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
       VPS_USER: ${{ vars.VPS_USER }}
       VPS_DEPLOY_PATH: ${{ vars.VPS_DEPLOY_PATH }}
       VPS_COMPOSE_FILE: ${{ vars.VPS_COMPOSE_FILE }}
@@ -147,6 +145,9 @@ jobs:
 
     steps:
       - name: Configure SSH securely
+        env:
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
         run: |
           : "${VPS_HOST:?Missing VPS_HOST secret}"
           : "${VPS_SSH_PRIVATE_KEY:?Missing VPS_SSH_PRIVATE_KEY secret}"
