@@ -96,7 +96,7 @@ jobs:
         id: metadata
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/siantika/carwash-api
+          images: ghcr.io/${{ github.repository }}
           tags: |
             type=raw,value=latest
             type=sha,prefix=sha-
@@ -134,8 +134,11 @@ jobs:
           set -euo pipefail
           cd /opt/carwash-api
 
-          docker compose -f docker-compose.prod.yml pull api
-          docker compose -f docker-compose.prod.yml up -d --no-deps api
+          docker pull ghcr.io/siantika/be-carwash-demo:latest
+          docker tag \
+            ghcr.io/siantika/be-carwash-demo:latest \
+            ghcr.io/siantika/carwash-api:latest
+          docker compose -f docker-compose.prod.yml up -d --no-deps --pull never api
 
           container_id="$(docker compose -f docker-compose.prod.yml ps -q api)"
           if [ -z "$container_id" ]; then
