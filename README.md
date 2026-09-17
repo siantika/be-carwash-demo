@@ -113,6 +113,20 @@ docker/
 - Swagger UI: `http://localhost:8000/docs`
 - Base API path: `/api/v1`
 
+## CI/CD
+
+GitHub Actions runs automatically for pushes and pull requests targeting `main`:
+
+- Ruff checks the application and tests.
+- Pytest runs against a PostgreSQL 16 service.
+- After a successful push to `main`, a Docker image is published to
+  `ghcr.io/siantika/be-carwash-demo` with the tags `latest` and `sha-<commit>`.
+
+The workflow can also be started manually from the repository's **Actions** tab.
+Publishing uses the built-in `GITHUB_TOKEN`, so no additional repository secret is
+required. Deployment from GHCR to a runtime server is environment-specific and is
+not performed by this workflow.
+
 Here is the Swagger UI screenshoot:
 
 ![Swagger UI](docs/images/swagger-api.png)
