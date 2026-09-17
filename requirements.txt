@@ -75,7 +75,7 @@ slowapi==0.1.9
 # =========================
 python-multipart==0.0.22
 orjson==3.11.5
-urllib3==2.6.3
+urllib3==2.7.0
 
 # =========================
 # Observability (OpenTelemetry)
