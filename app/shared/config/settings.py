@@ -1,7 +1,12 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        hide_input_in_errors=True,
+    )
+
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_HOURS: int = 8
@@ -36,9 +41,5 @@ class Settings(BaseSettings):
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: str | None = None
     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: str | None = None
     OTEL_EXPORTER_OTLP_HEADERS: str | None = None
-
-    class Config:
-        env_file = ".env"
-
 
 settings = Settings()

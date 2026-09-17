@@ -2,24 +2,32 @@ name: CI/CD
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
-  group: ci-cd-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  quality-and-test:
-    name: Lint and test
+  test:
+    name: Quality checks
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     services:
       postgres:
         image: postgres:16
@@ -35,6 +43,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    # Isolated test-only values; production values are never exposed to CI.
     env:
       SECRET_KEY: ci-only-secret-key
       ALGORITHM: HS256
@@ -51,107 +60,134 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
+      - name: Set up Python 3.12
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements.txt
 
       - name: Install dependencies
-        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
 
-      - name: Run lint
+      - name: Lint
         run: python -m ruff check app tests
 
-      - name: Run tests
+      - name: Test
         run: python -m pytest
 
-  publish-image:
-    name: Publish Docker image
+  publish:
+    name: Build and publish image
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    needs: quality-and-test
+    needs: test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       packages: write
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate image metadata
         id: metadata
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest
-            type=sha,prefix=sha-
+            type=sha,format=long,prefix=sha-
 
-      - name: Build and publish image
-        uses: docker/build-push-action@v7
+      - name: Build and publish
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
+          platforms: linux/amd64
           push: true
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy-production:
-    name: Deploy to VPS
-    needs: publish-image
+  deploy:
+    name: Deploy production
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: publish
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment: production
+    permissions: {}
+
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+      VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+      VPS_USER: ${{ vars.VPS_USER }}
+      VPS_DEPLOY_PATH: ${{ vars.VPS_DEPLOY_PATH }}
+      VPS_COMPOSE_FILE: ${{ vars.VPS_COMPOSE_FILE }}
+      VPS_SERVICE: ${{ vars.VPS_SERVICE }}
+      VPS_RUNTIME_IMAGE: ${{ vars.VPS_RUNTIME_IMAGE }}
+      VPS_HEALTHCHECK_URL: ${{ vars.VPS_HEALTHCHECK_URL }}
+      SOURCE_IMAGE: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
 
     steps:
-      - name: Configure SSH
-        env:
-          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+      - name: Configure SSH securely
         run: |
+          : "${VPS_HOST:?Missing VPS_HOST secret}"
+          : "${VPS_SSH_PRIVATE_KEY:?Missing VPS_SSH_PRIVATE_KEY secret}"
+          : "${VPS_KNOWN_HOSTS:?Missing VPS_KNOWN_HOSTS secret}"
+
           install -m 700 -d ~/.ssh
           printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
 
-      - name: Pull and restart API
+      - name: Deploy exact commit
         run: |
-          ssh -o BatchMode=yes sian@76.13.21.1 'bash -se' <<'REMOTE'
+          ssh \
+            -o BatchMode=yes \
+            -o ConnectTimeout=10 \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "DEPLOY_PATH='$VPS_DEPLOY_PATH' COMPOSE_FILE='$VPS_COMPOSE_FILE' SERVICE='$VPS_SERVICE' SOURCE_IMAGE='$SOURCE_IMAGE' RUNTIME_IMAGE='$VPS_RUNTIME_IMAGE' HEALTHCHECK_URL='$VPS_HEALTHCHECK_URL' bash -se" <<'REMOTE'
           set -euo pipefail
-          cd /opt/carwash-api
+          cd "$DEPLOY_PATH"
 
-          previous_image="$(docker inspect --format '{{.Image}}' carwash-api-api-1)"
+          compose=(docker compose -f "$COMPOSE_FILE")
+          current_container="$("${compose[@]}" ps -q "$SERVICE")"
+          previous_image="$(docker inspect --format '{{.Image}}' "$current_container")"
 
           rollback() {
-            echo "Deployment failed; restoring previous API image"
-            docker tag "$previous_image" ghcr.io/siantika/carwash-api:latest
-            docker compose -f docker-compose.prod.yml up -d --no-deps --pull never api
+            echo "Deployment failed; restoring the previous image"
+            docker tag "$previous_image" "$RUNTIME_IMAGE"
+            "${compose[@]}" up -d --no-deps --pull never "$SERVICE"
           }
 
-          docker pull ghcr.io/siantika/be-carwash-demo:latest
-          docker tag \
-            ghcr.io/siantika/be-carwash-demo:latest \
-            ghcr.io/siantika/carwash-api:latest
-          if ! docker compose -f docker-compose.prod.yml up -d --no-deps --pull never api; then
+          docker pull "$SOURCE_IMAGE"
+          docker tag "$SOURCE_IMAGE" "$RUNTIME_IMAGE"
+
+          if ! "${compose[@]}" up -d --no-deps --pull never "$SERVICE"; then
             rollback
             exit 1
           fi
 
-          container_id="$(docker compose -f docker-compose.prod.yml ps -q api)"
+          container_id="$("${compose[@]}" ps -q "$SERVICE")"
           if [ -z "$container_id" ]; then
             echo "API container was not created"
             rollback
@@ -161,22 +197,30 @@ jobs:
           for attempt in $(seq 1 30); do
             health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container_id")"
             if [ "$health" = "healthy" ]; then
-              if curl --fail --silent --show-error --max-time 10 http://127.0.0.1:8001/api/v1/health; then
+              if curl --fail --silent --show-error --max-time 10 "$HEALTHCHECK_URL"; then
+                echo
+                echo "Deployment completed successfully"
                 exit 0
               fi
               rollback
               exit 1
             fi
             if [ "$health" = "unhealthy" ]; then
-              docker compose -f docker-compose.prod.yml logs --tail=100 api
+              "${compose[@]}" logs --tail=100 "$SERVICE"
               rollback
               exit 1
             fi
             sleep 3
           done
 
-          docker compose -f docker-compose.prod.yml logs --tail=100 api
+          "${compose[@]}" logs --tail=100 "$SERVICE"
           echo "Timed out waiting for a healthy API container"
           rollback
           exit 1
           REMOTE
+
+      - name: Remove SSH credentials from runner
+        if: always()
+        run: |
+          shred --remove --zero ~/.ssh/id_ed25519 2>/dev/null || true
+          unlink ~/.ssh/known_hosts 2>/dev/null || true

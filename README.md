@@ -1,6 +1,8 @@
 # Carwash Operations Backend API
 A FastAPI backend for managing carwash operations, including ticketing, cashier workflows, and daily reporting.
 
+[![CI/CD](https://github.com/siantika/be-carwash-demo/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/siantika/be-carwash-demo/actions/workflows/ci-cd.yml)
+
 <p align="left">
   <img src="https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white" alt="Python 3.12" />
   <img src="https://img.shields.io/badge/FastAPI-0.121-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
@@ -120,14 +122,15 @@ GitHub Actions runs automatically for pushes and pull requests targeting `main`:
 - Ruff checks the application and tests.
 - Pytest runs against a PostgreSQL 16 service.
 - After a successful push to `main`, a Docker image is published to
-  `ghcr.io/siantika/be-carwash-demo` with the tags `latest` and `sha-<commit>`.
-- After publishing, the API service at `/opt/carwash-api` on the production VPS
-  pulls the latest image and restarts automatically. The workflow verifies the
-  container health check and API health endpoint before reporting success.
+  `ghcr.io/siantika/be-carwash-demo` with `latest` and immutable commit tags.
+- Production deploys the exact tested commit, verifies both the container and API
+  health checks, and automatically restores the previous image on failure.
 
 The workflow can also be started manually from the repository's **Actions** tab.
-Publishing uses the built-in `GITHUB_TOKEN`. VPS deployment uses the repository
-secrets `VPS_SSH_PRIVATE_KEY` and `VPS_KNOWN_HOSTS`.
+Publishing uses a least-privilege `GITHUB_TOKEN`. Infrastructure credentials and
+the VPS address are stored only in encrypted GitHub Actions secrets; non-sensitive
+deployment settings use repository variables. Third-party actions are pinned to
+immutable commit SHAs, and SSH host-key verification is enforced.
 
 Here is the Swagger UI screenshoot:
 
