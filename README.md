@@ -120,12 +120,14 @@ GitHub Actions runs automatically for pushes and pull requests targeting `main`:
 - Ruff checks the application and tests.
 - Pytest runs against a PostgreSQL 16 service.
 - After a successful push to `main`, a Docker image is published to
-  `ghcr.io/siantika/be-carwash-demo` with the tags `latest` and `sha-<commit>`.
+  `ghcr.io/siantika/carwash-api` with the tags `latest` and `sha-<commit>`.
+- After publishing, the API service at `/opt/carwash-api` on the production VPS
+  pulls the latest image and restarts automatically. The workflow verifies the
+  container health check and API health endpoint before reporting success.
 
 The workflow can also be started manually from the repository's **Actions** tab.
-Publishing uses the built-in `GITHUB_TOKEN`, so no additional repository secret is
-required. Deployment from GHCR to a runtime server is environment-specific and is
-not performed by this workflow.
+Publishing uses the built-in `GITHUB_TOKEN`. VPS deployment uses the repository
+secrets `VPS_SSH_PRIVATE_KEY` and `VPS_KNOWN_HOSTS`.
 
 Here is the Swagger UI screenshoot:
 

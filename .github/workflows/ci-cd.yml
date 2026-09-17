@@ -96,7 +96,7 @@ jobs:
         id: metadata
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ghcr.io/siantika/carwash-api
           tags: |
             type=raw,value=latest
             type=sha,prefix=sha-
@@ -110,3 +110,53 @@ jobs:
           labels: ${{ steps.metadata.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy-production:
+    name: Deploy to VPS
+    needs: publish-image
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Configure SSH
+        env:
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+
+      - name: Pull and restart API
+        run: |
+          ssh -o BatchMode=yes sian@76.13.21.1 'bash -se' <<'REMOTE'
+          set -euo pipefail
+          cd /opt/carwash-api
+
+          docker compose -f docker-compose.prod.yml pull api
+          docker compose -f docker-compose.prod.yml up -d --no-deps api
+
+          container_id="$(docker compose -f docker-compose.prod.yml ps -q api)"
+          if [ -z "$container_id" ]; then
+            echo "API container was not created"
+            exit 1
+          fi
+
+          for attempt in $(seq 1 30); do
+            health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container_id")"
+            if [ "$health" = "healthy" ]; then
+              curl --fail --silent --show-error --max-time 10 http://127.0.0.1:8001/api/v1/health
+              exit 0
+            fi
+            if [ "$health" = "unhealthy" ]; then
+              docker compose -f docker-compose.prod.yml logs --tail=100 api
+              exit 1
+            fi
+            sleep 3
+          done
+
+          docker compose -f docker-compose.prod.yml logs --tail=100 api
+          echo "Timed out waiting for a healthy API container"
+          exit 1
+          REMOTE
