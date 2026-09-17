@@ -134,26 +134,42 @@ jobs:
           set -euo pipefail
           cd /opt/carwash-api
 
+          previous_image="$(docker inspect --format '{{.Image}}' carwash-api-api-1)"
+
+          rollback() {
+            echo "Deployment failed; restoring previous API image"
+            docker tag "$previous_image" ghcr.io/siantika/carwash-api:latest
+            docker compose -f docker-compose.prod.yml up -d --no-deps --pull never api
+          }
+
           docker pull ghcr.io/siantika/be-carwash-demo:latest
           docker tag \
             ghcr.io/siantika/be-carwash-demo:latest \
             ghcr.io/siantika/carwash-api:latest
-          docker compose -f docker-compose.prod.yml up -d --no-deps --pull never api
+          if ! docker compose -f docker-compose.prod.yml up -d --no-deps --pull never api; then
+            rollback
+            exit 1
+          fi
 
           container_id="$(docker compose -f docker-compose.prod.yml ps -q api)"
           if [ -z "$container_id" ]; then
             echo "API container was not created"
+            rollback
             exit 1
           fi
 
           for attempt in $(seq 1 30); do
             health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container_id")"
             if [ "$health" = "healthy" ]; then
-              curl --fail --silent --show-error --max-time 10 http://127.0.0.1:8001/api/v1/health
-              exit 0
+              if curl --fail --silent --show-error --max-time 10 http://127.0.0.1:8001/api/v1/health; then
+                exit 0
+              fi
+              rollback
+              exit 1
             fi
             if [ "$health" = "unhealthy" ]; then
               docker compose -f docker-compose.prod.yml logs --tail=100 api
+              rollback
               exit 1
             fi
             sleep 3
@@ -161,5 +177,6 @@ jobs:
 
           docker compose -f docker-compose.prod.yml logs --tail=100 api
           echo "Timed out waiting for a healthy API container"
+          rollback
           exit 1
           REMOTE

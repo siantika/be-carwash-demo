@@ -6,7 +6,10 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_HOURS: int = 8
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    ALEMBIC_DATABASE_URL: str
+    # Only Alembic needs this URL. The running API builds its asyncpg URL from
+    # the DB_* settings below, so production can boot without this optional
+    # migration-only variable.
+    ALEMBIC_DATABASE_URL: str | None = None
 
     DB_NAME: str
     DB_USER: str
